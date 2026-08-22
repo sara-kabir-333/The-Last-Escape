@@ -1,41 +1,36 @@
-#include "iGraphics.h"
+﻿#include "iGraphics.h"
 #include "Variables.h"
 
-// Define global variables here
+// Define global variables declared as 'extern' in Variables.h
 int x = 0;
 int y = 0;
 
-int loadBg; // Single loading background image
-int menuBg;  // Menu background image
+int loadBg;
+int menuBg;
 
-// About page images (Expanded: 5 new pages + aboutBg1 + aboutBg2)
 int about1, about2, about3, about4, about5;
 int aboutBg1, aboutBg2;
 
-int backImg;  // Back button image
-int nextImg;  // Next button image for About pages
+int backImg;
+int nextImg;
 
-// Level Select images
 int levelBg;
 int level1Btn, level2Btn, level3Btn;
+int level1Bg;
 
-// Menu button images
 int btnPlay, btnAbout, btnSetting, btnExit;
-// Menu hover button images
 int btnPlayHover, btnAboutHover, btnSettingHover, btnExitHover;
 
-// GAME STATES & LOADING CONTROL
-int gameState = 0;    // Tracks the current active game state/screen
-int loadingStep = 0;  // Tracks loading progress (0 to 100)
-int btnHoverState = 0; // Tracks which button is currently hovered
+int gameState = 0;
+int loadingStep = 0;
+int btnHoverState = 0;
 
-// Include functions header file
+// Include your logic functions
 #include "Functions.h"
-int level1Bg;
 
 int main()
 {
-	iInitialize(800, 600, "The Last Escape"); // Initialize window size and title
+	iInitialize(800, 600, "The Last Escape");
 
 	// Load single loading background image
 	loadBg = iLoadImage("loadbg.png");
@@ -53,7 +48,7 @@ int main()
 	btnSettingHover = iLoadImage("menubg7.png");
 	btnExitHover = iLoadImage("menubg8.png");
 
-	// Load About page images (about1 to about5, plus aboutBg1 and aboutBg2) and buttons
+	// Load About page images and buttons
 	about1 = iLoadImage("about1.png");
 	about2 = iLoadImage("about2.png");
 	about3 = iLoadImage("about3.png");
@@ -72,7 +67,7 @@ int main()
 	level2Btn = iLoadImage("levelbg2.png");
 	level3Btn = iLoadImage("levelbg3.png");
 
-	// Loading timer set to 50 milliseconds for smooth progress filling
+	// Loading timer set to 50 milliseconds
 	iSetTimer(50, loadingUpdate);
 
 	iStart();
