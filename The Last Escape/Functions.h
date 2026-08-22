@@ -9,9 +9,9 @@
 
 #pragma comment(lib, "winmm.lib")
 
+// Function to update loading progress for initial startup and level loading
 void loadingUpdate()
 {
-	// Handle loading updates for both initial startup (gameState 0) and Level 1 loading (gameState 5)
 	if (gameState != 0 && gameState != 5)
 		return;
 
@@ -31,6 +31,7 @@ void loadingUpdate()
 	}
 }
 
+// Function to render graphics based on current game state
 void iDraw()
 {
 	iClear();
@@ -39,29 +40,26 @@ void iDraw()
 	iSetColor(0, 0, 0);
 	iFilledRectangle(0, 0, 800, 600);
 
-	if (gameState == 0 || gameState == 5) // Loading Screen States (Initial & Level 1)
+	if (gameState == 0 || gameState == 5) // Loading Screen States
 	{
-		// Display different background image based on current state
 		if (gameState == 0)
 		{
-			iShowImage(0, 0, 800, 600, loadBg); // Show initial loading screen background
+			iShowImage(0, 0, 800, 600, loadBg);
 		}
 		else
 		{
-			iShowImage(0, 0, 800, 600, level1Bg); // Show Level 1 loading background
+			iShowImage(0, 0, 800, 600, level1Bg);
 		}
 
-		// Draw Loading text in Golden color with a larger font
-		iSetColor(180, 122, 33); // Golden RGB color
+		// Draw Loading text
+		iSetColor(180, 122, 33);
 		iText(100, 120, "LOADING...", GLUT_BITMAP_TIMES_ROMAN_24);
 
-		// Draw Outer Progress Bar Rectangle Border
-		iSetColor(180, 122, 33); // Golden border
+		// Draw Progress Bar border and fill
+		iSetColor(180, 122, 33);
 		iRectangle(100, 80, 600, 30);
 
-		// Draw Inner Golden Filled Progress Bar based on loadingStep
-		iSetColor(180, 122, 33); // Golden fill color
-		int barWidth = (loadingStep * 600) / 100; // Calculate fill width proportionally (Max width = 600)
+		int barWidth = (loadingStep * 600) / 100;
 		iFilledRectangle(100, 80, barWidth, 30);
 	}
 	else if (gameState == 1) // Main Menu State
@@ -88,13 +86,43 @@ void iDraw()
 		else
 			iShowImage(340, 175, 300, 50, btnExit);
 	}
-	else if (gameState == 2) // About Screen State 1
+	else if (gameState == 2) // About Page 1
+	{
+		iShowImage(0, 0, 800, 600, about1);
+		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(650, 50, 100, 40, nextImg);
+	}
+	else if (gameState == 7) // About Page 2
+	{
+		iShowImage(0, 0, 800, 600, about2);
+		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(650, 50, 100, 40, nextImg);
+	}
+	else if (gameState == 8) // About Page 3
+	{
+		iShowImage(0, 0, 800, 600, about3);
+		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(650, 50, 100, 40, nextImg);
+	}
+	else if (gameState == 9) // About Page 4
+	{
+		iShowImage(0, 0, 800, 600, about4);
+		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(650, 50, 100, 40, nextImg);
+	}
+	else if (gameState == 10) // About Page 5
+	{
+		iShowImage(0, 0, 800, 600, about5);
+		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(650, 50, 100, 40, nextImg);
+	}
+	else if (gameState == 11) // About Page 6 (aboutBg1)
 	{
 		iShowImage(0, 0, 800, 600, aboutBg1);
 		iShowImage(50, 50, 100, 40, backImg);
 		iShowImage(650, 50, 100, 40, nextImg);
 	}
-	else if (gameState == 4) // About Screen State 2
+	else if (gameState == 12) // About Final Page (aboutBg2) - Only Back button, no Next button
 	{
 		iShowImage(0, 0, 800, 600, aboutBg2);
 		iShowImage(50, 50, 100, 40, backImg);
@@ -119,7 +147,7 @@ void iMouseMove(int mx, int my)
 
 void iPassiveMouseMove(int mx, int my)
 {
-	// Track mouse hover position in Main Menu without clicking
+	// Track mouse hover position in Main Menu
 	if (gameState == 1)
 	{
 		if (mx >= 340 && mx <= 640 && my >= 365 && my <= 415)
@@ -149,79 +177,118 @@ void iMouse(int button, int state, int mx, int my)
 {
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		if (gameState == 1) // Active only in Main Menu
+		if (gameState == 1) // Main Menu clicks
 		{
-			// Check Play button click area -> Switch to Level Select Screen
 			if (mx >= 340 && mx <= 640 && my >= 365 && my <= 415)
 			{
-				gameState = 3;
+				gameState = 3; // Switch to Level Select
 				printf("Play Button Clicked -> Opening Level Select!\n");
 			}
-			// Check About button click area -> Switch to About Screen 1
 			else if (mx >= 340 && mx <= 640 && my >= 295 && my <= 345)
 			{
-				gameState = 2;
-				printf("About Button Clicked!\n");
+				gameState = 2; // Switch to About Page 1 (about1)
+				printf("About Button Clicked -> Opening About Page 1!\n");
 			}
-			// Check Setting button click area
 			else if (mx >= 340 && mx <= 640 && my >= 235 && my <= 285)
 			{
 				printf("Setting Button Clicked!\n");
 			}
-			// Check Exit button click area
 			else if (mx >= 340 && mx <= 640 && my >= 175 && my <= 225)
 			{
-				exit(0); // Exit the game completely
+				exit(0); // Exit game
 			}
 		}
-		else if (gameState == 2) // Active only in About Screen 1
+		else if (gameState == 2) // About Page 1 navigation
 		{
-			// Check Back button click area -> Return to Main Menu
 			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
 			{
-				gameState = 1;
-				printf("Back Button Clicked, returning to Menu!\n");
+				gameState = 1; // Back to Menu
 			}
-			// Check Next button click area -> Go to About Screen 2
 			else if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
 			{
-				gameState = 4;
-				printf("Next Button Clicked, opening About Page 2!\n");
+				gameState = 7; // Next to About Page 2
 			}
 		}
-		else if (gameState == 4) // Active only in About Screen 2
+		else if (gameState == 7) // About Page 2 navigation
 		{
-			// Check Back button click area -> Return to About Screen 1
 			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
 			{
-				gameState = 2;
-				printf("Back Button Clicked, returning to About Page 1!\n");
+				gameState = 2; // Back to About Page 1
+			}
+			else if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
+			{
+				gameState = 8; // Next to About Page 3
 			}
 		}
-		else if (gameState == 3) // Active only in Level Select Screen
+		else if (gameState == 8) // About Page 3 navigation
 		{
-			// Check Back button click area
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 7; // Back to About Page 2
+			}
+			else if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
+			{
+				gameState = 9; // Next to About Page 4
+			}
+		}
+		else if (gameState == 9) // About Page 4 navigation
+		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 8; // Back to About Page 3
+			}
+			else if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
+			{
+				gameState = 10; // Next to About Page 5
+			}
+		}
+		else if (gameState == 10) // About Page 5 navigation
+		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 9; // Back to About Page 4
+			}
+			else if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
+			{
+				gameState = 11; // Next to About Page 6 (aboutBg1)
+			}
+		}
+		else if (gameState == 11) // About Page 6 (aboutBg1) navigation
+		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 10; // Back to About Page 5
+			}
+			else if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
+			{
+				gameState = 12; // Next to About Final Page (aboutBg2)
+			}
+		}
+		else if (gameState == 12) // About Final Page (aboutBg2) navigation (Back only)
+		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 11; // Back to aboutBg1
+			}
+		}
+		else if (gameState == 3) // Level Select Screen State
+		{
 			if (mx >= 68 && mx <= 188 && my >= 26 && my <= 79)
 			{
-				gameState = 1; // Return back to Main Menu
-				printf("Returned to Main Menu from Level Select!\n");
+				gameState = 1; // Return to Main Menu
 			}
-			// Check Level 1 click area -> Trigger Level 1 Loading (State 5)
 			else if (mx >= 120 && mx <= 295 && my >= 120 && my <= 462)
 			{
 				gameState = 5;      // Switch to Level 1 Loading Screen
-				loadingStep = 0;    // Reset progress bar from 0%
-				printf("Level 1 Selected -> Loading Level 1...\n");
+				loadingStep = 0;    // Reset progress bar
 			}
-			// Check Level 2 click area
 			else if (mx >= 307 && mx <= 482 && my >= 115 && my <= 457)
 			{
-				printf("Level 2 Selected!\n");
+				// Level 2
 			}
-			// Check Level 3 click area
 			else if (mx >= 492 && mx <= 667 && my >= 115 && my <= 457)
 			{
-				printf("Level 3 Selected!\n");
+				// Level 3
 			}
 		}
 	}
@@ -250,7 +317,7 @@ void fixedUpdate()
 	}
 
 	if (isKeyPressed(' ')) {
-		mciSendString("play ggsong from 0", NULL, 0, NULL); // Play background audio on spacebar
+		mciSendString("play ggsong from 0", NULL, 0, NULL);
 	}
 }
 

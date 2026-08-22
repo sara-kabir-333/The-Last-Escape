@@ -7,9 +7,13 @@ int y = 0;
 
 int loadBg; // Single loading background image
 int menuBg;  // Menu background image
-int aboutBg1, aboutBg2; // About page images
+
+// About page images (Expanded: 5 new pages + aboutBg1 + aboutBg2)
+int about1, about2, about3, about4, about5;
+int aboutBg1, aboutBg2;
+
 int backImg;  // Back button image
-int nextImg;  // Next button image for About page
+int nextImg;  // Next button image for About pages
 
 // Level Select images
 int levelBg;
@@ -21,8 +25,8 @@ int btnPlay, btnAbout, btnSetting, btnExit;
 int btnPlayHover, btnAboutHover, btnSettingHover, btnExitHover;
 
 // GAME STATES & LOADING CONTROL
-int gameState = 0;    // 0: Loading, 1: Main Menu, 2: About Page 1, 3: Level Select, 4: About Page 2
-int loadingStep = 0; // Tracks loading progress (0 to 100)
+int gameState = 0;    // Tracks the current active game state/screen
+int loadingStep = 0;  // Tracks loading progress (0 to 100)
 int btnHoverState = 0; // Tracks which button is currently hovered
 
 // Include functions header file
@@ -33,7 +37,7 @@ int main()
 {
 	iInitialize(800, 600, "The Last Escape"); // Initialize window size and title
 
-	// Load single loading background image (Ensure loadbg.png is in your project folder)
+	// Load single loading background image
 	loadBg = iLoadImage("loadbg.png");
 
 	// Load Main Menu background and normal button overlay images
@@ -49,9 +53,15 @@ int main()
 	btnSettingHover = iLoadImage("menubg7.png");
 	btnExitHover = iLoadImage("menubg8.png");
 
-	// Load About page images and buttons
+	// Load About page images (about1 to about5, plus aboutBg1 and aboutBg2) and buttons
+	about1 = iLoadImage("about1.png");
+	about2 = iLoadImage("about2.png");
+	about3 = iLoadImage("about3.png");
+	about4 = iLoadImage("about4.png");
+	about5 = iLoadImage("about5.png");
 	aboutBg1 = iLoadImage("aboutbg1.png");
 	aboutBg2 = iLoadImage("aboutbg2.png");
+
 	backImg = iLoadImage("backimage.png");
 	nextImg = iLoadImage("next.png");
 
