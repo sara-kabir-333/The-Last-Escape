@@ -7,20 +7,27 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-// Visual Studio specific library linking for audio (mciSendString)
 #pragma comment(lib, "winmm.lib")
 
 void loadingUpdate()
 {
-	if (gameState != 0)
+	// Handle loading updates for both initial startup (gameState 0) and Level 1 loading (gameState 5)
+	if (gameState != 0 && gameState != 5)
 		return;
 
-	loadingStep++; // Move to the next loading frame
+	loadingStep += 2; // Increase loading progress step
 
-	if (loadingStep >= 24)
+	if (loadingStep >= 100)
 	{
-		loadingStep = 24;
-		gameState = 1; // Switch to Main Menu when loading is finished
+		loadingStep = 100;
+		if (gameState == 0)
+		{
+			gameState = 1; // Switch to Main Menu when initial loading reaches 100%
+		}
+		else if (gameState == 5)
+		{
+			gameState = 6; // Switch to Level 1 Gameplay when level loading reaches 100%
+		}
 	}
 }
 
@@ -32,27 +39,35 @@ void iDraw()
 	iSetColor(0, 0, 0);
 	iFilledRectangle(0, 0, 800, 600);
 
-	if (gameState == 0) // Loading Screen State
+	if (gameState == 0 || gameState == 5) // Loading Screen States (Initial & Level 1)
 	{
-		// Loop from 1 up to current loadingStep so images stack up sequentially without overlapping issues
-		for (int i = 1; i <= loadingStep; i++)
+		// Display different background image based on current state
+		if (gameState == 0)
 		{
-			if (i >= 1 && i <= 23)
-			{
-				iShowImage(0, 0, 800, 600, img[i]); // Display loading frames progressively
-			}
-			else if (i == 24)
-			{
-				iShowImage(0, 0, 800, 600, img[24]); // Display final loading frame (load100)
-			}
+			iShowImage(0, 0, 800, 600, loadBg); // Show initial loading screen background
 		}
+		else
+		{
+			iShowImage(0, 0, 800, 600, level1Bg); // Show Level 1 loading background
+		}
+
+		// Draw Loading text in Golden color with a larger font
+		iSetColor(180, 122, 33); // Golden RGB color
+		iText(100, 120, "LOADING...", GLUT_BITMAP_TIMES_ROMAN_24);
+
+		// Draw Outer Progress Bar Rectangle Border
+		iSetColor(180, 122, 33); // Golden border
+		iRectangle(100, 80, 600, 30);
+
+		// Draw Inner Golden Filled Progress Bar based on loadingStep
+		iSetColor(180, 122, 33); // Golden fill color
+		int barWidth = (loadingStep * 600) / 100; // Calculate fill width proportionally (Max width = 600)
+		iFilledRectangle(100, 80, barWidth, 30);
 	}
 	else if (gameState == 1) // Main Menu State
 	{
-		// 1. Draw the main menu background
 		iShowImage(0, 0, 800, 600, menuBg);
 
-		// 2. Draw buttons with hover effect
 		if (btnHoverState == 1)
 			iShowImage(340, 365, 300, 50, btnPlayHover);
 		else
@@ -73,37 +88,28 @@ void iDraw()
 		else
 			iShowImage(340, 175, 300, 50, btnExit);
 	}
-	else if (gameState == 2) // About Screen State 1 (aboutbg1)
+	else if (gameState == 2) // About Screen State 1
 	{
-		// 1. Draw About page 1 background image
 		iShowImage(0, 0, 800, 600, aboutBg1);
-
-		// 2. Draw Back button at bottom-left corner
 		iShowImage(50, 50, 100, 40, backImg);
-
-		// 3. Draw Next button on the right side
 		iShowImage(650, 50, 100, 40, nextImg);
 	}
-	else if (gameState == 4) // About Screen State 2 (aboutbg2)
+	else if (gameState == 4) // About Screen State 2
 	{
-		// 1. Draw About page 2 background image
 		iShowImage(0, 0, 800, 600, aboutBg2);
-
-		// 2. Draw Back button at bottom to return to aboutbg1
 		iShowImage(50, 50, 100, 40, backImg);
 	}
 	else if (gameState == 3) // Level Select Screen State
 	{
-		// 1. Draw Level Select Background
 		iShowImage(0, 0, 800, 600, levelBg);
-
-		// 2. Draw the 3 level cards matching the layout
-		iShowImage(120, 120, 175, 342, level1Btn); // Level 1 Card
-		iShowImage(307, 115, 175, 342, level2Btn); // Level 2 Card
-		iShowImage(492, 115, 175, 342, level3Btn); // Level 3 Card
-
-		// 3. Draw Back button at bottom-left corner
+		iShowImage(120, 120, 175, 342, level1Btn);
+		iShowImage(307, 115, 175, 342, level2Btn);
+		iShowImage(492, 115, 175, 342, level3Btn);
 		iShowImage(68, 26, 120, 53, backImg);
+	}
+	else if (gameState == 6) // Level 1 Gameplay State
+	{
+		iShowImage(0, 0, 800, 600, level1Bg);
 	}
 }
 
@@ -168,7 +174,7 @@ void iMouse(int button, int state, int mx, int my)
 				exit(0); // Exit the game completely
 			}
 		}
-		else if (gameState == 2) // Active only in About Screen 1 (aboutbg1)
+		else if (gameState == 2) // Active only in About Screen 1
 		{
 			// Check Back button click area -> Return to Main Menu
 			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
@@ -183,7 +189,7 @@ void iMouse(int button, int state, int mx, int my)
 				printf("Next Button Clicked, opening About Page 2!\n");
 			}
 		}
-		else if (gameState == 4) // Active only in About Screen 2 (aboutbg2)
+		else if (gameState == 4) // Active only in About Screen 2
 		{
 			// Check Back button click area -> Return to About Screen 1
 			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
@@ -200,10 +206,12 @@ void iMouse(int button, int state, int mx, int my)
 				gameState = 1; // Return back to Main Menu
 				printf("Returned to Main Menu from Level Select!\n");
 			}
-			// Check Level 1 click area
+			// Check Level 1 click area -> Trigger Level 1 Loading (State 5)
 			else if (mx >= 120 && mx <= 295 && my >= 120 && my <= 462)
 			{
-				printf("Level 1 Selected!\n");
+				gameState = 5;      // Switch to Level 1 Loading Screen
+				loadingStep = 0;    // Reset progress bar from 0%
+				printf("Level 1 Selected -> Loading Level 1...\n");
 			}
 			// Check Level 2 click area
 			else if (mx >= 307 && mx <= 482 && my >= 115 && my <= 457)
@@ -217,15 +225,11 @@ void iMouse(int button, int state, int mx, int my)
 			}
 		}
 	}
-
-	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
-	{
-	}
 }
 
 void fixedUpdate()
 {
-	if (gameState == 1) // Movement active only after loading/in game
+	if (gameState == 1)
 	{
 		if (isKeyPressed('w') || isSpecialKeyPressed(GLUT_KEY_UP))
 		{
