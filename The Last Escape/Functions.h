@@ -1,26 +1,43 @@
-#define _CRT_SECURE_NO_WARNINGS
-
 #ifndef FUNCTIONS_H
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #define FUNCTIONS_H
 
-#include "Variables.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include "variables.h"
+#include "menu.h"
+#include "iGraphics.h"
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 #include <windows.h>
 #include <mmsystem.h>
-
-#pragma comment(lib, "winmm.lib")
 
 void showQuestionPattern();
 void startPlayerRun();
 void resetSwitchPuzzle();
 void startSwitchPuzzleLevel();
 
-// --- SWITCH PUZZLE FUNCTIONS ---
+void resetLevel1() {
+	loadingStep = 0;
+	sit1Timer = 0;
+	gameplayCounter = 0;
+	playerX = 580;
+	playerY = 130;
+	playerRunning = false;
+	playerEscaped = false;
+	finalMessageStarted = false;
+	levelFinished = false;
+	puzzleScreen = false;
+	showWpOne = false;
+	showWpTwo = false;
+	wrong = false;
+	solved = false;
+}
+
 void generateSwitchSequence() {
 	for (int i = 0; i < 5; i++) {
-		switchSequence[i] = rand() % 2; // 0 for OFF, 1 for ON
+		switchSequence[i] = rand() % 2;
 	}
 }
 
@@ -38,11 +55,11 @@ void resetSwitchPuzzle() {
 }
 
 void moveCharacterRight() {
+	if (isGamePaused) return;
 	charX += 8;
 	charFrame = (charFrame + 1) % 4;
 
 	if (gameState == 70) {
-		// Common Route -> Transition to CCTV Room at right boundary
 		if (charX >= 680) {
 			gameState = 71;
 			charX = 50;
@@ -53,11 +70,15 @@ void moveCharacterRight() {
 }
 
 void showFinalEscapeScreen() {
-	gameState = 56; // Final Escape Screen
+	gameState = 56;
+	loadingStep = 0;
+	if (musicPlaying) {
+		mciSendString(TEXT("pause bgm"), NULL, 0, NULL);
+	}
 }
 
 void startSwitchPuzzleLevel() {
-	gameState = 70; // Common Route
+	gameState = 70;
 	charX = 50;
 	charY = 150;
 	charFrame = 0;
@@ -65,10 +86,9 @@ void startSwitchPuzzleLevel() {
 	resetSwitchPuzzle();
 }
 
-// --- COLOR SEQUENCE PUZZLE FUNCTIONS ---
 void createSequence() {
 	for (int i = 0; i < level; i++) {
-		sequence[i] = rand() % 4;
+		sequence[i] = rand() % 7;
 	}
 	currentDisplayIndex = 0;
 	activeDisplayColor = -1;
@@ -77,6 +97,7 @@ void createSequence() {
 }
 
 void updateSequence() {
+	if (isGamePaused) return;
 	if (gameState != 53) return;
 
 	displayTimer++;
@@ -98,9 +119,10 @@ void updateSequence() {
 }
 
 void narrativeTimer() {
+	if (isGamePaused) return;
 	if (gameState == 50) {
 		sit1Timer++;
-		if (sit1Timer >= 3) {
+		if (sit1Timer >= 5) {
 			sit1Timer = 0;
 			gameState = 51;
 		}
@@ -109,7 +131,8 @@ void narrativeTimer() {
 
 void loadingUpdate()
 {
-	if (gameState != 0 && gameState != 5)
+	if (isGamePaused) return;
+	if (gameState != 0 && gameState != 5 && gameState != 6 && gameState != 56)
 		return;
 
 	loadingStep += 4;
@@ -120,12 +143,33 @@ void loadingUpdate()
 		if (gameState == 0)
 		{
 			gameState = 100;
+			if (musicPlaying) {
+				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
+			}
 		}
 		else if (gameState == 5)
 		{
 			gameState = 50;
 			sit1Timer = 0;
 			gameplayCounter = 0;
+			if (musicPlaying) {
+				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
+			}
+		}
+		else if (gameState == 6)
+		{
+			gameState = 400;
+			if (musicPlaying) {
+				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
+			}
+		}
+		else if (gameState == 56)
+		{
+			gameState = 300;
+			level1Completed = true;
+			if (musicPlaying) {
+				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
+			}
 		}
 	}
 }
@@ -148,10 +192,10 @@ void hideFirstMessage()
 }
 
 void showSecondMessage() {}
-void backToScene(){ puzzleScreen = false; backScene = true; }
-void showFinalMessage(){}
+void backToScene() { puzzleScreen = false; backScene = true; }
+void showFinalMessage() {}
 
-void guardMove(){
+void guardMove() {
 	if (moveRight)
 	{
 		guardX++;
@@ -166,7 +210,7 @@ void guardMove(){
 	}
 }
 
-void playerRunAnimation(){
+void playerRunAnimation() {
 	if (!playerRunning)
 		return;
 
@@ -186,7 +230,7 @@ void playerRunAnimation(){
 	}
 }
 
-void startPlayerRun(){
+void startPlayerRun() {
 	playerRunning = true;
 	puzzleScreen = false;
 	levelFinished = true;
@@ -194,7 +238,7 @@ void startPlayerRun(){
 	showWpOne = false;
 }
 
-void guardAnimation(){
+void guardAnimation() {
 	guardAnimCounter++;
 	if (guardAnimCounter >= 20)
 	{
@@ -205,11 +249,11 @@ void guardAnimation(){
 	}
 }
 
-void generatePuzzle(){
+void generatePuzzle() {
 	current = 0;
 }
 
-void showQuestionPattern(){
+void showQuestionPattern() {
 	if (currentPuzzle == 0) iShowImage(200, 220, 400, 350, que1);
 	else if (currentPuzzle == 1) iShowImage(200, 220, 400, 350, que2);
 	else if (currentPuzzle == 2) iShowImage(200, 220, 400, 350, que3);
@@ -217,8 +261,9 @@ void showQuestionPattern(){
 	else if (currentPuzzle == 4) iShowImage(200, 220, 400, 350, que5);
 }
 
-void fixedUpdate(){
-	// --- PENDING TRANSITIONS MANAGEMENT ---
+void fixedUpdate() {
+	if (isGamePaused) return;
+
 	if (isWaitingToRun) {
 		solvedTickCounter++;
 		if (solvedTickCounter >= 7) {
@@ -227,7 +272,6 @@ void fixedUpdate(){
 		}
 	}
 
-	// --- SWITCH PUZZLE TIMING & MOVEMENT LOGIC (Only in Common Route gameState 70) ---
 	if (gameState == 70) {
 		if (isKeyPressed('d') || isKeyPressed('D') || isKeyPressed(' ') || isSpecialKeyPressed(GLUT_KEY_RIGHT)) {
 			moveCharacterRight();
@@ -242,7 +286,6 @@ void fixedUpdate(){
 		}
 	}
 
-	// CCTV Room & Switch Puzzle Screen (gameState 71)
 	if (gameState == 71) {
 		if (switchShowSequence) {
 			switchTickCounter++;
@@ -398,10 +441,17 @@ void iDraw()
 	iSetColor(0, 0, 0);
 	iFilledRectangle(0, 0, 800, 600);
 
-	if (gameState == 0 || gameState == 5)
+	if (gameState == 0 || gameState == 5 || gameState == 6)
 	{
-		if (gameState == 0) iShowImage(0, 0, 800, 600, loadBg);
-		else iShowImage(0, 0, 800, 600, level1Bg);
+		if (gameState == 0) {
+			iShowImage(0, 0, 800, 600, loadBg);
+		}
+		else if (gameState == 5) {
+			iShowImage(0, 0, 800, 600, level1Bg);
+		}
+		else if (gameState == 6) {
+			iShowImage(0, 0, 800, 600, level2Bg);
+		}
 
 		iSetColor(180, 122, 33);
 		iText(100, 120, "LOADING...", GLUT_BITMAP_TIMES_ROMAN_24);
@@ -412,21 +462,9 @@ void iDraw()
 	}
 	else if (gameState == 100)
 	{
-		iShowImage(0, 0, 800, 600, menuBg);
-
-		if (btnHoverState == 1) iShowImage(340, 365, 300, 50, btnPlayHover);
-		else iShowImage(340, 365, 300, 50, btnPlay);
-
-		if (btnHoverState == 2) iShowImage(340, 295, 300, 50, btnAboutHover);
-		else iShowImage(340, 295, 300, 50, btnAbout);
-
-		if (btnHoverState == 3) iShowImage(340, 235, 300, 50, btnSettingHover);
-		else iShowImage(340, 235, 300, 50, btnSetting);
-
-		if (btnHoverState == 4) iShowImage(340, 175, 300, 50, btnExitHover);
-		else iShowImage(340, 175, 300, 50, btnExit);
+		drawMenu();
 	}
-	else if (gameState >= 200 && gameState <= 206)
+	else if (gameState >= 200 && gameState <= 204)
 	{
 		int currentAbout = about1;
 		if (gameState == 200) currentAbout = about1;
@@ -434,33 +472,37 @@ void iDraw()
 		else if (gameState == 202) currentAbout = about3;
 		else if (gameState == 203) currentAbout = about4;
 		else if (gameState == 204) currentAbout = about5;
-		else if (gameState == 205) currentAbout = aboutBg1;
-		else if (gameState == 206) currentAbout = aboutBg2;
 
-		if (gameState == 205 || gameState == 206)
-		{
-			iShowImage(50, 50, 700, 500, currentAbout);
-		}
-		else
-		{
-			iShowImage(0, 0, 800, 600, currentAbout);
-		}
+		iShowImage(0, 0, 800, 600, currentAbout);
 
 		iShowImage(50, 50, 100, 40, backImg);
-		if (gameState != 206) iShowImage(650, 50, 100, 40, nextImg);
+		if (gameState != 204) iShowImage(650, 50, 100, 40, nextImg);
 	}
 	else if (gameState == 300)
 	{
 		iShowImage(0, 0, 800, 600, levelBg);
 		iShowImage(120, 120, 175, 342, level1Btn);
-		iShowImage(307, 115, 175, 342, level2Btn);
+
+		if (level1Completed) {
+			iShowImage(307, 115, 175, 342, level2UnlockedBtn);
+		}
+		else {
+			iShowImage(307, 115, 175, 342, level2Btn);
+		}
+
 		iShowImage(492, 115, 175, 342, level3Btn);
 		iShowImage(68, 26, 120, 53, backImg);
 	}
-	else if (gameState == 70) // Switch Puzzle Common Route
+	else if (gameState == 400)
+	{
+		iShowImage(0, 0, 800, 600, level2Bg);
+		iShowImage(50, 50, 100, 40, backImg);
+	}
+	else if (gameState == 70)
 	{
 		iShowImage(0, 0, 800, 600, imgCommonRoute);
 		iShowImage(charX, charY, 130, 200, imgChar[charFrame]);
+		iShowImage(50, 50, 100, 40, backImg);
 
 		iSetColor(0, 0, 0);
 		iFilledRectangle(180, 500, 440, 60);
@@ -469,10 +511,11 @@ void iDraw()
 		iSetColor(200, 200, 200);
 		iText(245, 510, "Head to the Security Control Room...", GLUT_BITMAP_HELVETICA_12);
 	}
-	else if (gameState == 71) // CCTV Room & Switch Puzzle Screen
+	else if (gameState == 71)
 	{
 		iShowImage(0, 0, 800, 600, imgCCTVBackground);
 		iShowImage(charX, charY, 140, 220, imgChar[charFrame]);
+		iShowImage(50, 50, 100, 40, backImg);
 
 		iSetColor(0, 0, 0);
 		iFilledRectangle(150, 460, 500, 110);
@@ -504,13 +547,11 @@ void iDraw()
 				}
 			}
 
-			// Draw Clickable ON Button
 			iSetColor(0, 180, 0);
 			iFilledRectangle(260, 400, 120, 45);
 			iSetColor(255, 255, 255);
 			iText(295, 415, "ON", GLUT_BITMAP_HELVETICA_18);
 
-			// Draw Clickable OFF Button
 			iSetColor(180, 0, 0);
 			iFilledRectangle(420, 400, 120, 45);
 			iSetColor(255, 255, 255);
@@ -535,22 +576,26 @@ void iDraw()
 	}
 	else if (gameState == 50) {
 		if (imgsit1 > 0) iShowImage(0, 0, 800, 600, imgsit1);
+		iShowImage(50, 50, 100, 40, backImg);
 	}
 	else if (gameState == 51) {
 		if (imgsit2 > 0) iShowImage(0, 0, 800, 600, imgsit2);
 		if (imgnote > 0) iShowImage(40, -27, 600, 320, imgnote);
+		iShowImage(50, 50, 100, 40, backImg);
 		iSetColor(0, 0, 0);
 		iText(130, 40, "CLICK ON SCREEN TO MOVE FORWARD", GLUT_BITMAP_HELVETICA_18);
 	}
 	else if (gameState == 52) {
 		if (imgBackground > 0) iShowImage(0, 0, 800, 600, imgBackground);
 		if (imgnote > 0) iShowImage(40, -27, 600, 320, imgnote);
+		iShowImage(50, 50, 100, 40, backImg);
 		iSetColor(0, 0, 0);
 		iText(150, 40, "CLICK ANYWHERE TO INSPECT LOCK", GLUT_BITMAP_HELVETICA_18);
 	}
 	else if (gameState == 53 || gameState == 54 || gameState == 57) {
 		if (imgLockScreen > 0) iShowImage(0, 0, 800, 600, imgLockScreen);
 		if (imgnote > 0) iShowImage(0, 0, 600, 350, imgnote);
+		iShowImage(50, 50, 100, 40, backImg);
 
 		iSetColor(0, 0, 0);
 		if (gameState == 53) iText(100, 75, "MEMORIZE THE SEQUENCE...", GLUT_BITMAP_HELVETICA_18);
@@ -575,10 +620,23 @@ void iDraw()
 		if (gameState == 53 && activeDisplayColor == 3) iSetColor(255, 255, 180);
 		else iSetColor(255, 255, 0);
 		iFilledRectangle(yellowX, yellowY, boxSize, boxSize);
+
+		if (gameState == 53 && activeDisplayColor == 4) iSetColor(180, 255, 255);
+		else iSetColor(0, 255, 255);
+		iFilledRectangle(cyanX, cyanY, boxSize, boxSize);
+
+		if (gameState == 53 && activeDisplayColor == 5) iSetColor(255, 180, 255);
+		else iSetColor(255, 0, 255);
+		iFilledRectangle(magentaX, magentaY, boxSize, boxSize);
+
+		if (gameState == 53 && activeDisplayColor == 6) iSetColor(255, 210, 150);
+		else iSetColor(255, 128, 0);
+		iFilledRectangle(orangeX, orangeY, boxSize, boxSize);
 	}
 	else if (gameState == 55) {
 		if (imgLockScreen > 0) iShowImage(0, 0, 800, 600, imgLockScreen);
 		if (imgnote > 0) iShowImage(0, 0, 600, 350, imgnote);
+		iShowImage(50, 50, 100, 40, backImg);
 
 		if (playerImg > 0) iShowImage(530, 180, 140, 180, playerImg);
 		if (nextImg > 0) iShowImage(600, 50, 100, 40, nextImg);
@@ -589,6 +647,7 @@ void iDraw()
 	else if (gameState == 60)
 	{
 		iShowImage(0, 0, 800, 600, bgOne);
+		iShowImage(50, 50, 100, 40, backImg);
 
 		if (moveRight)
 		{
@@ -623,11 +682,6 @@ void iDraw()
 				else
 					iShowImage(playerX, playerY - 2, 60, 77, playerImg);
 			}
-		}
-
-		if (showWpOne)
-		{
-			iShowImage(30, 60, 740, 120, wpOne);
 		}
 
 		if (showWpTwo && !puzzleScreen)
@@ -670,6 +724,269 @@ void iDraw()
 	}
 	else if (gameState == 56) {
 		if (imgEscapeScreen > 0) iShowImage(0, 0, 800, 600, imgEscapeScreen);
+
+		iSetColor(180, 122, 33);
+		iText(100, 120, "LOADING...", GLUT_BITMAP_TIMES_ROMAN_24);
+
+		iRectangle(100, 80, 600, 30);
+		int barWidth = (loadingStep * 600) / 100;
+		iFilledRectangle(100, 80, barWidth, 30);
+	}
+
+	if (gameState == 100 || gameState == 300 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56))
+	{
+		if (settingsImg > 0) {
+			iShowImage(20, 520, 50, 50, settingsImg);
+		}
+
+		if (showSettingsPanel && settingsOnImg > 0) {
+			iShowImage(20, 375, 290, 135, settingsOnImg);
+
+			if (musicPlaying && on1 > 0) {
+				iShowImage(199, 450, 100, 38, on1);
+			}
+			else if (!musicPlaying && off1 > 0) {
+				iShowImage(199, 450, 100, 38, off1);
+			}
+
+			if (soundEnabled && on2 > 0) {
+				iShowImage(199, 400, 100, 38, on2);
+			}
+			else if (!soundEnabled && off2 > 0) {
+				iShowImage(199, 400, 100, 38, off2);
+			}
+		}
+	}
+
+	if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56))
+	{
+		if (isGamePaused) {
+			if (pauseToPlayImg > 0) {
+				iShowImage(74, 509, 60, 70, pauseToPlayImg);
+			}
+		}
+		else {
+			if (pauseImg > 0) {
+				iShowImage(74, 509, 60, 70, pauseImg);
+			}
+		}
+	}
+}
+
+void iMouse(int button, int state, int mx, int my)
+{
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	{
+		if (soundEnabled) {
+			mciSendString(TEXT("seek clicksound to start"), NULL, 0, NULL);
+			mciSendString(TEXT("play clicksound"), NULL, 0, NULL);
+		}
+
+		if (gameState == 100 || gameState == 300 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56))
+		{
+			if (mx >= 20 && mx <= 70 && my >= 520 && my <= 570)
+			{
+				showSettingsPanel = !showSettingsPanel;
+				return;
+			}
+
+			if (showSettingsPanel)
+			{
+				if (mx >= 20 && mx <= 310 && my >= 375 && my <= 510)
+				{
+					if (mx >= 220 && mx <= 300 && my >= 460 && my <= 495)
+					{
+						musicPlaying = !musicPlaying;
+						if (musicPlaying) {
+							mciSendString(TEXT("resume bgm"), NULL, 0, NULL);
+						}
+						else {
+							mciSendString(TEXT("pause bgm"), NULL, 0, NULL);
+						}
+					}
+					else if (mx >= 220 && mx <= 300 && my >= 415 && my <= 450)
+					{
+						soundEnabled = !soundEnabled;
+					}
+					return;
+				}
+				else
+				{
+					showSettingsPanel = false;
+				}
+			}
+		}
+
+		if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56))
+		{
+			if (mx >= 78 && mx <= 132 && my >= 518 && my <= 572)
+			{
+				isGamePaused = !isGamePaused;
+				if (isGamePaused) {
+					if (musicPlaying) {
+						mciSendString(TEXT("pause bgm"), NULL, 0, NULL);
+					}
+				}
+				else {
+					if (musicPlaying) {
+						mciSendString(TEXT("resume bgm"), NULL, 0, NULL);
+					}
+				}
+				return;
+			}
+		}
+
+		if (isGamePaused) return;
+
+		if (gameState == 400 || gameState == 50 || gameState == 51 || gameState == 52 || gameState == 53 || gameState == 54 || gameState == 57 || gameState == 55 || gameState == 60 || gameState == 70 || gameState == 71)
+		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 300;
+				return;
+			}
+		}
+
+		if (gameState == 70 && mx > charX) {
+			targetX = mx;
+		}
+
+		if (gameState == 71) {
+			if (switchShowSequence) {
+				switchShowSequence = false;
+				return;
+			}
+			if (switchWrong) {
+				resetSwitchPuzzle();
+				return;
+			}
+			if (switchSolved) {
+				return;
+			}
+
+			if (mx >= 260 && mx <= 380 && my >= 400 && my <= 445) {
+				int pressed = 1;
+				if (pressed == switchSequence[switchCurrentInput]) {
+					switchCurrentInput++;
+					if (switchCurrentInput == 5) {
+						switchSolved = true;
+					}
+				}
+				else {
+					switchWrong = true;
+				}
+				return;
+			}
+			else if (mx >= 420 && mx <= 540 && my >= 400 && my <= 445) {
+				int pressed = 0;
+				if (pressed == switchSequence[switchCurrentInput]) {
+					switchCurrentInput++;
+					if (switchCurrentInput == 5) {
+						switchSolved = true;
+					}
+				}
+				else {
+					switchWrong = true;
+				}
+				return;
+			}
+		}
+
+		if (gameState == 100)
+		{
+			handleMenuMouse(mx, my);
+		}
+		else if (gameState >= 200 && gameState <= 204)
+		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				if (gameState == 200) gameState = 100;
+				else gameState--;
+			}
+			else if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90 && gameState != 204)
+			{
+				gameState++;
+			}
+		}
+		else if (gameState == 300)
+		{
+			if (mx >= 68 && mx <= 188 && my >= 26 && my <= 79)
+			{
+				gameState = 100;
+			}
+			else if (mx >= 120 && mx <= 295 && my >= 120 && my <= 462)
+			{
+				resetLevel1();
+				gameState = 5;
+				loadingStep = 0;
+				if (musicPlaying) {
+					mciSendString(TEXT("pause bgm"), NULL, 0, NULL);
+				}
+			}
+			else if (mx >= 307 && mx <= 482 && my >= 115 && my <= 457)
+			{
+				gameState = 6;
+				loadingStep = 0;
+				if (musicPlaying) {
+					mciSendString(TEXT("pause bgm"), NULL, 0, NULL);
+				}
+			}
+		}
+		else if (gameState == 51) {
+			gameState = 52;
+			return;
+		}
+		else if (gameState == 52) {
+			createSequence();
+			return;
+		}
+		else if (gameState == 57) {
+			inputIndex = 0;
+			createSequence();
+			return;
+		}
+		else if (gameState == 55) {
+			if (mx >= 600 && mx <= 700 && my >= 50 && my <= 90) {
+				gameState = 60;
+				gameplayCounter = 0;
+				showWpOne = true;
+				showWpTwo = false;
+			}
+			return;
+		}
+		else if (gameState == 60 && playerEscaped) {
+			if (mx >= 650 && mx <= 750 && my >= 30 && my <= 70) {
+				startSwitchPuzzleLevel();
+			}
+			return;
+		}
+		else if (gameState == 56) {
+			return;
+		}
+
+		if (gameState == 54) {
+			int clicked = -1;
+			if (mx >= redX && mx <= redX + boxSize && my >= redY && my <= redY + boxSize) clicked = 0;
+			else if (mx >= blueX && mx <= blueX + boxSize && my >= blueY && my <= blueY + boxSize) clicked = 1;
+			else if (mx >= greenX && mx <= greenX + boxSize && my >= greenY && my <= greenY + boxSize) clicked = 2;
+			else if (mx >= yellowX && mx <= yellowX + boxSize && my >= yellowY && my <= yellowY + boxSize) clicked = 3;
+			else if (mx >= cyanX && mx <= cyanX + boxSize && my >= cyanY && my <= cyanY + boxSize) clicked = 4;
+			else if (mx >= magentaX && mx <= magentaX + boxSize && my >= magentaY && my <= magentaY + boxSize) clicked = 5;
+			else if (mx >= orangeX && mx <= orangeX + boxSize && my >= orangeY && my <= orangeY + boxSize) clicked = 6;
+
+			if (clicked != -1) {
+				playerInput[inputIndex] = clicked;
+				if (playerInput[inputIndex] != sequence[inputIndex]) {
+					gameState = 57;
+					return;
+				}
+				inputIndex++;
+				if (inputIndex == level) {
+					gameState = 55;
+					inputIndex = 0;
+				}
+			}
+		}
 	}
 }
 
@@ -679,11 +996,7 @@ void iPassiveMouseMove(int mx, int my)
 {
 	if (gameState == 100)
 	{
-		if (mx >= 340 && mx <= 640 && my >= 365 && my <= 415) btnHoverState = 1;
-		else if (mx >= 340 && mx <= 640 && my >= 295 && my <= 345) btnHoverState = 2;
-		else if (mx >= 340 && mx <= 640 && my >= 235 && my <= 285) btnHoverState = 3;
-		else if (mx >= 340 && mx <= 640 && my >= 175 && my <= 225) btnHoverState = 4;
-		else btnHoverState = 0;
+		handleMenuPassiveMouse(mx, my);
 	}
 }
 
@@ -692,7 +1005,8 @@ void iKeyboard(unsigned char key) {
 		exit(0);
 	}
 
-	// Switch Puzzle Keyboard Input (gameState 71)
+	if (isGamePaused) return;
+
 	if (gameState == 71) {
 		if (switchPlayerRunning) return;
 
@@ -729,7 +1043,7 @@ void iKeyboard(unsigned char key) {
 }
 
 void iSpecialKeyboard(int key) {
-	// Allow right arrow movement ONLY in Common Route (gameState 70)
+	if (isGamePaused) return;
 	if (key == GLUT_KEY_RIGHT && gameState == 70) {
 		moveCharacterRight();
 	}

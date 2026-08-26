@@ -1,3 +1,5 @@
+#pragma once
+
 //
 //  Original Author: S. M. Shahriar Nirjon
 //
