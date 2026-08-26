@@ -8,17 +8,17 @@
 void drawMenu() {
 	iShowImage(0, 0, 800, 600, menuBg);
 
-	if (btnHoverState == 1) iShowImage(340, 363, 300, 50, btnPlayHover);
-	else iShowImage(340, 363, 300, 50, btnPlay);
+	if (btnHoverState == 1) iShowImage(340, 363, 280, 50, btnPlayHover);
+	else iShowImage(340, 363, 280, 50, btnPlay);
 
-	if (btnHoverState == 2) iShowImage(340, 297, 300, 50, btnAboutHover);
-	else iShowImage(340, 297, 300, 50, btnAbout);
+	if (btnHoverState == 2) iShowImage(340, 297, 280, 50, btnAboutHover);
+	else iShowImage(340, 297, 280, 50, btnAbout);
 
-	if (btnHoverState == 3) iShowImage(340, 237, 300, 50, btncreditHover);
-	else iShowImage(340, 237, 300, 50, btncredit);
+	if (btnHoverState == 3) iShowImage(340, 237, 280, 50, btncreditHover);
+	else iShowImage(340, 237, 280, 50, btncredit);
 
-	if (btnHoverState == 4) iShowImage(340, 175, 300, 50, btnExitHover);
-	else iShowImage(340, 175, 300, 50, btnExit);
+	if (btnHoverState == 4) iShowImage(340, 175, 280, 50, btnExitHover);
+	else iShowImage(340, 175, 280, 50, btnExit);
 }
 
 void handleMenuMouse(int mx, int my) {
