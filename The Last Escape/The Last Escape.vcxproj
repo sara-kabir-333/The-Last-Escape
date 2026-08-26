@@ -66,11 +66,6 @@
   <ItemGroup>
     <ClCompile Include="iMain.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Functions.h" />
-    <ClInclude Include="menu.h" />
-    <ClInclude Include="Variables.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
