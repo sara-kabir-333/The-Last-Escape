@@ -1,160 +1,184 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
 
-#include <ctime>
+int loadBg = 0;
+int menuBg = 0;
+int settingsImg = 0;
+int settingsOnImg = 0;
+int on1 = 0, on2 = 0;
+int off1 = 0, off2 = 0;
 
-extern int loadBg;
-extern int menuBg;
-extern int settingsImg;
-extern int settingsOnImg;
-extern int on1, on2;
-extern int off1, off2;
+int pauseImg = 0;
+int pauseToPlayImg = 0;
+bool isGamePaused = false;
 
-extern int pauseImg;
-extern int pauseToPlayImg;
-extern bool isGamePaused;
+bool showSettingsPanel = false;
+bool musicPlaying = true;
+bool soundEnabled = true;
 
-extern bool showSettingsPanel;
-extern bool musicPlaying;
-extern bool soundEnabled;
+int about1 = 0, about2 = 0, about3 = 0, about4 = 0, about5 = 0;
+int creditnoteImg = 0;
 
-extern int about1, about2, about3, about4, about5;
+int backImg = 0;
+int nextImg = 0;
 
-extern int backImg;
-extern int nextImg;
+int levelBg = 0;
+int level1Bg = 0;
+int level2Bg = 0;
+int level1Btn = 0, level2Btn = 0, level3Btn = 0, level2UnlockedBtn = 0;
+bool level1Completed = false;
 
-extern int levelBg;
-extern int level1Bg;
-extern int level2Bg;
-extern int level1Btn, level2Btn, level3Btn, level2UnlockedBtn;
-extern bool level1Completed;
+int map1Img = 0;
+int cellMapImg = 0;
+int cellMap2Img = 0;
+int cctvMapImg = 0;
+int alarmMapImg = 0;
+bool cctvUnlocked = false;
+bool switchPuzzleCompleted = false;
 
-extern int btnPlay, btnAbout, btncredit, btnExit;
-extern int btnPlayHover, btnAboutHover, btncreditHover, btnExitHover;
+int note1Img = 0;
+int note2Img = 0;
+int note3Img = 0;
+int note4Img = 0;
+int mapHoverState = 0;
 
-extern int bgOne;
-extern int bgTwo;
+int btnPlay = 0, btnAbout = 0, btncredit = 0, btnExit = 0;
+int btnPlayHover = 0, btnAboutHover = 0, btncreditHover = 0, btnExitHover = 0;
 
-extern int wpTwo;
-extern int wpThree;
+int bgOne = 0;
+int bgTwo = 0;
 
-extern int playerImg;
-extern int playerOne;
-extern int playerTwo;
-extern int playerThree;
+int wpTwo = 0;
+int wpThree = 0;
 
-extern int guard1;
-extern int guard3;
-extern int guard4;
-extern int guard5;
+int playerImg = 0;
+int playerOne = 0;
+int playerTwo = 0;
+int playerThree = 0;
 
-extern int que1, que2, que3, que4, que5;
+int guard1 = 0;
+int guard3 = 0;
+int guard4 = 0;
+int guard5 = 0;
+int guard6 = 0;
+int caughtPlayer = 0;
 
-extern int imgBackground;
-extern int imgLockScreen;
-extern int imgEscapeScreen;
-extern int imgnote;
-extern int imgsit1;
-extern int imgsit2;
+int que1 = 0, que2 = 0, que3 = 0, que4 = 0, que5 = 0;
 
-extern int imgCommonRoute;
-extern int imgCCTVBackground;
-extern int imgChar[4];
+int imgBackground = 0;
+int imgLockScreen = 0;
+int imgEscapeScreen = 0;
+int imgnote = 0;
+int imgsit1 = 0;
+int imgsit2 = 0;
 
-extern int gameState;
-extern int loadingStep;
-extern int btnHoverState;
+int imgCommonRoute = 0;
+int imgCCTVBackground = 0;
 
-extern int x;
-extern int y;
+int gameState = 0;
+int loadingStep = 0;
+int btnHoverState = 0;
 
-extern int playerIdleFrame;
-extern int playerIdleCounter;
+int x = 0;
+int y = 0;
 
-extern int playerX;
-extern int playerY;
-extern bool playerRun;
-extern int playerFrame;
+int playerIdleFrame = 0;
+int playerIdleCounter = 0;
 
-extern int guardX;
-extern int guardY;
-extern bool moveRight;
-extern int guardFrame;
-extern int guardAnimCounter;
+int playerX = 580;
+int playerY = 130;
+bool playerRun = false;
+int playerFrame = 0;
 
-extern bool puzzleStart;
-extern bool puzzleSolved;
-extern bool puzzleWrong;
+int guardX = 40;
+int guardY = 276;
+bool moveRight = true;
+int guardFrame = 0;
+int guardAnimCounter = 0;
 
-extern bool showWpOne;
-extern bool showWpTwo;
-extern bool showWpThree;
-extern bool puzzleScreen;
+bool puzzleStart = false;
+bool puzzleSolved = false;
+bool puzzleWrong = false;
+bool memoryWrong = false;
 
-extern char answer[5][4];
+bool showWpOne = false;
+bool showWpTwo = false;
+bool showWpThree = false;
+bool puzzleScreen = false;
 
-extern int currentPuzzle;
-extern int current;
-extern clock_t questionStartTime;
+char answer[5][4] =
+{
+	"496",
+	"859",
+	"274",
+	"631",
+	"512"
+};
 
-extern bool showQuestion;
-extern bool solved;
-extern bool wrong;
+int currentPuzzle = 0;
+int current = 0;
+clock_t questionStartTime = 0;
 
-extern bool keyReleased;
-extern bool digitReleased;
-extern bool rReleased;
+bool showQuestion = true;
+bool solved = false;
+bool wrong = false;
 
-extern bool playerRunning;
-extern bool startRun;
-extern bool playerEscaped;
-extern bool finalMessageStarted;
-extern bool finalMessageShown;
+bool keyReleased = true;
+bool digitReleased = true;
 
-extern bool backScene;
-extern bool levelFinished;
+bool playerRunning = false;
+bool startRun = false;
+bool playerEscaped = false;
+bool finalMessageStarted = false;
+bool finalMessageShown = false;
 
-extern int boxSize;
-extern int redX, redY;
-extern int blueX, blueY;
-extern int greenX, greenY;
-extern int yellowX, yellowY;
-extern int cyanX, cyanY;
-extern int magentaX, magentaY;
-extern int orangeX, orangeY;
+bool backScene = false;
+bool levelFinished = false;
 
-extern int sequence[10];
-extern int level;
-extern int playerInput[10];
-extern int inputIndex;
+int boxSize = 85;
+int redX = 120, redY = 380;
+int blueX = 270, blueY = 380;
+int greenX = 420, greenY = 380;
+int yellowX = 570, yellowY = 380;
+int cyanX = 195, cyanY = 480;
+int magentaX = 345, magentaY = 480;
+int orangeX = 495, orangeY = 480;
 
-extern int currentDisplayIndex;
-extern int activeDisplayColor;
-extern int displayTimer;
+int sequence[10] = { 0 };
+int level = 5;
+int playerInput[10] = { 0 };
+int inputIndex = 0;
 
-extern int switchSequence[5];
-extern int switchCurrentInput;
+int currentDisplayIndex = 0;
+int activeDisplayColor = -1;
+int displayTimer = 0;
 
-extern bool switchShowSequence;
-extern bool switchSolved;
-extern bool switchWrong;
-extern bool switchKeyReleased;
-extern bool switchPlayerRunning;
+int switchSequence[5] = { 0 };
+int switchCurrentInput = 0;
 
-extern int switchTickCounter;
-extern int switchSolvedTickCounter;
+bool switchShowSequence = true;
+bool switchSolved = false;
+bool switchWrong = false;
+bool switchKeyReleased = true;
+bool switchPlayerRunning = false;
 
-extern int charX;
-extern int charY;
-extern int charFrame;
-extern int targetX;
+int switchTickCounter = 0;
+int switchSolvedTickCounter = 0;
 
-extern int solvedTickCounter;
-extern bool isWaitingToRun;
-extern int switchLevelDelayCounter;
-extern bool isWaitingForSwitchLevel;
+int charX = 50;
+int charY = 150;
+int charFrame = 0;
+int targetX = -1;
 
-extern int sit1Timer;
-extern int gameplayCounter;
+int solvedTickCounter = 0;
+bool isWaitingToRun = false;
+int switchLevelDelayCounter = 0;
+bool isWaitingForSwitchLevel = false;
+
+int sit1Timer = 0;
+int gameplayCounter = 0;
+
+int aboutBg1, aboutBg2, btnSetting, btnSettingHover, wpOne;
+int menuHover = 0;
 
 #endif
