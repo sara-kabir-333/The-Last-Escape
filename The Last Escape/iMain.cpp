@@ -192,47 +192,60 @@ int aboutBg1, aboutBg2, btnSetting, btnSettingHover, wpOne;
 int menuHover = 0;
 
 // ==========================================================
-// IMAGE MEMORY PUZZLE (ADDED AFTER CCTV SWITCH PUZZLE)
-// Game states 80-83 are reserved for this puzzle.
+// DODGE FALLING BOXES MINI-GAME (REPLACES IMAGE MEMORY PUZZLE)
+// Game state 80 is reserved for this puzzle.
 // ==========================================================
-const int STATE_MEMORY_WALK = 80;
-const int STATE_MEMORY_SHOW_SEQUENCE = 81;
-const int STATE_MEMORY_SHUFFLING = 82;
-const int STATE_MEMORY_HOLD_AFTER_SHUFFLE = 83;
-const int STATE_MEMORY_PLAY = 84;
-const int STATE_MEMORY_EXIT = 85;
+#define DODGE_MAX_BOXES 5
 
-int memoryState = STATE_MEMORY_WALK;
+const int GAMESTATE_DODGE = 80;
 
-float memoryCharX = -80.0f;
-float memoryTargetCharX = 350.0f;
-int memoryCharFrame = 1;
-int memoryCharAnimCounter = 0;
+bool dodgeGameStarted = false;
+bool dodgeGameOver = false;
+bool dodgeLevelComplete = false;
 
-int memorySequenceLength = 8;
-int memoryTargetSequence[10];
-int memoryGridCardIDs[8];
-float memoryGridCardX[8], memoryGridCardY[8];
-int memoryPlayerSequence[10];
-int memoryPlayerInputIndex = 0;
+int dodgePlayerX;
+int dodgePlayerY = 30;
+int dodgePlayerWidth = 330;
+int dodgePlayerHeight = 130;
+int dodgePlayerSpeed = 6;
+int dodgeActualPlayerWidth = 70;
 
-int memoryShuffleAnimStep = 0;
-const int memoryMaxShuffleSteps = 25;
+int dodgeLevel = 1;
+float dodgeLevelTimeLeft = 10.0f;
 
-bool memoryPuzzleSolved = false;
-bool memoryPuzzleFailed = false;
+// Image handles
+int dodgeBgImg = 0;
+int dodgeBoxImg = 0;
+int dodgeNoteImg = 0;
+int dodgeImgStand = 0;
+int dodgeImgLeft1 = 0, dodgeImgLeft2 = 0;
+int dodgeImgRight1 = 0, dodgeImgRight2 = 0;
+int dodgeCaughtPlayerImg = 0;
 
-int memoryImgCardBack = -1;
-int memoryImgBackground = -1;
-int memoryImgWp = -1;
-int memoryImgChar[5] = { -1, -1, -1, -1, -1 };
-int memoryImgItem[9] = { -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+int dodgeCurrentAnimState = 0;
+int dodgeAnimTimer = 0;
 
-void initMemoryPuzzle(int length);
-void memoryStartShuffleTransition();
-void memoryStartPlayerTurn();
-void memoryAnimationTimer();
-void drawMemoryPuzzle();
+//==========================
+// BOX STRUCT
+//==========================
+typedef struct
+{
+	int x;
+	int y;
+	int width;
+	int height;
+	int speed;
+} DodgeBox;
+
+DodgeBox dodgeBoxes[DODGE_MAX_BOXES];
+
+void resetDodgeBox(int i);
+void resetDodgeGame();
+void nextDodgeLevel();
+bool checkDodgeCollision(DodgeBox b);
+void updateDodgeGame();
+void drawDodgeGame();
+void handleDodgeMouseClick(int mx, int my);
 void resetLevel1();
 
 
@@ -282,6 +295,65 @@ void usbAnimateCharacter();
 void usbDrawGame();
 void usbHandleMouseClick(int mx, int my);
 void usbHandleKeyboard(unsigned char key);
+
+// Auto-return-to-map timer for when the USB game is won
+bool usbCompletionTimerStarted = false;
+double usbCompletionTimerStart = 0;
+
+// ==========================================================
+// LEVEL 2 MAP SCREEN (NEW)
+// Shown after the Level 2 loading screen. Room 361 leads to
+// the USB mini-game; Room 363 leads to the torn-pieces
+// investigation puzzle. Both return here automatically when
+// completed.
+// ==========================================================
+const int GAMESTATE_LEVEL2_MAP = 450;
+
+int level2MapImg = 0;
+
+// ==========================================================
+// INVESTIGATION PUZZLE (TORN PIECES) - NEW MODULE
+// Runs entirely inside gameState == 460. Stage 1 = search the
+// room for 6 torn pieces; Stage 2 = arrange them on the table.
+// ==========================================================
+const int GAMESTATE_INVESTIGATION = 460;
+
+int investStage = 1; // 1 = Search Room, 2 = Table Arrangement
+int investPiecesFoundCount = 0;
+
+int investPieceX[6] = { 50, 400, 50, 400, 50, 400 };
+int investPieceY[6] = { 50, 50, 250, 250, 400, 400 };
+
+int investCorrectX[6] = { 265, 378, 470, 245, 350, 447 };
+int investCorrectY[6] = { 316, 310, 317, 220, 220, 211 };
+
+bool investCollected[6] = { false, false, false, false, false, false };
+bool investPlaced[6] = { false, false, false, false, false, false };
+
+int investDraggedPiece = -1;
+bool investIsDragging = false;
+int investGrabOffsetX = 0;
+int investGrabOffsetY = 0;
+
+const int INVEST_PIECE_SIZE_W = 120;
+const int INVEST_PIECE_SIZE_H = 120;
+
+bool investPuzzleCompletedFlag = false;
+double investCompletionTimerStart = 0;
+
+int investRoomImg = 0;
+int investTableImg = 0;
+int investPieceImg[6] = { 0, 0, 0, 0, 0, 0 };
+int investNoteImg = 0;
+
+void resetInvestPuzzle();
+void checkInvestSearchLocation(int mx, int my);
+void checkInvestPiecePlacement(int pieceIndex);
+bool checkIfInvestPuzzleComplete();
+void drawInvestPuzzle();
+void handleInvestMouseDown(int mx, int my);
+void handleInvestMouseUp(int mx, int my);
+void handleInvestMouseMove(int mx, int my);
 
 void drawMenu() {
 	if (menuBg > 0) {
@@ -472,8 +544,8 @@ void loadingUpdate()
 		}
 		else if (gameState == 6)
 		{
-			gameState = 400;
-			usbInitGame();
+			gameState = GAMESTATE_LEVEL2_MAP;
+			loadingStep = 0;
 			if (musicPlaying) {
 				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
 			}
@@ -762,270 +834,427 @@ void fixedUpdate() {
 			}
 		}
 	}
-}
 
+	// ==========================================================
+	// DODGE FALLING BOXES MINI-GAME UPDATE (REPLACES IMAGE MEMORY PUZZLE)
+	// ==========================================================
+	if (gameState == GAMESTATE_DODGE)
+	{
+		updateDodgeGame();
 
-void initMemoryPuzzle(int length) {
-	memorySequenceLength = length;
-	if (memorySequenceLength > 8) memorySequenceLength = 8;
+		bool isMovingRight = false;
+		bool isMovingLeft = false;
 
-	memoryCharX = -80.0f;
-	memoryTargetCharX = 350.0f;
-	memoryCharFrame = 1;
-	memoryCharAnimCounter = 0;
+		if (dodgeGameStarted && !dodgeGameOver && !dodgeLevelComplete)
+		{
+			if (isSpecialKeyPressed(GLUT_KEY_LEFT))
+			{
+				dodgePlayerX -= dodgePlayerSpeed;
+				if (dodgePlayerX < -320)
+					dodgePlayerX = -320;
 
-	for (int i = 0; i < 8; i++) {
-		int row = i / 4;
-		int col = i % 4;
-		memoryGridCardX[i] = 145.0f + col * 135.0f;
-		memoryGridCardY[i] = 370.0f - row * 135.0f;
-		memoryGridCardIDs[i] = i + 1;
-	}
+				isMovingLeft = true;
+				dodgeAnimTimer++;
+				if ((dodgeAnimTimer / 5) % 2 == 0) dodgeCurrentAnimState = 1;
+				else dodgeCurrentAnimState = 2;
+			}
 
-	for (int i = 0; i < memorySequenceLength; i++) {
-		int candidate;
-		bool duplicate;
-		do {
-			duplicate = false;
-			candidate = (rand() % 8) + 1;
-			for (int j = 0; j < i; j++) {
-				if (memoryTargetSequence[j] == candidate) {
-					duplicate = true;
-					break;
+			if (isSpecialKeyPressed(GLUT_KEY_RIGHT))
+			{
+				dodgePlayerX += dodgePlayerSpeed;
+				if (dodgePlayerX + 320 + dodgeActualPlayerWidth > 800)
+					dodgePlayerX = 800 - 250 - dodgeActualPlayerWidth;
+
+				isMovingRight = true;
+				dodgeAnimTimer++;
+
+				int frame = (dodgeAnimTimer / 6) % 3;
+				if (frame == 0) dodgeCurrentAnimState = 0;
+				else if (frame == 1) dodgeCurrentAnimState = 3;
+				else dodgeCurrentAnimState = 4;
+			}
+		}
+
+		if (!isMovingRight && !isMovingLeft)
+		{
+			if (dodgeAnimTimer > 0)
+			{
+				dodgeAnimTimer--;
+				if (dodgeAnimTimer == 0)
+				{
+					dodgeCurrentAnimState = 0;
 				}
 			}
-		} while (duplicate);
-		memoryTargetSequence[i] = candidate;
-	}
-
-	memoryPlayerInputIndex = 0;
-	memoryShuffleAnimStep = 0;
-	memoryPuzzleSolved = false;
-	memoryPuzzleFailed = false;
-	memoryState = STATE_MEMORY_WALK;
-}
-
-void memoryStartShuffleTransition() {
-	if (memoryState != STATE_MEMORY_SHOW_SEQUENCE) return;
-
-	memoryState = STATE_MEMORY_SHUFFLING;
-	memoryShuffleAnimStep = 0;
-
-	for (int i = 7; i > 0; i--) {
-		int j = rand() % (i + 1);
-		int temp = memoryGridCardIDs[i];
-		memoryGridCardIDs[i] = memoryGridCardIDs[j];
-		memoryGridCardIDs[j] = temp;
+		}
 	}
 }
 
-void memoryStartPlayerTurn() {
-	if (memoryState == STATE_MEMORY_HOLD_AFTER_SHUFFLE) {
-		memoryState = STATE_MEMORY_PLAY;
+//==========================
+// DODGE FALLING BOXES: BOX FUNCTIONS
+//==========================
+void resetDodgeBox(int i)
+{
+	dodgeBoxes[i].width = 50 + rand() % 25;
+	dodgeBoxes[i].height = 40 + rand() % 15;
+
+	dodgeBoxes[i].x = rand() % (800 - dodgeBoxes[i].width);
+	dodgeBoxes[i].y = 600 + rand() % 300;
+
+	dodgeBoxes[i].speed = 4 + dodgeLevel + rand() % 3;
+}
+
+void resetDodgeGame()
+{
+	dodgePlayerX = -320;
+
+	dodgeGameStarted = false;
+	dodgeGameOver = false;
+	dodgeLevelComplete = false;
+
+	dodgeLevel = 1;
+	dodgeLevelTimeLeft = 4.0f;
+	dodgeCurrentAnimState = 0;
+
+	for (int i = 0; i < DODGE_MAX_BOXES; i++)
+		resetDodgeBox(i);
+}
+
+void nextDodgeLevel()
+{
+	dodgeLevel++;
+	dodgeLevelTimeLeft = 3.0f;
+	dodgeLevelComplete = false;
+
+	dodgePlayerX = -320;
+	dodgeCurrentAnimState = 0;
+
+	for (int i = 0; i < DODGE_MAX_BOXES; i++)
+	{
+		resetDodgeBox(i);
 	}
 }
 
-void memoryAnimationTimer() {
-	if (isGamePaused) return;
+bool checkDodgeCollision(DodgeBox b)
+{
+	int leftBound = dodgePlayerX + 320 + 20;
+	int rightBound = dodgePlayerX + 320 + 50;
+	int topBound = dodgePlayerY + dodgePlayerHeight - 35;
+	int bottomBound = dodgePlayerY + 5;
 
-	if (memoryState == STATE_MEMORY_WALK) {
-		memoryCharX += 4.0f;
-		memoryCharAnimCounter++;
+	return (leftBound < b.x + b.width &&
+		rightBound > b.x &&
+		bottomBound < b.y + b.height &&
+		topBound > b.y);
+}
 
-		if (memoryCharAnimCounter >= 5) {
-			memoryCharFrame++;
-			if (memoryCharFrame > 4) memoryCharFrame = 1;
-			memoryCharAnimCounter = 0;
-		}
+void updateDodgeGame()
+{
+	if (!dodgeGameStarted || dodgeGameOver || dodgeLevelComplete)
+		return;
 
-		if (memoryCharX >= memoryTargetCharX) {
-			memoryCharX = memoryTargetCharX;
-			memoryState = STATE_MEMORY_SHOW_SEQUENCE;
-			iSetTimer(8000, memoryStartShuffleTransition);
-		}
-	}
-	else if (memoryState == STATE_MEMORY_EXIT) {
-		memoryCharX += 5.0f;
-		memoryCharAnimCounter++;
+	dodgeLevelTimeLeft -= 0.02f;
 
-		if (memoryCharAnimCounter >= 4) {
-			memoryCharFrame++;
-			if (memoryCharFrame > 4) memoryCharFrame = 1;
-			memoryCharAnimCounter = 0;
-		}
+	int rightBoundary = 800 - 250 - dodgeActualPlayerWidth;
+	if (dodgePlayerX >= rightBoundary - 5)
+	{
+		dodgeLevelComplete = true;
 
-		if (memoryCharX > 850) {
-			memoryState = STATE_MEMORY_WALK;
+		// Integration hook: finishing Level 1 of the dodge game completes
+		// this puzzle for the main game, same as the old memory puzzle did.
+		if (dodgeLevel == 1) {
 			level1Completed = true;
-			gameState = 300;
 		}
-	}
-
-	if (memoryState == STATE_MEMORY_SHUFFLING) {
-		memoryShuffleAnimStep++;
-
-		for (int i = 0; i < 8; i++) {
-			int row = i / 4;
-			int col = i % 4;
-			float finalX = 145.0f + col * 135.0f;
-			float finalY = 370.0f - row * 135.0f;
-
-			if (memoryShuffleAnimStep < memoryMaxShuffleSteps) {
-				memoryGridCardX[i] += (finalX - memoryGridCardX[i]) * 0.25f;
-				memoryGridCardY[i] += (finalY - memoryGridCardY[i]) * 0.25f;
-			}
-		}
-
-		if (memoryShuffleAnimStep >= memoryMaxShuffleSteps) {
-			for (int i = 0; i < 8; i++) {
-				int row = i / 4;
-				int col = i % 4;
-				memoryGridCardX[i] = 145.0f + col * 135.0f;
-				memoryGridCardY[i] = 370.0f - row * 135.0f;
-			}
-
-			memoryState = STATE_MEMORY_HOLD_AFTER_SHUFFLE;
-			iSetTimer(5000, memoryStartPlayerTurn);
-		}
-	}
-}
-
-void drawMemoryPuzzle() {
-	if (memoryImgBackground != -1)
-		iShowImage(0, 0, 800, 600, memoryImgBackground);
-	else {
-		iSetColor(20, 30, 45);
-		iFilledRectangle(0, 0, 800, 600);
-	}
-
-	if (memoryImgWp != -1)
-		iShowImage(100, 20, 600, 90, memoryImgWp);
-
-	if (memoryState == STATE_MEMORY_WALK || memoryState == STATE_MEMORY_EXIT) {
-		if (memoryImgChar[memoryCharFrame] != -1)
-			iShowImage((int)memoryCharX, 150, 80, 100, memoryImgChar[memoryCharFrame]);
-	}
-	else {
-		if (memoryImgChar[1] != -1)
-			iShowImage((int)memoryCharX, 150, 80, 100, memoryImgChar[1]);
-	}
-
-	iSetColor(50, 25, 0);
-
-	if (memoryPuzzleFailed) {
-		if (imgnote > 0) {
-			iShowImage(150, 20, 500, 200, imgnote);
-		}
-		iSetColor(150, 0, 0);
-		iText(245, 65, "ALARM TRIGGERED! YOU WERE CAUGHT.", GLUT_BITMAP_HELVETICA_18);
-		iSetColor(0, 0, 0);
-		iText(200, 50, "CLICK ANYWHERE TO RESTART FROM THE BOX PUZZLE", GLUT_BITMAP_HELVETICA_18);
 		return;
 	}
 
-	if (memoryState == STATE_MEMORY_WALK) {
-		iText(190, 40, "PRISONER ESCAPING...", GLUT_BITMAP_HELVETICA_12);
+	if (dodgeLevelTimeLeft <= 0.0f)
+	{
+		dodgeLevelTimeLeft = 0.0f;
+		if (soundEnabled) {
+			PlaySound(TEXT("caughtalarm.wav"), NULL, SND_ASYNC | SND_FILENAME);
+		}
+		dodgeGameOver = true;
+		return;
 	}
-	else if (memoryState == STATE_MEMORY_SHOW_SEQUENCE) {
-		iText(190, 40, "STEP 1: MEMORIZE ALL 8 ITEMS IN SEQUENCE", GLUT_BITMAP_HELVETICA_12);
 
-		for (int i = 0; i < 8; i++) {
-			int xPos = (int)memoryGridCardX[i];
-			int yPos = (int)memoryGridCardY[i];
+	for (int i = 0; i < DODGE_MAX_BOXES; i++)
+	{
+		dodgeBoxes[i].y -= dodgeBoxes[i].speed;
 
-			iSetColor(40, 50, 70);
-			iFilledRectangle(xPos, yPos, 100, 100);
-
-			int seqOrder = -1;
-			for (int t = 0; t < memorySequenceLength; t++) {
-				if (memoryTargetSequence[t] == memoryGridCardIDs[i]) {
-					seqOrder = t + 1;
-					break;
-				}
+		if (checkDodgeCollision(dodgeBoxes[i]))
+		{
+			if (soundEnabled) {
+				PlaySound(TEXT("caughtalarm.wav"), NULL, SND_ASYNC | SND_FILENAME);
 			}
+			dodgeGameOver = true;
+			return;
+		}
 
-			if (seqOrder != -1) {
-				iSetColor(255, 215, 0);
-				iRectangle(xPos, yPos, 100, 100);
-				iRectangle(xPos - 1, yPos - 1, 102, 102);
+		if (dodgeBoxes[i].y + dodgeBoxes[i].height < 0)
+		{
+			resetDodgeBox(i);
+		}
+	}
+}
+
+void drawDodgeGame()
+{
+	// 1. Start Screen / Instruction Menu
+	if (!dodgeGameStarted)
+	{
+		iShowImage(0, 0, 800, 600, dodgeBgImg);
+		iShowImage(dodgePlayerX, dodgePlayerY, dodgePlayerWidth, dodgePlayerHeight, dodgeImgStand);
+		iShowImage(130, -25, 500, 280, dodgeNoteImg);
+
+		iSetColor(0, 0, 0);
+		iText(230, 40, "REACH THE RIGHT SIDE IN 4 SEC", GLUT_BITMAP_HELVETICA_18);
+		iText(280, 15, "Click Mouse to Start", GLUT_BITMAP_HELVETICA_18);
+
+		iShowImage(50, 50, 100, 40, backImg);
+		return;
+	}
+
+	// 2. Main Gameplay Background
+	iShowImage(0, 0, 800, 600, dodgeBgImg);
+
+	iSetColor(255, 255, 255);
+	iText(20, 570, "DODGE & REACH THE RIGHT SIDE!", GLUT_BITMAP_HELVETICA_18);
+
+	char str[100];
+	sprintf(str, "Level : %d", dodgeLevel);
+	iText(20, 540, str, GLUT_BITMAP_HELVETICA_18);
+
+	sprintf(str, "Time Left : %.1f s", dodgeLevelTimeLeft);
+	iText(20, 515, str, GLUT_BITMAP_HELVETICA_18);
+
+	// 3. Draw Character Animation Frame (Hide if game over to show caught state)
+	if (!dodgeGameOver)
+	{
+		if (dodgeCurrentAnimState == 0)
+			iShowImage(dodgePlayerX, dodgePlayerY, dodgePlayerWidth, dodgePlayerHeight, dodgeImgStand);
+		else if (dodgeCurrentAnimState == 1)
+			iShowImage(dodgePlayerX, dodgePlayerY, dodgePlayerWidth, dodgePlayerHeight, dodgeImgLeft1);
+		else if (dodgeCurrentAnimState == 2)
+			iShowImage(dodgePlayerX, dodgePlayerY, dodgePlayerWidth, dodgePlayerHeight, dodgeImgLeft2);
+		else if (dodgeCurrentAnimState == 3)
+			iShowImage(dodgePlayerX, dodgePlayerY, dodgePlayerWidth, dodgePlayerHeight, dodgeImgRight1);
+		else if (dodgeCurrentAnimState == 4)
+			iShowImage(dodgePlayerX, dodgePlayerY, dodgePlayerWidth, dodgePlayerHeight, dodgeImgRight2);
+	}
+
+	// 4. Falling Boxes
+	for (int i = 0; i < DODGE_MAX_BOXES; i++)
+	{
+		iShowImage(dodgeBoxes[i].x, dodgeBoxes[i].y, dodgeBoxes[i].width, dodgeBoxes[i].height, dodgeBoxImg);
+	}
+
+	// 5. Level Complete Screen
+	if (dodgeLevelComplete)
+	{
+		iShowImage(30, -15, 740, 300, dodgeNoteImg);
+
+		iSetColor(0, 150, 0);
+		iText(315, 55, "LEVEL COMPLETE!", GLUT_BITMAP_TIMES_ROMAN_24);
+
+		iSetColor(0, 0, 0);
+		if (level1Completed) {
+			iText(275, 30, "Click Mouse to Return to the Map", GLUT_BITMAP_HELVETICA_18);
+		}
+		else {
+			iText(290, 30, "Click Mouse for Next Level", GLUT_BITMAP_HELVETICA_18);
+		}
+	}
+
+	// 6. Game Over Screen (Directly shows caught player image)
+	if (dodgeGameOver)
+	{
+		iShowImage(dodgePlayerX, dodgePlayerY, dodgePlayerWidth, dodgePlayerHeight, dodgeCaughtPlayerImg);
+
+		iShowImage(30, -15, 740, 300, dodgeNoteImg);
+
+		iSetColor(255, 0, 0);
+		iText(320, 55, "CAUGHT BY GUARD!", GLUT_BITMAP_TIMES_ROMAN_24);
+
+		iSetColor(0, 0, 0);
+		iText(305, 30, "Click Mouse to Restart", GLUT_BITMAP_HELVETICA_18);
+	}
+
+	iShowImage(50, 50, 100, 40, backImg);
+}
+
+void handleDodgeMouseClick(int mx, int my)
+{
+	if (!dodgeGameStarted)
+	{
+		dodgeGameStarted = true;
+		return;
+	}
+	else if (dodgeGameOver)
+	{
+		resetDodgeGame();
+		return;
+	}
+	else if (dodgeLevelComplete)
+	{
+		if (level1Completed) {
+			gameState = 350;
+		}
+		else {
+			nextDodgeLevel();
+		}
+		return;
+	}
+}
+
+//==========================
+// INVESTIGATION PUZZLE (TORN PIECES) FUNCTIONS
+//==========================
+void resetInvestPuzzle() {
+	investStage = 1;
+	investPiecesFoundCount = 0;
+	investPuzzleCompletedFlag = false;
+	investDraggedPiece = -1;
+	investIsDragging = false;
+
+	int defaultPieceX[6] = { 50, 400, 50, 400, 50, 400 };
+	int defaultPieceY[6] = { 50, 50, 250, 250, 400, 400 };
+
+	for (int i = 0; i < 6; i++) {
+		investCollected[i] = false;
+		investPlaced[i] = false;
+		investPieceX[i] = defaultPieceX[i];
+		investPieceY[i] = defaultPieceY[i];
+	}
+}
+
+void checkInvestSearchLocation(int mx, int my) {
+	if (investStage != 1) return;
+
+	if (mx >= 350 && mx <= 480 && my >= 100 && my <= 180) { if (!investCollected[0]) { investCollected[0] = true; investPiecesFoundCount++; } }
+	if (mx >= 60 && mx <= 160 && my >= 280 && my <= 360)  { if (!investCollected[1]) { investCollected[1] = true; investPiecesFoundCount++; } }
+	if (mx >= 550 && mx <= 680 && my >= 240 && my <= 360) { if (!investCollected[2]) { investCollected[2] = true; investPiecesFoundCount++; } }
+	if (mx >= 30 && mx <= 130 && my >= 40 && my <= 120)   { if (!investCollected[3]) { investCollected[3] = true; investPiecesFoundCount++; } }
+	if (mx >= 190 && mx <= 260 && my >= 40 && my <= 160)  { if (!investCollected[4]) { investCollected[4] = true; investPiecesFoundCount++; } }
+	if (mx >= 380 && mx <= 450 && my >= 220 && my <= 280) { if (!investCollected[5]) { investCollected[5] = true; investPiecesFoundCount++; } }
+
+	if (investPiecesFoundCount >= 6) {
+		investStage = 2;
+	}
+}
+
+void checkInvestPiecePlacement(int pieceIndex) {
+	int diffX = investPieceX[pieceIndex] - investCorrectX[pieceIndex];
+	int diffY = investPieceY[pieceIndex] - investCorrectY[pieceIndex];
+
+	if (diffX > -40 && diffX < 40 && diffY > -40 && diffY < 40) {
+		investPieceX[pieceIndex] = investCorrectX[pieceIndex];
+		investPieceY[pieceIndex] = investCorrectY[pieceIndex];
+		investPlaced[pieceIndex] = true;
+	}
+}
+
+bool checkIfInvestPuzzleComplete() {
+	for (int i = 0; i < 6; i++) {
+		if (!investPlaced[i]) return false;
+	}
+	return true;
+}
+
+void drawInvestPuzzle() {
+	if (investStage == 1) {
+		if (investRoomImg > 0) iShowImage(0, 0, 800, 600, investRoomImg);
+		if (investNoteImg > 0) iShowImage(150, -25, 480, 280, investNoteImg);
+
+		iSetColor(0, 0, 0);
+		iText(220, 35, "Collect 6 torn pieces from the room", GLUT_BITMAP_HELVETICA_18);
+
+		char counterText[50];
+		sprintf(counterText, "Pieces Found: %d/6", investPiecesFoundCount);
+		iSetColor(255, 255, 255);
+		iText(30, 560, counterText, GLUT_BITMAP_HELVETICA_18);
+	}
+	else if (investStage == 2) {
+		if (investTableImg > 0) iShowImage(0, 0, 800, 600, investTableImg);
+		if (investNoteImg > 0) iShowImage(150, -25, 480, 280, investNoteImg);
+
+		iSetColor(0, 0, 0);
+		iText(190, 45, "Stage 2: Arrange the 6 pieces into position", GLUT_BITMAP_HELVETICA_18);
+
+		for (int i = 0; i < 6; i++) {
+			iSetColor(255, 255, 255);
+			iRectangle(investCorrectX[i], investCorrectY[i], 80, 40);
+
+			char outlineNum[10];
+			sprintf(outlineNum, "Point %d", i + 1);
+			iText(investCorrectX[i] + 15, investCorrectY[i] + 12, outlineNum, GLUT_BITMAP_HELVETICA_12);
+		}
+
+		for (int i = 0; i < 6; i++) {
+			if (investPieceImg[i] > 0) {
+				iShowImage(investPieceX[i], investPieceY[i], INVEST_PIECE_SIZE_W, INVEST_PIECE_SIZE_H, investPieceImg[i]);
+			}
+		}
+
+		if (checkIfInvestPuzzleComplete() && !investPuzzleCompletedFlag) {
+			investPuzzleCompletedFlag = true;
+			investCompletionTimerStart = GetTickCount64();
+		}
+
+		if (investPuzzleCompletedFlag) {
+			double elapsedTime = (GetTickCount64() - investCompletionTimerStart) / 1000.0;
+
+			if (elapsedTime < 3.0) {
+				iSetColor(0, 0, 255);
+				iText(280, 20, "Assembling Room Data...", GLUT_BITMAP_HELVETICA_18);
 			}
 			else {
-				iSetColor(0, 255, 204);
-				iRectangle(xPos, yPos, 100, 100);
-			}
-
-			int itemID = memoryGridCardIDs[i];
-			if (memoryImgItem[itemID] != -1)
-				iShowImage(xPos + 18, yPos + 18, 64, 64, memoryImgItem[itemID]);
-
-			if (seqOrder != -1) {
-				char orderStr[10];
-				sprintf(orderStr, "#%d", seqOrder);
-				iSetColor(255, 255, 0);
-				iText(xPos + 8, yPos + 75, orderStr, GLUT_BITMAP_HELVETICA_18);
+				resetInvestPuzzle();
+				gameState = GAMESTATE_LEVEL2_MAP;
 			}
 		}
 	}
-	else if (memoryState == STATE_MEMORY_SHUFFLING ||
-		memoryState == STATE_MEMORY_HOLD_AFTER_SHUFFLE) {
 
-		iText(190, 40, "STUDY FINAL POSITIONS (CARDS REMAIN FACE-UP)",
-			GLUT_BITMAP_HELVETICA_12);
+	iShowImage(50, 50, 100, 40, backImg);
+}
 
-		for (int i = 0; i < 8; i++) {
-			int xPos = (int)memoryGridCardX[i];
-			int yPos = (int)memoryGridCardY[i];
+void handleInvestMouseDown(int mx, int my) {
+	if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90) {
+		gameState = GAMESTATE_LEVEL2_MAP;
+		return;
+	}
 
-			iSetColor(40, 50, 70);
-			iFilledRectangle(xPos, yPos, 100, 100);
-			iSetColor(255, 215, 0);
-			iRectangle(xPos, yPos, 100, 100);
+	if (investStage == 1) {
+		checkInvestSearchLocation(mx, my);
+	}
+	else if (investStage == 2 && !investPuzzleCompletedFlag) {
+		for (int i = 5; i >= 0; i--) {
+			if (!investPlaced[i]) {
+				if (mx >= investPieceX[i] && mx <= investPieceX[i] + INVEST_PIECE_SIZE_W &&
+					my >= investPieceY[i] && my <= investPieceY[i] + INVEST_PIECE_SIZE_H) {
 
-			int itemID = memoryGridCardIDs[i];
-			if (memoryImgItem[itemID] != -1)
-				iShowImage(xPos + 18, yPos + 18, 64, 64, memoryImgItem[itemID]);
-
-			int seqOrder = -1;
-			for (int t = 0; t < memorySequenceLength; t++) {
-				if (memoryTargetSequence[t] == memoryGridCardIDs[i]) {
-					seqOrder = t + 1;
+					investDraggedPiece = i;
+					investIsDragging = true;
+					investGrabOffsetX = mx - investPieceX[i];
+					investGrabOffsetY = my - investPieceY[i];
 					break;
 				}
 			}
-
-			if (seqOrder != -1) {
-				char orderStr[10];
-				sprintf(orderStr, "#%d", seqOrder);
-				iSetColor(255, 255, 0);
-				iText(xPos + 8, yPos + 75, orderStr, GLUT_BITMAP_HELVETICA_18);
-			}
 		}
 	}
-	else if (memoryState == STATE_MEMORY_PLAY) {
-		iText(190, 40, "STEP 2: CLICK ALL 8 CARDS IN SEQUENCE",
-			GLUT_BITMAP_HELVETICA_12);
+}
 
-		for (int i = 0; i < 8; i++) {
-			int xPos = (int)memoryGridCardX[i];
-			int yPos = (int)memoryGridCardY[i];
-
-			iSetColor(60, 70, 90);
-			iFilledRectangle(xPos, yPos, 100, 100);
-
-			iSetColor(255, 255, 255);
-			iRectangle(xPos, yPos, 100, 100);
-
-			if (memoryImgCardBack != -1)
-				iShowImage(xPos + 18, yPos + 18, 64, 64, memoryImgCardBack);
-
-			char cardNum[20];
-			sprintf(cardNum, "Slot %d", i + 1);
-			iText(xPos + 25, yPos - 20, cardNum, GLUT_BITMAP_HELVETICA_12);
-		}
+void handleInvestMouseUp(int mx, int my) {
+	if (investStage == 2 && investIsDragging && investDraggedPiece != -1) {
+		checkInvestPiecePlacement(investDraggedPiece);
+		investDraggedPiece = -1;
+		investIsDragging = false;
 	}
-	else if (memoryState == STATE_MEMORY_EXIT) {
-		iSetColor(0, 100, 0);
-		iText(300, 40, "ACCESS GRANTED!", GLUT_BITMAP_HELVETICA_18);
+}
+
+void handleInvestMouseMove(int mx, int my) {
+	if (investStage == 2 && investIsDragging && investDraggedPiece != -1) {
+		investPieceX[investDraggedPiece] = mx - investGrabOffsetX;
+		investPieceY[investDraggedPiece] = my - investGrabOffsetY;
 	}
 }
 
@@ -1390,12 +1619,21 @@ void iDraw()
 		int barWidth = (loadingStep * 600) / 100;
 		iFilledRectangle(100, 80, barWidth, 30);
 	}
-	else if (gameState >= STATE_MEMORY_WALK && gameState <= STATE_MEMORY_EXIT)
+	else if (gameState == GAMESTATE_DODGE)
 	{
-		drawMemoryPuzzle();
+		drawDodgeGame();
+	}
+	else if (gameState == GAMESTATE_LEVEL2_MAP)
+	{
+		if (level2MapImg > 0) iShowImage(0, 0, 800, 600, level2MapImg);
+		if (backImg > 0) iShowImage(50, 50, 100, 40, backImg);
+	}
+	else if (gameState == GAMESTATE_INVESTIGATION)
+	{
+		drawInvestPuzzle();
 	}
 
-	if (gameState == 100 || gameState == 210 || gameState == 300 || gameState == 350 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || (gameState >= STATE_MEMORY_WALK && gameState <= STATE_MEMORY_EXIT))
+	if (gameState == 100 || gameState == 210 || gameState == 300 || gameState == 350 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || gameState == GAMESTATE_DODGE || gameState == GAMESTATE_LEVEL2_MAP || gameState == GAMESTATE_INVESTIGATION)
 	{
 		if (settingsImg > 0 && gameState != 210) {
 			iShowImage(20, 520, 50, 50, settingsImg);
@@ -1420,7 +1658,7 @@ void iDraw()
 		}
 	}
 
-	if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || (gameState >= STATE_MEMORY_WALK && gameState <= STATE_MEMORY_EXIT))
+	if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || gameState == GAMESTATE_DODGE)
 	{
 		if (isGamePaused) {
 			if (pauseToPlayImg > 0) {
@@ -1444,7 +1682,7 @@ void iMouse(int button, int state, int mx, int my)
 			mciSendString(TEXT("play clicksound"), NULL, 0, NULL);
 		}
 
-		if (gameState == 100 || gameState == 300 || gameState == 350 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || (gameState >= STATE_MEMORY_WALK && gameState <= STATE_MEMORY_EXIT))
+		if (gameState == 100 || gameState == 300 || gameState == 350 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || gameState == GAMESTATE_DODGE || gameState == GAMESTATE_LEVEL2_MAP || gameState == GAMESTATE_INVESTIGATION)
 		{
 			if (mx >= 20 && mx <= 70 && my >= 520 && my <= 570)
 			{
@@ -1479,7 +1717,7 @@ void iMouse(int button, int state, int mx, int my)
 			}
 		}
 
-		if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || (gameState >= STATE_MEMORY_WALK && gameState <= STATE_MEMORY_EXIT))
+		if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || gameState == GAMESTATE_DODGE)
 		{
 			if (mx >= 78 && mx <= 132 && my >= 518 && my <= 572)
 			{
@@ -1539,55 +1777,54 @@ void iMouse(int button, int state, int mx, int my)
 		}
 
 		// ======================================================
-		// IMAGE MEMORY PUZZLE MOUSE INPUT
+		// DODGE FALLING BOXES MOUSE INPUT
 		// ======================================================
-		if (gameState >= STATE_MEMORY_WALK && gameState <= STATE_MEMORY_EXIT)
+		if (gameState == GAMESTATE_DODGE)
 		{
-			if (memoryPuzzleFailed)
-			{
-				resetLevel1();
-				createSequence(); // Restarts directly from the box puzzle state (gameState = 53)
-				return;
-			}
-
 			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
 			{
 				gameState = 350;
 				return;
 			}
 
-			if (memoryState == STATE_MEMORY_PLAY &&
-				!memoryPuzzleSolved && !memoryPuzzleFailed)
+			handleDodgeMouseClick(mx, my);
+			return;
+		}
+
+		// ======================================================
+		// LEVEL 2 MAP MOUSE INPUT
+		// ======================================================
+		if (gameState == GAMESTATE_LEVEL2_MAP)
+		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
 			{
-				for (int i = 0; i < 8; i++)
-				{
-					int xPos = (int)memoryGridCardX[i];
-					int yPos = (int)memoryGridCardY[i];
-
-					if (mx >= xPos && mx <= xPos + 100 &&
-						my >= yPos && my <= yPos + 100)
-					{
-						int clickedItemID = memoryGridCardIDs[i];
-
-						memoryPlayerSequence[memoryPlayerInputIndex] = clickedItemID;
-						memoryPlayerInputIndex++;
-
-						if (memoryPlayerSequence[memoryPlayerInputIndex - 1] !=
-							memoryTargetSequence[memoryPlayerInputIndex - 1])
-						{
-							memoryPuzzleFailed = true;
-							return;
-						}
-						else if (memoryPlayerInputIndex == memorySequenceLength)
-						{
-							memoryPuzzleSolved = true;
-							memoryState = STATE_MEMORY_EXIT;
-							return;
-						}
-					}
-				}
+				gameState = 300;
 				return;
 			}
+			else if (mx >= 15 && mx <= 240 && my >= 320 && my <= 590)
+			{
+				// Room 361 -> USB mini-game
+				gameState = 400;
+				usbInitGame();
+				return;
+			}
+			else if (mx >= 320 && mx <= 480 && my >= 350 && my <= 550)
+			{
+				// Room 363 -> torn-pieces investigation puzzle
+				resetInvestPuzzle();
+				gameState = GAMESTATE_INVESTIGATION;
+				return;
+			}
+			return;
+		}
+
+		// ======================================================
+		// INVESTIGATION PUZZLE MOUSE INPUT
+		// ======================================================
+		if (gameState == GAMESTATE_INVESTIGATION)
+		{
+			handleInvestMouseDown(mx, my);
+			return;
 		}
 
 		if (gameState == 100)
@@ -1670,8 +1907,8 @@ void iMouse(int button, int state, int mx, int my)
 			else if (mx >= 530 && mx <= 730 && my >= 333 && my <= 561)
 			{
 				if (switchPuzzleCompleted && cctvUnlocked && !level1Completed) {
-					initMemoryPuzzle(8);
-					gameState = STATE_MEMORY_WALK;
+					resetDodgeGame();
+					gameState = GAMESTATE_DODGE;
 				}
 				return;
 			}
@@ -1733,9 +1970,22 @@ void iMouse(int button, int state, int mx, int my)
 			}
 		}
 	}
+	else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+	{
+		if (gameState == GAMESTATE_INVESTIGATION)
+		{
+			handleInvestMouseUp(mx, my);
+		}
+	}
 }
 
-void iMouseMove(int mx, int my) {}
+void iMouseMove(int mx, int my)
+{
+	if (gameState == GAMESTATE_INVESTIGATION)
+	{
+		handleInvestMouseMove(mx, my);
+	}
+}
 
 void iPassiveMouseMove(int mx, int my)
 {
@@ -1815,6 +2065,10 @@ void iKeyboard(unsigned char key) {
 }
 
 void iSpecialKeyboard(int key) {
+	if (key == GLUT_KEY_END) {
+		exit(0);
+	}
+
 	if (isGamePaused) return;
 	if (gameState == 70 || gameState == 71) {
 		if (key == GLUT_KEY_RIGHT) {
@@ -1926,6 +2180,7 @@ void usbInitGame() {
 	usbCurrentFrame = 0;
 	usbCharX = -50.0f;
 	usbCharY = 150.0f;
+	usbCompletionTimerStarted = false;
 	usbGenerateBoard();
 }
 
@@ -2006,13 +2261,25 @@ void usbDrawGame() {
 		iSetColor(50, 255, 50);
 		iText(275, 480, "SECURITY BYPASSED!", GLUT_BITMAP_TIMES_ROMAN_24);
 		iSetColor(255, 255, 255);
-		iText(220, 440, "Character acquired the USB!", GLUT_BITMAP_HELVETICA_18);
+		iText(220, 440, "Character acquired the USB! Press R to Restart.", GLUT_BITMAP_HELVETICA_18);
+
+		if (!usbCompletionTimerStarted) {
+			usbCompletionTimerStarted = true;
+			usbCompletionTimerStart = GetTickCount64();
+		}
+		else {
+			double elapsedTime = (GetTickCount64() - usbCompletionTimerStart) / 1000.0;
+			if (elapsedTime >= 3.0) {
+				usbCompletionTimerStarted = false;
+				gameState = GAMESTATE_LEVEL2_MAP;
+			}
+		}
 	}
 	else if (usbSubState == 3) {
 		iSetColor(255, 50, 50);
 		iText(265, 300, "LOCKDOWN TRIGGERED!", GLUT_BITMAP_TIMES_ROMAN_24);
 		iSetColor(255, 255, 255);
-		iText(310, 260, "Press r to retry", GLUT_BITMAP_HELVETICA_18);
+		iText(310, 260, "Press R to Retry", GLUT_BITMAP_HELVETICA_18);
 	}
 
 	iShowImage(50, 50, 100, 40, backImg);
@@ -2171,24 +2438,17 @@ int main()
 	que4 = iLoadImage("Images/que4.png");
 	que5 = iLoadImage("Images/que5.png");
 
-	// Image memory puzzle assets
-	memoryImgBackground = iLoadImage("Images/route.png");
-	memoryImgWp = iLoadImage("Images/wp.png");
-	memoryImgCardBack = iLoadImage("Images/back.png");
-
-	memoryImgChar[1] = iLoadImage("Images/mainchar1.png");
-	memoryImgChar[2] = iLoadImage("Images/mainchar2.png");
-	memoryImgChar[3] = iLoadImage("Images/mainchar3.png");
-	memoryImgChar[4] = iLoadImage("Images/mainchar4.png");
-
-	memoryImgItem[1] = iLoadImage("Images/01_prisoner.png");
-	memoryImgItem[2] = iLoadImage("Images/02_guard.png");
-	memoryImgItem[3] = iLoadImage("Images/03_keys.png");
-	memoryImgItem[4] = iLoadImage("Images/04_flashlight.png");
-	memoryImgItem[5] = iLoadImage("Images/05_vent.png");
-	memoryImgItem[6] = iLoadImage("Images/06_crowbar.png");
-	memoryImgItem[7] = iLoadImage("Images/07_screwdriver.png");
-	memoryImgItem[8] = iLoadImage("Images/08_cash.png");
+	// Dodge falling boxes mini-game assets (replaces image memory puzzle)
+	dodgeBgImg = iLoadImage("Images/bk.png");
+	dodgeBoxImg = iLoadImage("Images/box.png");
+	dodgeNoteImg = iLoadImage("Images/note.png");
+	dodgeImgStand = iLoadImage("Images/stand.png");
+	dodgeImgLeft1 = iLoadImage("Images/left1.png");
+	dodgeImgLeft2 = iLoadImage("Images/left2.png");
+	dodgeImgRight1 = iLoadImage("Images/right1.png");
+	dodgeImgRight2 = iLoadImage("Images/right2.png");
+	dodgeCaughtPlayerImg = iLoadImage("Images/caughtplayer.png");
+	resetDodgeGame();
 
 	imgCommonRoute = iLoadImage("Images/common route.png");
 	imgCCTVBackground = iLoadImage("Images/cctv.png");
@@ -2208,12 +2468,25 @@ int main()
 	usbImgUsbIcon = iLoadImage("Images/usb.png");
 	usbInitGame();
 
+	// Level 2 map screen assets
+	level2MapImg = iLoadImage("Images/level2map.png");
+
+	// Investigation puzzle (torn pieces) assets
+	investRoomImg = iLoadImage("Images/room.png");
+	investTableImg = iLoadImage("Images/table.png");
+	investNoteImg = iLoadImage("Images/note.png");
+	investPieceImg[0] = iLoadImage("Images/piece1.png");
+	investPieceImg[1] = iLoadImage("Images/piece2.png");
+	investPieceImg[2] = iLoadImage("Images/piece3.png");
+	investPieceImg[3] = iLoadImage("Images/piece4.png");
+	investPieceImg[4] = iLoadImage("Images/piece5.png");
+	investPieceImg[5] = iLoadImage("Images/piece6.png");
+
 	iSetTimer(20, fixedUpdate);
 	iSetTimer(100, loadingUpdate);
 	iSetTimer(1000, narrativeTimer);
 	iSetTimer(400, updateSequence);
 
-	iSetTimer(30, memoryAnimationTimer);
 	iSetTimer(120, usbAnimateCharacter);
 
 	iStart();
