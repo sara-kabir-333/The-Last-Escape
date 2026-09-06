@@ -46,11 +46,7 @@ int alarmMapImg = 0;
 bool cctvUnlocked = false;
 bool switchPuzzleCompleted = false;
 
-int note1Img = 0;
-int note2Img = 0;
-int note3Img = 0;
-int note4Img = 0;
-int mapHoverState = 0; // 0: none, 1: note1, 2: note2, 3: note3, 4: note4
+int mapHoverState = 0;
 
 int btnPlay = 0, btnAbout = 0, btncredit = 0, btnExit = 0;
 int btnPlayHover = 0, btnAboutHover = 0, btncreditHover = 0, btnExitHover = 0;
@@ -191,10 +187,6 @@ int gameplayCounter = 0;
 int aboutBg1, aboutBg2, btnSetting, btnSettingHover, wpOne;
 int menuHover = 0;
 
-// ==========================================================
-// DODGE FALLING BOXES MINI-GAME (REPLACES IMAGE MEMORY PUZZLE)
-// Game state 80 is reserved for this puzzle.
-// ==========================================================
 #define DODGE_MAX_BOXES 5
 
 const int GAMESTATE_DODGE = 80;
@@ -213,7 +205,6 @@ int dodgeActualPlayerWidth = 70;
 int dodgeLevel = 1;
 float dodgeLevelTimeLeft = 10.0f;
 
-// Image handles
 int dodgeBgImg = 0;
 int dodgeBoxImg = 0;
 int dodgeNoteImg = 0;
@@ -225,9 +216,6 @@ int dodgeCaughtPlayerImg = 0;
 int dodgeCurrentAnimState = 0;
 int dodgeAnimTimer = 0;
 
-//==========================
-// BOX STRUCT
-//==========================
 typedef struct
 {
 	int x;
@@ -259,17 +247,12 @@ void handleMenuMouse(int mx, int my);
 void updateSequence();
 void createSequence();
 
-// ==========================================================
-// USB COLLECTION MINI-GAME (LEVEL 2) - MERGED MODULE
-// Runs entirely inside gameState == 400. Nothing about any
-// other gameState was changed to add this.
-// ==========================================================
 #define USB_GRID_SIZE 8
 #define USB_TILE_SIZE 55
 #define USB_BOARD_X ((800 - (USB_GRID_SIZE * USB_TILE_SIZE)) / 2)
 #define USB_BOARD_Y 75
 
-int usbSubState = 0; // 0: Instructions, 1: Playing, 2: Won, 3: Lost
+int usbSubState = 0;
 int usbGrid[USB_GRID_SIZE][USB_GRID_SIZE];
 int usbSelectedRow = -1, usbSelectedCol = -1;
 int usbScore = 0;
@@ -296,29 +279,18 @@ void usbDrawGame();
 void usbHandleMouseClick(int mx, int my);
 void usbHandleKeyboard(unsigned char key);
 
-// Auto-return-to-map timer for when the USB game is won
 bool usbCompletionTimerStarted = false;
 double usbCompletionTimerStart = 0;
 
-// ==========================================================
-// LEVEL 2 MAP SCREEN (NEW)
-// Shown after the Level 2 loading screen. Room 361 leads to
-// the USB mini-game; Room 363 leads to the torn-pieces
-// investigation puzzle. Both return here automatically when
-// completed.
-// ==========================================================
 const int GAMESTATE_LEVEL2_MAP = 450;
 
 int level2MapImg = 0;
+int vaultImg = 0;
+bool vaultUnlocked = false;
 
-// ==========================================================
-// INVESTIGATION PUZZLE (TORN PIECES) - NEW MODULE
-// Runs entirely inside gameState == 460. Stage 1 = search the
-// room for 6 torn pieces; Stage 2 = arrange them on the table.
-// ==========================================================
 const int GAMESTATE_INVESTIGATION = 460;
 
-int investStage = 1; // 1 = Search Room, 2 = Table Arrangement
+int investStage = 1;
 int investPiecesFoundCount = 0;
 
 int investPieceX[6] = { 50, 400, 50, 400, 50, 400 };
@@ -354,6 +326,85 @@ void drawInvestPuzzle();
 void handleInvestMouseDown(int mx, int my);
 void handleInvestMouseUp(int mx, int my);
 void handleInvestMouseMove(int mx, int my);
+
+// ============================================================================
+// VAULT RUNNER MINIGAME (merged from second project)
+// Triggered by clicking the vault image on the GAMESTATE_LEVEL2_MAP screen
+// once vaultUnlocked is true. All variables/functions are prefixed with "vr"
+// to avoid name clashes with the rest of the game.
+// ============================================================================
+const int GAMESTATE_VAULT_RUNNER = 470;
+
+bool vrIsStarted = false;
+bool vrShowVault3 = false;
+int vrVault1Img = 0;
+int vrVault2Img = 0;
+int vrVault3Img = 0;
+int vrNoteImg = 0;
+
+int vrRunnerX = 50;
+int vrRunnerY = 200;
+int vrRunnerDy = 0;
+bool vrIsJumping = false;
+int vrJumpCount = 0;
+bool vrIsMouseHeld = false;
+int vrFallCounter = 0;
+
+int vrBoxX = 800;
+int vrBoxY = 200;
+int vrBoxWidth = 40;
+int vrBoxHeight = 45;
+int vrGameSpeed = 4;
+
+int vrRockX = 1100;
+int vrRockY = 200;
+
+int vrDistance = 0;
+int vrDistCounter = 0;
+int vrCoinScore = 0;
+
+int vrBgImage = 0;
+int vrBgX1 = 0;
+int vrBgX2 = 800;
+
+int vrRunnerImg[3] = { 0, 0, 0 };
+int vrCurrentFrame = 0;
+int vrAnimTimer = 0;
+
+int vrBall1X = 700, vrBall1Y = 220;
+int vrBall2X = 1100, vrBall2Y = 285;
+int vrRedBallX = 1500;
+int vrRedBallY = 285;
+
+bool vrGameOver = false;
+bool vrGameWon = false;
+
+// Vault3 "access granted" screen -> auto-advance to a loading screen after
+// showing it for 2 seconds, then return to the level page.
+bool vrVault3TimerStarted = false;
+double vrVault3TimerStart = 0;
+
+// New gamestate used only for the loading bar shown right after Vault
+// Runner is won (background1.png with the same loading bar as elsewhere).
+const int GAMESTATE_VR_WIN_LOADING = 480;
+
+// True once the Vault Runner minigame (Level 2) has been completed. Used to
+// unlock the Level 3 button on the level select page.
+bool level2Completed = false;
+
+int vrWinBgImg = 0; // Images/background1.png
+
+// Level 3 button (locked/unlocked) + its background + the loading gamestate
+// shown after clicking the unlocked Level 3 button. Level 3 gameplay itself
+// is not implemented yet - it is left as a placeholder for later.
+int level3UnlockedBtn = 0; // Images/levelbg5.png
+int level3BgImg = 0;       // Images/level3bg.png
+const int GAMESTATE_LEVEL3_LOADING = 490;
+
+void vrResetGame();
+void vrFixedUpdate();
+void vrDraw();
+void vrHandleMouseDown(int mx, int my);
 
 void drawMenu() {
 	if (menuBg > 0) {
@@ -519,7 +570,8 @@ void narrativeTimer() {
 void loadingUpdate()
 {
 	if (isGamePaused) return;
-	if (gameState != 0 && gameState != 5 && gameState != 6 && gameState != 56)
+	if (gameState != 0 && gameState != 5 && gameState != 6 && gameState != 56 && gameState != 57 &&
+		gameState != GAMESTATE_VR_WIN_LOADING && gameState != GAMESTATE_LEVEL3_LOADING)
 		return;
 
 	loadingStep += 4;
@@ -554,6 +606,31 @@ void loadingUpdate()
 		{
 			gameState = 300;
 			level1Completed = true;
+			if (musicPlaying) {
+				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
+			}
+		}
+		else if (gameState == 57)
+		{
+			gameState = 300;
+			loadingStep = 0;
+			if (musicPlaying) {
+				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
+			}
+		}
+		else if (gameState == GAMESTATE_VR_WIN_LOADING)
+		{
+			gameState = 300;
+			loadingStep = 0;
+			level2Completed = true;
+			if (musicPlaying) {
+				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
+			}
+		}
+		else if (gameState == GAMESTATE_LEVEL3_LOADING)
+		{
+			// Level 3 gameplay isn't built yet, so the bar just fills up
+			// and stays on the level3bg.png placeholder screen.
 			if (musicPlaying) {
 				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
 			}
@@ -835,9 +912,6 @@ void fixedUpdate() {
 		}
 	}
 
-	// ==========================================================
-	// DODGE FALLING BOXES MINI-GAME UPDATE (REPLACES IMAGE MEMORY PUZZLE)
-	// ==========================================================
 	if (gameState == GAMESTATE_DODGE)
 	{
 		updateDodgeGame();
@@ -887,11 +961,13 @@ void fixedUpdate() {
 			}
 		}
 	}
+
+	if (gameState == GAMESTATE_VAULT_RUNNER)
+	{
+		vrFixedUpdate();
+	}
 }
 
-//==========================
-// DODGE FALLING BOXES: BOX FUNCTIONS
-//==========================
 void resetDodgeBox(int i)
 {
 	dodgeBoxes[i].width = 50 + rand() % 25;
@@ -959,8 +1035,6 @@ void updateDodgeGame()
 	{
 		dodgeLevelComplete = true;
 
-		// Integration hook: finishing Level 1 of the dodge game completes
-		// this puzzle for the main game, same as the old memory puzzle did.
 		if (dodgeLevel == 1) {
 			level1Completed = true;
 		}
@@ -999,7 +1073,6 @@ void updateDodgeGame()
 
 void drawDodgeGame()
 {
-	// 1. Start Screen / Instruction Menu
 	if (!dodgeGameStarted)
 	{
 		iShowImage(0, 0, 800, 600, dodgeBgImg);
@@ -1014,7 +1087,6 @@ void drawDodgeGame()
 		return;
 	}
 
-	// 2. Main Gameplay Background
 	iShowImage(0, 0, 800, 600, dodgeBgImg);
 
 	iSetColor(255, 255, 255);
@@ -1027,7 +1099,6 @@ void drawDodgeGame()
 	sprintf(str, "Time Left : %.1f s", dodgeLevelTimeLeft);
 	iText(20, 515, str, GLUT_BITMAP_HELVETICA_18);
 
-	// 3. Draw Character Animation Frame (Hide if game over to show caught state)
 	if (!dodgeGameOver)
 	{
 		if (dodgeCurrentAnimState == 0)
@@ -1042,13 +1113,11 @@ void drawDodgeGame()
 			iShowImage(dodgePlayerX, dodgePlayerY, dodgePlayerWidth, dodgePlayerHeight, dodgeImgRight2);
 	}
 
-	// 4. Falling Boxes
 	for (int i = 0; i < DODGE_MAX_BOXES; i++)
 	{
 		iShowImage(dodgeBoxes[i].x, dodgeBoxes[i].y, dodgeBoxes[i].width, dodgeBoxes[i].height, dodgeBoxImg);
 	}
 
-	// 5. Level Complete Screen
 	if (dodgeLevelComplete)
 	{
 		iShowImage(30, -15, 740, 300, dodgeNoteImg);
@@ -1065,7 +1134,6 @@ void drawDodgeGame()
 		}
 	}
 
-	// 6. Game Over Screen (Directly shows caught player image)
 	if (dodgeGameOver)
 	{
 		iShowImage(dodgePlayerX, dodgePlayerY, dodgePlayerWidth, dodgePlayerHeight, dodgeCaughtPlayerImg);
@@ -1097,7 +1165,11 @@ void handleDodgeMouseClick(int mx, int my)
 	else if (dodgeLevelComplete)
 	{
 		if (level1Completed) {
-			gameState = 350;
+			gameState = 57;
+			loadingStep = 0;
+			if (musicPlaying) {
+				mciSendString(TEXT("pause bgm"), NULL, 0, NULL);
+			}
 		}
 		else {
 			nextDodgeLevel();
@@ -1106,9 +1178,6 @@ void handleDodgeMouseClick(int mx, int my)
 	}
 }
 
-//==========================
-// INVESTIGATION PUZZLE (TORN PIECES) FUNCTIONS
-//==========================
 void resetInvestPuzzle() {
 	investStage = 1;
 	investPiecesFoundCount = 0;
@@ -1208,6 +1277,7 @@ void drawInvestPuzzle() {
 				iText(280, 20, "Assembling Room Data...", GLUT_BITMAP_HELVETICA_18);
 			}
 			else {
+				vaultUnlocked = true;
 				resetInvestPuzzle();
 				gameState = GAMESTATE_LEVEL2_MAP;
 			}
@@ -1258,13 +1328,313 @@ void handleInvestMouseMove(int mx, int my) {
 	}
 }
 
+// ----------------------------------------------------------------------------
+// VAULT RUNNER MINIGAME - function definitions
+// (Ported as-is from the second project; only variable/function names were
+// prefixed with "vr" to avoid clashing with the rest of the game. No gameplay
+// logic was changed.)
+// ----------------------------------------------------------------------------
+
+void vrResetGame() {
+	vrIsStarted = false;
+	vrShowVault3 = false;
+	vrGameOver = false;
+	vrGameWon = false;
+	vrBoxX = 800;
+	vrRockX = 1100;
+	vrDistance = 0;
+	vrDistCounter = 0;
+	vrCoinScore = 0;
+	vrRunnerY = 200;
+	vrIsJumping = false;
+	vrJumpCount = 0;
+	vrIsMouseHeld = false;
+	vrFallCounter = 0;
+	vrGameSpeed = 4;
+	vrBgX1 = 0;
+	vrBgX2 = 800;
+	vrBall1X = 700; vrBall1Y = 220;
+	vrBall2X = 1100; vrBall2Y = 285;
+	vrRedBallX = 1500; vrRedBallY = 285;
+}
+
+void vrFixedUpdate() {
+	if (!vrIsStarted || vrGameOver) return;
+
+	vrBgX1 -= vrGameSpeed;
+	vrBgX2 -= vrGameSpeed;
+
+	if (vrBgX1 <= -800) {
+		vrBgX1 = vrBgX2 + 800;
+	}
+	if (vrBgX2 <= -800) {
+		vrBgX2 = vrBgX1 + 800;
+	}
+
+	vrAnimTimer++;
+	if (vrAnimTimer >= 6) {
+		vrCurrentFrame = (vrCurrentFrame + 1) % 3;
+		vrAnimTimer = 0;
+	}
+
+	vrDistCounter++;
+	int threshold = vrIsMouseHeld ? 4 : 8;
+	if (vrDistCounter % threshold == 0) {
+		vrDistance++;
+	}
+
+	vrGameSpeed = 4 + (vrDistance / 150);
+	if (vrGameSpeed > 12) {
+		vrGameSpeed = 12;
+	}
+
+	vrBoxX -= vrGameSpeed;
+	if (vrBoxX < -40) {
+		vrBoxX = 850 + (rand() % 300);
+	}
+
+	vrRockX -= vrGameSpeed;
+	if (vrRockX < -60) {
+		vrRockX = 900 + (rand() % 400);
+	}
+
+	vrBall1X -= vrGameSpeed;
+	if (vrBall1X < -20) {
+		vrBall1X = 800 + (rand() % 300);
+		vrBall1Y = (rand() % 2 == 0) ? 220 : 285;
+	}
+
+	vrBall2X -= vrGameSpeed;
+	if (vrBall2X < -20) {
+		vrBall2X = 900 + (rand() % 350);
+		vrBall2Y = (rand() % 2 == 0) ? 220 : 285;
+	}
+
+	vrRedBallX -= vrGameSpeed;
+	if (vrRedBallX < -20) {
+		vrRedBallX = 1600 + (rand() % 500);
+		vrRedBallY = (rand() % 2 == 0) ? 220 : 285;
+	}
+
+	if (vrIsJumping) {
+		vrRunnerY += vrRunnerDy;
+
+		if (vrRunnerDy > 0) {
+			vrRunnerDy -= 2;
+		}
+		else {
+			if (vrIsMouseHeld) {
+				vrFallCounter++;
+				if (vrFallCounter % 3 == 0) {
+					vrRunnerDy -= 1;
+				}
+			}
+			else {
+				vrRunnerDy -= 2;
+			}
+		}
+
+		if (vrRunnerY <= 200) {
+			vrRunnerY = 200;
+			vrIsJumping = false;
+			vrJumpCount = 0;
+			vrRunnerDy = 0;
+			vrFallCounter = 0;
+		}
+	}
+
+	if (vrBall1X + 12 >= vrRunnerX && vrBall1X - 12 <= vrRunnerX + 80 && vrBall1Y + 12 >= vrRunnerY && vrBall1Y - 12 <= vrRunnerY + 100) {
+		vrCoinScore += 5;
+		vrBall1X = 900 + (rand() % 300);
+		vrBall1Y = (rand() % 2 == 0) ? 220 : 285;
+		if (vrCoinScore >= 150) {
+			vrGameOver = true;
+			vrGameWon = true;
+		}
+	}
+
+	if (vrBall2X + 12 >= vrRunnerX && vrBall2X - 12 <= vrRunnerX + 80 && vrBall2Y + 12 >= vrRunnerY && vrBall2Y - 12 <= vrRunnerY + 100) {
+		vrCoinScore += 5;
+		vrBall2X = 1000 + (rand() % 300);
+		vrBall2Y = (rand() % 2 == 0) ? 220 : 285;
+		if (vrCoinScore >= 150) {
+			vrGameOver = true;
+			vrGameWon = true;
+		}
+	}
+
+	if (vrRedBallX + 12 >= vrRunnerX && vrRedBallX - 12 <= vrRunnerX + 80 && vrRedBallY + 12 >= vrRunnerY && vrRedBallY - 12 <= vrRunnerY + 100) {
+		vrCoinScore += 15;
+		vrRedBallX = 1600 + (rand() % 500);
+		vrRedBallY = (rand() % 2 == 0) ? 220 : 285;
+		if (vrCoinScore >= 150) {
+			vrGameOver = true;
+			vrGameWon = true;
+		}
+	}
+
+	if (vrRunnerX + 50 >= vrBoxX && vrRunnerX <= vrBoxX + vrBoxWidth && vrRunnerY <= vrBoxY + vrBoxHeight) {
+		vrGameOver = true;
+		vrGameWon = false;
+	}
+
+	if (vrRunnerX + 50 >= vrRockX && vrRunnerX <= vrRockX + 50 && vrRunnerY <= vrRockY + 38) {
+		vrGameOver = true;
+		vrGameWon = false;
+	}
+}
+
+void vrDraw() {
+	if (!vrIsStarted) {
+		iShowImage(0, 0, 800, 600, vrVault1Img);
+		iShowImage(200, 45, 390, 180, vrNoteImg);
+		iSetColor(20, 20, 20);
+		iText(230, 80, "Click anywhere to disable the laser", GLUT_BITMAP_HELVETICA_18);
+		return;
+	}
+
+	if (vrGameOver && vrGameWon) {
+		if (!vrShowVault3) {
+			iShowImage(0, 0, 800, 600, vrVault2Img);
+			iShowImage(200, 45, 390, 180, vrNoteImg);
+			iSetColor(20, 20, 20);
+			iText(220, 80, "Click anywhere to use the access card", GLUT_BITMAP_HELVETICA_18);
+		}
+		else {
+			iShowImage(0, 0, 800, 600, vrVault3Img);
+
+			if (!vrVault3TimerStarted) {
+				vrVault3TimerStarted = true;
+				vrVault3TimerStart = GetTickCount64();
+			}
+			else {
+				double elapsedTime = (GetTickCount64() - vrVault3TimerStart) / 1000.0;
+				if (elapsedTime >= 2.0) {
+					vrVault3TimerStarted = false;
+					gameState = GAMESTATE_VR_WIN_LOADING;
+					loadingStep = 0;
+					if (musicPlaying) {
+						mciSendString(TEXT("pause bgm"), NULL, 0, NULL);
+					}
+				}
+			}
+		}
+		return;
+	}
+
+	iShowImage(vrBgX1, 0, 800, 600, vrBgImage);
+	iShowImage(vrBgX2, 0, 800, 600, vrBgImage);
+
+	iSetColor(255, 215, 0);
+	iFilledCircle(vrBall1X, vrBall1Y, 12);
+	iSetColor(255, 255, 200);
+	iFilledCircle(vrBall1X - 3, vrBall1Y + 3, 3);
+
+	iSetColor(255, 215, 0);
+	iFilledCircle(vrBall2X, vrBall2Y, 12);
+	iSetColor(255, 255, 200);
+	iFilledCircle(vrBall2X - 3, vrBall2Y + 3, 3);
+
+	iSetColor(220, 20, 60);
+	iFilledCircle(vrRedBallX, vrRedBallY, 12);
+	iSetColor(255, 182, 193);
+	iFilledCircle(vrRedBallX - 3, vrRedBallY + 3, 3);
+
+	iShowImage(vrRunnerX, vrRunnerY, 80, 100, vrRunnerImg[vrCurrentFrame]);
+
+	iSetColor(139, 69, 19);
+	iFilledRectangle(vrBoxX, vrBoxY, vrBoxWidth, vrBoxHeight);
+	iSetColor(90, 40, 10);
+	iRectangle(vrBoxX, vrBoxY, vrBoxWidth, vrBoxHeight);
+	iSetColor(110, 50, 15);
+	iLine(vrBoxX, vrBoxY, vrBoxX + vrBoxWidth, vrBoxY + vrBoxHeight);
+	iLine(vrBoxX, vrBoxY + vrBoxHeight, vrBoxX + vrBoxWidth, vrBoxY);
+
+	iSetColor(95, 85, 75);
+	double vrRockPolyX[] = { (double)vrRockX, (double)vrRockX + 10, (double)vrRockX + 25, (double)vrRockX + 45, (double)vrRockX + 52, (double)vrRockX };
+	double vrRockPolyY[] = { (double)vrRockY, (double)vrRockY + 22, (double)vrRockY + 38, (double)vrRockY + 28, (double)vrRockY, (double)vrRockY };
+	iFilledPolygon(vrRockPolyX, vrRockPolyY, 6);
+
+	iSetColor(130, 120, 110);
+	iFilledCircle(vrRockX + 22, vrRockY + 22, 5);
+
+	char vrDistStr[50], vrScoreStr[50];
+	sprintf(vrDistStr, "DISTANCE: %05d m", vrDistance);
+	sprintf(vrScoreStr, "SCORE:    %05d", vrCoinScore);
+
+	iSetColor(255, 255, 255);
+	iText(570, 550, vrDistStr, GLUT_BITMAP_HELVETICA_18);
+	iText(570, 520, vrScoreStr, GLUT_BITMAP_HELVETICA_18);
+
+	if (vrGameOver && !vrGameWon) {
+		iSetColor(255, 50, 50);
+		iText(340, 320, "GAME OVER", GLUT_BITMAP_HELVETICA_18);
+		iSetColor(220, 220, 220);
+		iText(295, 280, "CLICK TO RETRY", GLUT_BITMAP_HELVETICA_18);
+	}
+}
+
+void vrHandleMouseDown(int mx, int my) {
+	if (!vrIsStarted) {
+		vrIsStarted = true;
+		return;
+	}
+	if (vrGameOver) {
+		if (vrGameWon) {
+			if (!vrShowVault3) {
+				vrShowVault3 = true;
+				return;
+			}
+			else {
+				vrResetGame();
+				return;
+			}
+		}
+		else {
+			vrGameOver = false;
+			vrGameWon = false;
+			vrShowVault3 = false;
+			vrBoxX = 800;
+			vrRockX = 1100;
+			vrDistance = 0;
+			vrDistCounter = 0;
+			vrCoinScore = 0;
+			vrRunnerY = 200;
+			vrIsJumping = false;
+			vrJumpCount = 0;
+			vrIsMouseHeld = false;
+			vrFallCounter = 0;
+			vrGameSpeed = 4;
+			vrBgX1 = 0;
+			vrBgX2 = 800;
+			vrBall1X = 700; vrBall1Y = 220;
+			vrBall2X = 1100; vrBall2Y = 285;
+			vrRedBallX = 1500;
+		}
+	}
+	else {
+		vrIsMouseHeld = true;
+		if (!vrIsJumping) {
+			vrIsJumping = true;
+			vrJumpCount = 1;
+			vrRunnerDy = 22;
+			vrFallCounter = 0;
+		}
+		else if (vrJumpCount == 1) {
+			vrJumpCount = 2;
+			vrRunnerDy = 20;
+			vrFallCounter = 0;
+		}
+	}
+}
+
 void iDraw()
 {
 	iClear();
 	iSetColor(0, 0, 0);
 	iFilledRectangle(0, 0, 800, 600);
 
-	if (gameState == 0 || gameState == 5 || gameState == 6)
+	if (gameState == 0 || gameState == 5 || gameState == 6 || gameState == 57 || gameState == GAMESTATE_VR_WIN_LOADING || gameState == GAMESTATE_LEVEL3_LOADING)
 	{
 		if (gameState == 0) {
 			iShowImage(0, 0, 800, 600, loadBg);
@@ -1274,6 +1644,15 @@ void iDraw()
 		}
 		else if (gameState == 6) {
 			iShowImage(0, 0, 800, 600, level2Bg);
+		}
+		else if (gameState == 57) {
+			iShowImage(0, 0, 800, 600, imgEscapeScreen);
+		}
+		else if (gameState == GAMESTATE_VR_WIN_LOADING) {
+			iShowImage(0, 0, 800, 600, vrWinBgImg);
+		}
+		else if (gameState == GAMESTATE_LEVEL3_LOADING) {
+			iShowImage(0, 0, 800, 600, level3BgImg);
 		}
 
 		iSetColor(180, 122, 33);
@@ -1318,7 +1697,12 @@ void iDraw()
 			iShowImage(307, 115, 175, 342, level2Btn);
 		}
 
-		iShowImage(492, 115, 175, 342, level3Btn);
+		if (level2Completed) {
+			iShowImage(492, 115, 175, 342, level3UnlockedBtn);
+		}
+		else {
+			iShowImage(492, 115, 175, 342, level3Btn);
+		}
 		iShowImage(68, 26, 120, 53, backImg);
 	}
 	else if (gameState == 350)
@@ -1332,26 +1716,6 @@ void iDraw()
 		}
 		if (cctvMapImg > 0) iShowImage(62, 335, 200, 228, cctvMapImg);
 		if (alarmMapImg > 0) iShowImage(530, 333, 200, 228, alarmMapImg);
-
-		if (switchPuzzleCompleted && cctvUnlocked && !level1Completed) {
-			iSetColor(255, 255, 0);
-			iRectangle(530, 333, 200, 228);
-			iRectangle(531, 334, 198, 226);
-			iText(548, 320, "CLICK: MEMORY PUZZLE", GLUT_BITMAP_HELVETICA_18);
-		}
-
-		if (mapHoverState == 1 && note1Img > 0) {
-			iShowImage(200, 240, 400, 100, note1Img);
-		}
-		else if (mapHoverState == 2 && note2Img > 0) {
-			iShowImage(200, 240, 400, 100, note2Img);
-		}
-		else if (mapHoverState == 3 && note3Img > 0) {
-			iShowImage(275, 335, 200, 200, note3Img);
-		}
-		else if (mapHoverState == 4 && note4Img > 0) {
-			iShowImage(320, 333, 200, 200, note4Img);
-		}
 
 		if (backImg > 0) iShowImage(50, 50, 100, 40, backImg);
 	}
@@ -1626,14 +1990,21 @@ void iDraw()
 	else if (gameState == GAMESTATE_LEVEL2_MAP)
 	{
 		if (level2MapImg > 0) iShowImage(0, 0, 800, 600, level2MapImg);
+		if (vaultUnlocked && vaultImg > 0) {
+			iShowImage(154, 57, 204, 193, vaultImg);
+		}
 		if (backImg > 0) iShowImage(50, 50, 100, 40, backImg);
 	}
 	else if (gameState == GAMESTATE_INVESTIGATION)
 	{
 		drawInvestPuzzle();
 	}
+	else if (gameState == GAMESTATE_VAULT_RUNNER)
+	{
+		vrDraw();
+	}
 
-	if (gameState == 100 || gameState == 210 || gameState == 300 || gameState == 350 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || gameState == GAMESTATE_DODGE || gameState == GAMESTATE_LEVEL2_MAP || gameState == GAMESTATE_INVESTIGATION)
+	if (gameState == 100 || gameState == 210 || gameState == 300 || gameState == 350 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56 && gameState != 57) || gameState == GAMESTATE_DODGE || gameState == GAMESTATE_LEVEL2_MAP || gameState == GAMESTATE_INVESTIGATION)
 	{
 		if (settingsImg > 0 && gameState != 210) {
 			iShowImage(20, 520, 50, 50, settingsImg);
@@ -1658,7 +2029,7 @@ void iDraw()
 		}
 	}
 
-	if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || gameState == GAMESTATE_DODGE)
+	if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56 && gameState != 57) || gameState == GAMESTATE_DODGE)
 	{
 		if (isGamePaused) {
 			if (pauseToPlayImg > 0) {
@@ -1682,7 +2053,7 @@ void iMouse(int button, int state, int mx, int my)
 			mciSendString(TEXT("play clicksound"), NULL, 0, NULL);
 		}
 
-		if (gameState == 100 || gameState == 300 || gameState == 350 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || gameState == GAMESTATE_DODGE || gameState == GAMESTATE_LEVEL2_MAP || gameState == GAMESTATE_INVESTIGATION)
+		if (gameState == 100 || gameState == 300 || gameState == 350 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56 && gameState != 57) || gameState == GAMESTATE_DODGE || gameState == GAMESTATE_LEVEL2_MAP || gameState == GAMESTATE_INVESTIGATION)
 		{
 			if (mx >= 20 && mx <= 70 && my >= 520 && my <= 570)
 			{
@@ -1717,7 +2088,7 @@ void iMouse(int button, int state, int mx, int my)
 			}
 		}
 
-		if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56) || gameState == GAMESTATE_DODGE)
+		if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56 && gameState != 57) || gameState == GAMESTATE_DODGE)
 		{
 			if (mx >= 78 && mx <= 132 && my >= 518 && my <= 572)
 			{
@@ -1776,9 +2147,6 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
-		// ======================================================
-		// DODGE FALLING BOXES MOUSE INPUT
-		// ======================================================
 		if (gameState == GAMESTATE_DODGE)
 		{
 			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
@@ -1791,9 +2159,6 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
-		// ======================================================
-		// LEVEL 2 MAP MOUSE INPUT
-		// ======================================================
 		if (gameState == GAMESTATE_LEVEL2_MAP)
 		{
 			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
@@ -1803,27 +2168,34 @@ void iMouse(int button, int state, int mx, int my)
 			}
 			else if (mx >= 15 && mx <= 240 && my >= 320 && my <= 590)
 			{
-				// Room 361 -> USB mini-game
 				gameState = 400;
 				usbInitGame();
 				return;
 			}
 			else if (mx >= 320 && mx <= 480 && my >= 350 && my <= 550)
 			{
-				// Room 363 -> torn-pieces investigation puzzle
 				resetInvestPuzzle();
 				gameState = GAMESTATE_INVESTIGATION;
+				return;
+			}
+			else if (vaultUnlocked && mx >= 154 && mx <= 362 && my >= 56 && my <= 253)
+			{
+				vrResetGame();
+				gameState = GAMESTATE_VAULT_RUNNER;
 				return;
 			}
 			return;
 		}
 
-		// ======================================================
-		// INVESTIGATION PUZZLE MOUSE INPUT
-		// ======================================================
 		if (gameState == GAMESTATE_INVESTIGATION)
 		{
 			handleInvestMouseDown(mx, my);
+			return;
+		}
+
+		if (gameState == GAMESTATE_VAULT_RUNNER)
+		{
+			vrHandleMouseDown(mx, my);
 			return;
 		}
 
@@ -1868,7 +2240,18 @@ void iMouse(int button, int state, int mx, int my)
 			else if (mx >= 307 && mx <= 482 && my >= 115 && my <= 457)
 			{
 				if (level1Completed) {
+					vaultUnlocked = false;
 					gameState = 6;
+					loadingStep = 0;
+					if (musicPlaying) {
+						mciSendString(TEXT("pause bgm"), NULL, 0, NULL);
+					}
+				}
+			}
+			else if (mx >= 492 && mx <= 667 && my >= 115 && my <= 457)
+			{
+				if (level2Completed) {
+					gameState = GAMESTATE_LEVEL3_LOADING;
 					loadingStep = 0;
 					if (musicPlaying) {
 						mciSendString(TEXT("pause bgm"), NULL, 0, NULL);
@@ -1941,7 +2324,7 @@ void iMouse(int button, int state, int mx, int my)
 			}
 			return;
 		}
-		else if (gameState == 56) {
+		else if (gameState == 56 || gameState == 57) {
 			return;
 		}
 
@@ -1975,6 +2358,10 @@ void iMouse(int button, int state, int mx, int my)
 		if (gameState == GAMESTATE_INVESTIGATION)
 		{
 			handleInvestMouseUp(mx, my);
+		}
+		else if (gameState == GAMESTATE_VAULT_RUNNER)
+		{
+			vrIsMouseHeld = false;
 		}
 	}
 }
@@ -2079,10 +2466,6 @@ void iSpecialKeyboard(int key) {
 		}
 	}
 }
-
-// ==========================================================
-// USB COLLECTION MINI-GAME (LEVEL 2) - FUNCTION DEFINITIONS
-// ==========================================================
 
 void usbGenerateBoard() {
 	for (int r = 0; r < USB_GRID_SIZE; r++) {
@@ -2395,17 +2778,14 @@ int main()
 	level2Btn = iLoadImage("Images/levelbg2.png");
 	level3Btn = iLoadImage("Images/levelbg3.png");
 	level2UnlockedBtn = iLoadImage("Images/levelbg4.png");
+	level3UnlockedBtn = iLoadImage("Images/levelbg5.png");
+	level3BgImg = iLoadImage("Images/level3bg.png");
 
 	map1Img = iLoadImage("Images/map1.png");
 	cellMapImg = iLoadImage("Images/cellmap.png");
 	cellMap2Img = iLoadImage("Images/cellmap2.png");
 	cctvMapImg = iLoadImage("Images/cctvmap.png");
 	alarmMapImg = iLoadImage("Images/alarmmap.png");
-
-	note1Img = iLoadImage("Images/mapnote1.png");
-	note2Img = iLoadImage("Images/mapnote2.png");
-	note3Img = iLoadImage("Images/mapnote3.png");
-	note4Img = iLoadImage("Images/mapnote4.png");
 
 	imgBackground = iLoadImage("Images/b1.png");
 	imgLockScreen = iLoadImage("Images/b3.png");
@@ -2438,7 +2818,6 @@ int main()
 	que4 = iLoadImage("Images/que4.png");
 	que5 = iLoadImage("Images/que5.png");
 
-	// Dodge falling boxes mini-game assets (replaces image memory puzzle)
 	dodgeBgImg = iLoadImage("Images/bk.png");
 	dodgeBoxImg = iLoadImage("Images/box.png");
 	dodgeNoteImg = iLoadImage("Images/note.png");
@@ -2453,7 +2832,6 @@ int main()
 	imgCommonRoute = iLoadImage("Images/common route.png");
 	imgCCTVBackground = iLoadImage("Images/cctv.png");
 
-	// USB collection mini-game (Level 2) assets
 	usbImgBg = iLoadImage("Images/usb room.png");
 	usbImgWp = iLoadImage("Images/wp.png");
 	usbImgKey = iLoadImage("Images/key_1.png");
@@ -2468,10 +2846,9 @@ int main()
 	usbImgUsbIcon = iLoadImage("Images/usb.png");
 	usbInitGame();
 
-	// Level 2 map screen assets
 	level2MapImg = iLoadImage("Images/level2map.png");
+	vaultImg = iLoadImage("Images/vault.png");
 
-	// Investigation puzzle (torn pieces) assets
 	investRoomImg = iLoadImage("Images/room.png");
 	investTableImg = iLoadImage("Images/table.png");
 	investNoteImg = iLoadImage("Images/note.png");
@@ -2481,6 +2858,17 @@ int main()
 	investPieceImg[3] = iLoadImage("Images/piece4.png");
 	investPieceImg[4] = iLoadImage("Images/piece5.png");
 	investPieceImg[5] = iLoadImage("Images/piece6.png");
+
+	// Vault Runner minigame images
+	vrVault1Img = iLoadImage("Images/vault1.png");
+	vrVault2Img = iLoadImage("Images/vault2.png");
+	vrVault3Img = iLoadImage("Images/vault3.png");
+	vrNoteImg = iLoadImage("Images/note.png");
+	vrBgImage = iLoadImage("Images/background.png");
+	vrRunnerImg[0] = iLoadImage("Images/player1.png");
+	vrRunnerImg[1] = iLoadImage("Images/player2.png");
+	vrRunnerImg[2] = iLoadImage("Images/player3.png");
+	vrWinBgImg = iLoadImage("Images/background1.png");
 
 	iSetTimer(20, fixedUpdate);
 	iSetTimer(100, loadingUpdate);
