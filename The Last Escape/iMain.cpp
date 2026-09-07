@@ -406,6 +406,28 @@ void vrFixedUpdate();
 void vrDraw();
 void vrHandleMouseDown(int mx, int my);
 
+// ----------------------------------------------------------------------------
+// Centralised helpers deciding on which game states the Settings icon and the
+// Pause icon should be visible / clickable. Both the drawing code (iDraw) and
+// the input code (iMouse) call these SAME functions, so the two can never
+// drift apart again (this is what caused the Pause icon to be clickable but
+// not behave consistently in some minigames before).
+// ----------------------------------------------------------------------------
+bool isSettingsVisibleState(int gs) {
+	return gs == 100 || gs == 300 || gs == 350 || gs == 400 ||
+		gs == 70 || gs == 71 ||
+		(gs >= 50 && gs <= 60 && gs != 56 && gs != 57) ||
+		gs == GAMESTATE_DODGE || gs == GAMESTATE_LEVEL2_MAP ||
+		gs == GAMESTATE_INVESTIGATION || gs == GAMESTATE_VAULT_RUNNER;
+}
+
+bool isPauseVisibleState(int gs) {
+	return gs == 70 || gs == 71 ||
+		(gs >= 50 && gs <= 60 && gs != 56 && gs != 57) ||
+		gs == GAMESTATE_DODGE || gs == 400 ||
+		gs == GAMESTATE_VAULT_RUNNER || gs == GAMESTATE_INVESTIGATION;
+}
+
 void drawMenu() {
 	if (menuBg > 0) {
 		iShowImage(0, 0, 800, 600, menuBg);
@@ -1356,6 +1378,7 @@ void vrResetGame() {
 	vrBall1X = 700; vrBall1Y = 220;
 	vrBall2X = 1100; vrBall2Y = 285;
 	vrRedBallX = 1500; vrRedBallY = 285;
+	vrVault3TimerStarted = false;
 }
 
 void vrFixedUpdate() {
@@ -1585,10 +1608,11 @@ void vrHandleMouseDown(int mx, int my) {
 				vrShowVault3 = true;
 				return;
 			}
-			else {
-				vrResetGame();
-				return;
-			}
+			// Vault3 ("access granted") screen is showing: this transitions
+			// to the loading screen automatically after 2 seconds (handled
+			// in vrDraw). Ignore clicks here so an accidental click during
+			// that 2-second window doesn't restart the whole minigame.
+			return;
 		}
 		else {
 			vrGameOver = false;
@@ -2004,13 +2028,13 @@ void iDraw()
 		vrDraw();
 	}
 
-	if (gameState == 100 || gameState == 210 || gameState == 300 || gameState == 350 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56 && gameState != 57) || gameState == GAMESTATE_DODGE || gameState == GAMESTATE_LEVEL2_MAP || gameState == GAMESTATE_INVESTIGATION)
+	if (isSettingsVisibleState(gameState))
 	{
-		if (settingsImg > 0 && gameState != 210) {
+		if (settingsImg > 0) {
 			iShowImage(20, 520, 50, 50, settingsImg);
 		}
 
-		if (showSettingsPanel && settingsOnImg > 0 && gameState != 210) {
+		if (showSettingsPanel && settingsOnImg > 0) {
 			iShowImage(20, 375, 290, 135, settingsOnImg);
 
 			if (musicPlaying && on1 > 0) {
@@ -2029,7 +2053,7 @@ void iDraw()
 		}
 	}
 
-	if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56 && gameState != 57) || gameState == GAMESTATE_DODGE)
+	if (isPauseVisibleState(gameState))
 	{
 		if (isGamePaused) {
 			if (pauseToPlayImg > 0) {
@@ -2053,7 +2077,7 @@ void iMouse(int button, int state, int mx, int my)
 			mciSendString(TEXT("play clicksound"), NULL, 0, NULL);
 		}
 
-		if (gameState == 100 || gameState == 300 || gameState == 350 || gameState == 400 || gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56 && gameState != 57) || gameState == GAMESTATE_DODGE || gameState == GAMESTATE_LEVEL2_MAP || gameState == GAMESTATE_INVESTIGATION)
+		if (isSettingsVisibleState(gameState))
 		{
 			if (mx >= 20 && mx <= 70 && my >= 520 && my <= 570)
 			{
@@ -2088,7 +2112,7 @@ void iMouse(int button, int state, int mx, int my)
 			}
 		}
 
-		if (gameState == 70 || gameState == 71 || ((gameState >= 50 && gameState <= 60) && gameState != 56 && gameState != 57) || gameState == GAMESTATE_DODGE)
+		if (isPauseVisibleState(gameState))
 		{
 			if (mx >= 78 && mx <= 132 && my >= 518 && my <= 572)
 			{
