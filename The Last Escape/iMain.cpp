@@ -216,6 +216,13 @@ int dodgeCaughtPlayerImg = 0;
 int dodgeCurrentAnimState = 0;
 int dodgeAnimTimer = 0;
 
+// After successfully dodging all the boxes, the character keeps auto-running
+// right towards the door (drawn in fallingboxbg.png) instead of freezing in
+// place, so the level ending reads as "reaching the door" rather than just
+// stopping mid-air.
+bool dodgeRunningToDoor = false;
+const int DODGE_DOOR_X = 750;
+
 typedef struct
 {
 	int x;
@@ -405,6 +412,116 @@ void vrResetGame();
 void vrFixedUpdate();
 void vrDraw();
 void vrHandleMouseDown(int mx, int my);
+
+// ----------------------------------------------------------------------------
+// NEW: instruction/"note" screens inserted ahead of a few minigames. Each one
+// just shows a background plus a note image and a Next button; clicking Next
+// starts the game exactly like it used to start before these were added.
+// ----------------------------------------------------------------------------
+const int GAMESTATE_DODGE_NOTE = 500;       // shown before GAMESTATE_DODGE
+const int GAMESTATE_LEVEL2_NOTE = 510;      // shown once, right after the level 2 loading screen, before GAMESTATE_LEVEL2_MAP
+const int GAMESTATE_USB_NOTE = 520;         // shown before the USB match-3 minigame (gameState 400)
+const int GAMESTATE_INVEST_NOTE = 530;      // shown before GAMESTATE_INVESTIGATION
+const int GAMESTATE_GUNCOLLECT_NOTE = 540;  // shown right after the level 3 loading bar finishes
+
+int dodgeIntroNoteImg = 0;     // Images/dodgenote.png
+int level2NoteImg = 0;         // Images/level2note.png
+int usbNoteImg = 0;            // Images/usbnote.png
+int evidenceRoomNoteImg = 0;   // Images/evidenceroomnote.png
+int gunCollectImg = 0;         // Images/guncollect.png
+
+// ============================================================================
+// LEVEL 3 FIGHT MINIGAME (merged from the "Level 3 - Prison Fight" project)
+// Triggered by clicking Next on the GAMESTATE_GUNCOLLECT_NOTE screen. All
+// variables/functions are prefixed with "lv3" to avoid name clashes with the
+// rest of the game, same convention as the "vr" (Vault Runner) minigame.
+// Gameplay logic kept as close to the original standalone file as possible.
+// ============================================================================
+const int GAMESTATE_LEVEL3_FIGHT = 550;
+
+// lv3SubState: 0 = fighting the guard, 1 = guard defeated / collect the gun,
+// 2 = walking to the door after collecting the gun, 3 = stopped at the door.
+int lv3SubState = 0;
+
+const int LV3_HERO_START_X = 100;
+const int LV3_HERO_START_Y = 100;
+const int LV3_HERO_START_HEALTH = 30;
+
+int lv3HeroX = LV3_HERO_START_X;
+int lv3HeroY = LV3_HERO_START_Y;
+int lv3HeroWidth = 200;
+int lv3HeroHeight = 150;
+int lv3HeroHealth = LV3_HERO_START_HEALTH;
+
+// Hero Combat & Movement States
+bool lv3IsAttacking = false;
+int lv3AttackCooldown = 0;
+int lv3HeroActionType = 1; // 1 = Punch, 2 = Kick
+
+// Hero Walking Animation Frames (maincharstand -> mainchar2 -> mainchar3)
+int lv3HeroWalkFrame = 0;
+int lv3HeroWalkAnimTimer = 0;
+
+// Tracks whether hero has reached/collided with the guard
+bool lv3HeroReachedGuard = false;
+
+// Cooldown between registered attack clicks (slows the fight down)
+int lv3ClickCooldownTimer = 0;
+const int LV3_CLICK_COOLDOWN = 20; // frames between allowed hits
+
+// Screen centre both fighters walk to and stop at, so the fight happens in
+// the middle of the screen instead of wherever they happened to collide.
+// LV3_FIGHT_OVERLAP is how much their bounding boxes overlap once stopped
+// (needed because of the transparent padding around the character sprites,
+// same idea as the old COLLISION_DISTANCE) - the two stop positions below
+// are derived from it so the overlap is always centred on LV3_CENTER_X.
+//   fighters too far apart  -> increase LV3_FIGHT_OVERLAP
+//   fighters overlap too much -> decrease LV3_FIGHT_OVERLAP
+const int LV3_CENTER_X = 400;
+const int LV3_FIGHT_OVERLAP = 125;
+// Derived so the 125px overlap between the two 200-wide sprites is centred
+// exactly on LV3_CENTER_X: LV3_HERO_STOP_X + 200 - LV3_GUARD_STOP_X == 125,
+// and (LV3_GUARD_STOP_X + LV3_HERO_STOP_X + 200) / 2 == LV3_CENTER_X.
+const int LV3_HERO_STOP_X = 263;
+const int LV3_GUARD_STOP_X = 338;
+
+// Guard Structure
+struct Lv3Guard {
+	int x, y;
+	int width, height;
+	int health;
+	bool isAlive;
+};
+
+const int LV3_GUARD_START_X = 600;
+const int LV3_GUARD_START_HEALTH = 50;
+
+Lv3Guard lv3Guard = { LV3_GUARD_START_X, 100, 200, 150, LV3_GUARD_START_HEALTH, true };
+int lv3GuardActionFrame = 0;
+int lv3GuardAnimTimer = 0;
+int lv3AttackTimer = 0;
+
+// Walking-to-the-door sequence played once the gun has been collected. The
+// hero stops just short of the door drawn in insideprison.png instead of
+// walking through it, to make it clear he has reached it.
+const int LV3_DOOR_STOP_X = 620;
+
+int lv3BgImageId = 0;
+int lv3HeroStandId = 0;
+int lv3HeroAnim2Id = 0;
+int lv3HeroAnim3Id = 0;
+int lv3HeroPunchId = 0;
+int lv3HeroKickId = 0;
+int lv3GuardStId = 0;
+int lv3GuardPunch1Id = 0;
+int lv3GuardPunch2Id = 0;
+int lv3GunImageId = 0;
+int lv3NoteImg = 0;
+
+void lv3RestartGame();
+void lv3UpdateGame();
+void lv3Draw();
+void lv3HandleMouseDown(int mx, int my);
 
 // ----------------------------------------------------------------------------
 // Centralised helpers deciding on which game states the Settings icon and the
@@ -618,7 +735,7 @@ void loadingUpdate()
 		}
 		else if (gameState == 6)
 		{
-			gameState = GAMESTATE_LEVEL2_MAP;
+			gameState = GAMESTATE_LEVEL2_NOTE;
 			loadingStep = 0;
 			if (musicPlaying) {
 				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
@@ -651,8 +768,11 @@ void loadingUpdate()
 		}
 		else if (gameState == GAMESTATE_LEVEL3_LOADING)
 		{
-			// Level 3 gameplay isn't built yet, so the bar just fills up
-			// and stays on the level3bg.png placeholder screen.
+			// Bar fills up, then shows the gun-collect note before entering
+			// the level 3 placeholder screen (level 3 gameplay isn't built
+			// yet, so that placeholder just displays level3bg.png).
+			gameState = GAMESTATE_GUNCOLLECT_NOTE;
+			loadingStep = 0;
 			if (musicPlaying) {
 				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
 			}
@@ -988,6 +1108,11 @@ void fixedUpdate() {
 	{
 		vrFixedUpdate();
 	}
+
+	if (gameState == GAMESTATE_LEVEL3_FIGHT)
+	{
+		lv3UpdateGame();
+	}
 }
 
 void resetDodgeBox(int i)
@@ -1008,6 +1133,7 @@ void resetDodgeGame()
 	dodgeGameStarted = false;
 	dodgeGameOver = false;
 	dodgeLevelComplete = false;
+	dodgeRunningToDoor = false;
 
 	dodgeLevel = 1;
 	dodgeLevelTimeLeft = 4.0f;
@@ -1022,6 +1148,7 @@ void nextDodgeLevel()
 	dodgeLevel++;
 	dodgeLevelTimeLeft = 3.0f;
 	dodgeLevelComplete = false;
+	dodgeRunningToDoor = false;
 
 	dodgePlayerX = -320;
 	dodgeCurrentAnimState = 0;
@@ -1050,16 +1177,37 @@ void updateDodgeGame()
 	if (!dodgeGameStarted || dodgeGameOver || dodgeLevelComplete)
 		return;
 
+	if (dodgeRunningToDoor)
+	{
+		// All boxes dodged: keep the character auto-running right towards
+		// the door instead of freezing on the spot, then show the level
+		// complete note once he actually gets there.
+		dodgePlayerX += dodgePlayerSpeed;
+
+		dodgeAnimTimer++;
+		int frame = (dodgeAnimTimer / 6) % 2;
+		dodgeCurrentAnimState = (frame == 0) ? 3 : 4;
+
+		if (dodgePlayerX >= DODGE_DOOR_X)
+		{
+			dodgePlayerX = DODGE_DOOR_X;
+			dodgeCurrentAnimState = 0;
+			dodgeRunningToDoor = false;
+			dodgeLevelComplete = true;
+
+			if (dodgeLevel == 1) {
+				level1Completed = true;
+			}
+		}
+		return;
+	}
+
 	dodgeLevelTimeLeft -= 0.02f;
 
 	int rightBoundary = 800 - 250 - dodgeActualPlayerWidth;
 	if (dodgePlayerX >= rightBoundary - 5)
 	{
-		dodgeLevelComplete = true;
-
-		if (dodgeLevel == 1) {
-			level1Completed = true;
-		}
+		dodgeRunningToDoor = true;
 		return;
 	}
 
@@ -1652,6 +1800,269 @@ void vrHandleMouseDown(int mx, int my) {
 	}
 }
 
+// ----------------------------------------------------------------------------
+// LEVEL 3 FIGHT MINIGAME - function definitions
+// (Ported from the standalone "Level 3 - Prison Fight" project; only
+// variable/function names were prefixed with "lv3" to avoid clashing with
+// the rest of the game. Gameplay logic kept the same, other than centering
+// the fight and adding the walk-to-the-door finish.)
+// ----------------------------------------------------------------------------
+
+// Resets everything back to the initial fight state
+void lv3RestartGame() {
+	lv3HeroX = LV3_HERO_START_X;
+	lv3HeroY = LV3_HERO_START_Y;
+	lv3HeroHealth = LV3_HERO_START_HEALTH;
+	lv3IsAttacking = false;
+	lv3AttackCooldown = 0;
+	lv3HeroActionType = 1;
+	lv3HeroWalkFrame = 0;
+	lv3HeroWalkAnimTimer = 0;
+	lv3HeroReachedGuard = false;
+	lv3ClickCooldownTimer = 0;
+
+	lv3Guard.x = LV3_GUARD_START_X;
+	lv3Guard.health = LV3_GUARD_START_HEALTH;
+	lv3Guard.isAlive = true;
+	lv3GuardActionFrame = 0;
+	lv3GuardAnimTimer = 0;
+	lv3AttackTimer = 0;
+
+	lv3SubState = 0;
+}
+
+void lv3UpdateGame() {
+	if (lv3SubState == 0) {
+		// Attack visual duration timer
+		if (lv3IsAttacking) {
+			lv3AttackCooldown--;
+			if (lv3AttackCooldown <= 0) {
+				lv3IsAttacking = false;
+			}
+		}
+
+		// Click cooldown timer (limits attack rate -> longer fight)
+		if (lv3ClickCooldownTimer > 0) {
+			lv3ClickCooldownTimer--;
+		}
+
+		// Guard animates constantly (idle/attack frames)
+		lv3GuardAnimTimer++;
+		if (lv3GuardAnimTimer >= 15) {
+			lv3GuardActionFrame = (lv3GuardActionFrame + 1) % 3;
+			lv3GuardAnimTimer = 0;
+		}
+
+		if (!lv3HeroReachedGuard) {
+			// Hero and guard both auto-walk towards the centre of the screen
+			// and stop there, so the fight always happens in the middle
+			// instead of wherever they happened to meet.
+			if (lv3HeroX < LV3_HERO_STOP_X) {
+				lv3HeroX += 3;
+				lv3HeroWalkAnimTimer++;
+				if (lv3HeroWalkAnimTimer >= 10) {
+					lv3HeroWalkFrame = (lv3HeroWalkFrame + 1) % 3;
+					lv3HeroWalkAnimTimer = 0;
+				}
+			}
+
+			if (lv3Guard.isAlive && lv3Guard.x > LV3_GUARD_STOP_X) {
+				lv3Guard.x -= 2;
+			}
+
+			if (lv3HeroX >= LV3_HERO_STOP_X && (!lv3Guard.isAlive || lv3Guard.x <= LV3_GUARD_STOP_X)) {
+				lv3HeroX = LV3_HERO_STOP_X;
+				lv3Guard.x = LV3_GUARD_STOP_X;
+				lv3HeroReachedGuard = true; // stop both hero and guard movement here
+				lv3HeroWalkFrame = 0;       // reset to standing frame
+			}
+		}
+		else {
+			// Once collided: guard can still attack hero periodically
+			if (lv3Guard.isAlive) {
+				lv3AttackTimer++;
+				if (lv3AttackTimer >= 40) { // Slower attack rate to prolong fighting duration
+					lv3HeroHealth -= 5;
+					lv3AttackTimer = 0;
+					if (lv3HeroHealth < 0) lv3HeroHealth = 0;
+
+					// Restart the level if hero health hits 0
+					if (lv3HeroHealth <= 0) {
+						lv3RestartGame();
+					}
+				}
+			}
+		}
+	}
+	else if (lv3SubState == 2) {
+		// Walking towards the door; stop just short of it so it's clear the
+		// hero has reached it rather than walking through it.
+		if (lv3HeroX < LV3_DOOR_STOP_X) {
+			lv3HeroX += 3;
+			lv3HeroWalkAnimTimer++;
+			if (lv3HeroWalkAnimTimer >= 10) {
+				lv3HeroWalkFrame = (lv3HeroWalkFrame + 1) % 3;
+				lv3HeroWalkAnimTimer = 0;
+			}
+		}
+		else {
+			lv3HeroX = LV3_DOOR_STOP_X;
+			lv3HeroWalkFrame = 0;
+			lv3SubState = 3;
+		}
+	}
+}
+
+void lv3Draw() {
+	// Draw Background Image
+	iShowImage(0, 0, 800, 600, lv3BgImageId);
+
+	if (lv3SubState == 0) {
+		// Draw Hero: Priority to Attack animation, otherwise show walking or standing frames
+		if (lv3IsAttacking) {
+			if (lv3HeroActionType == 1) {
+				iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroPunchId);
+			}
+			else {
+				iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroKickId);
+			}
+		}
+		else {
+			if (lv3HeroWalkFrame == 0) {
+				iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroStandId);
+			}
+			else if (lv3HeroWalkFrame == 1) {
+				iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroAnim2Id);
+			}
+			else {
+				iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroAnim3Id);
+			}
+		}
+
+		// Draw Hero Health Bar
+		iSetColor(255, 255, 255);
+		iText(50, 560, "Hero Health:", GLUT_BITMAP_HELVETICA_18);
+		iSetColor(255, 0, 0);
+		iFilledRectangle(170, 562, lv3HeroHealth * 2, 15);
+
+		// Draw Guard if Alive
+		if (lv3Guard.isAlive) {
+			if (lv3GuardActionFrame == 0) {
+				iShowImage(lv3Guard.x, lv3Guard.y, lv3Guard.width, lv3Guard.height, lv3GuardStId);
+			}
+			else if (lv3GuardActionFrame == 1) {
+				iShowImage(lv3Guard.x, lv3Guard.y, lv3Guard.width, lv3Guard.height, lv3GuardPunch1Id);
+			}
+			else {
+				iShowImage(lv3Guard.x, lv3Guard.y, lv3Guard.width, lv3Guard.height, lv3GuardPunch2Id);
+			}
+
+			// Draw Guard Health Bar
+			iSetColor(255, 255, 255);
+			iText(500, 560, "Guard Health:", GLUT_BITMAP_HELVETICA_18);
+			iSetColor(255, 0, 0);
+			iFilledRectangle(630, 562, lv3Guard.health * 2, 15);
+		}
+
+		// Instructions box (original bottom placement, same as the standalone
+		// Level 3 fight project - not moved).
+		iShowImage(30, -15, 740, 300, lv3NoteImg);
+
+		iSetColor(0, 0, 0);
+		if (!lv3HeroReachedGuard) {
+			iText(310, 55, "Moving towards the guard...", GLUT_BITMAP_HELVETICA_18);
+		}
+		else {
+			iText(285, 55, "MOUSE CLICK = Punch/Kick", GLUT_BITMAP_HELVETICA_18);
+		}
+	}
+	else if (lv3SubState == 1) {
+		// Level Complete / Gun Prompt Note Box & Text (original placement)
+		iShowImage(30, -15, 740, 300, lv3NoteImg);
+
+		iSetColor(0, 150, 0);
+		iText(290, 55, "GUARD DEFEATED!", GLUT_BITMAP_TIMES_ROMAN_24);
+
+		iSetColor(0, 0, 0);
+		iText(305, 30, "COLLECT THE GUN!", GLUT_BITMAP_HELVETICA_18);
+
+		iShowImage(330, 200, 180, 100, lv3GunImageId);
+
+		// Draw Arrow Pointing Down to the Gun with Increased Thickness
+		iSetColor(255, 0, 0); // Red arrow
+
+		// Draw multiple parallel lines side-by-side to make the shaft thick
+		for (int offset = -2; offset <= 2; offset++) {
+			iLine(410 + offset, 330, 410 + offset, 290);
+		}
+
+		// Draw multiple lines for the arrow head to make it bold
+		for (int offset = -2; offset <= 2; offset++) {
+			iLine(410 + offset, 290, 400 + offset, 305);
+			iLine(410 + offset, 290, 420 + offset, 305);
+		}
+	}
+	else if (lv3SubState == 2) {
+		// Walking towards the door after collecting the gun
+		if (lv3HeroWalkFrame == 0) {
+			iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroStandId);
+		}
+		else if (lv3HeroWalkFrame == 1) {
+			iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroAnim2Id);
+		}
+		else {
+			iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroAnim3Id);
+		}
+	}
+	else if (lv3SubState == 3) {
+		// Stopped right before the door
+		iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroStandId);
+
+		iShowImage(30, -15, 740, 300, lv3NoteImg);
+		iSetColor(0, 0, 0);
+		iText(280, 55, "YOU REACHED THE DOOR!", GLUT_BITMAP_HELVETICA_18);
+	}
+}
+
+// Mouse click handles alternating punch/kick combo (only while fighting), and
+// the gun pickup click once the guard is defeated.
+void lv3HandleMouseDown(int mx, int my) {
+	if (lv3SubState == 0 && lv3HeroReachedGuard) {
+		// Enforce a cooldown between hits so fights last longer
+		if (lv3ClickCooldownTimer <= 0) {
+			lv3IsAttacking = true;
+			lv3AttackCooldown = 15; // Keep attack frame visible
+			lv3ClickCooldownTimer = LV3_CLICK_COOLDOWN;
+
+			if (lv3Guard.isAlive) {
+				lv3Guard.health -= 5; // reduced from 10 -> longer fight
+
+				if (lv3Guard.health <= 0) {
+					lv3Guard.health = 0;
+					lv3Guard.isAlive = false;
+					lv3SubState = 1;
+				}
+			}
+
+			// Alternate between Punch (1) and Kick (2)
+			if (lv3HeroActionType == 1) {
+				lv3HeroActionType = 2;
+			}
+			else {
+				lv3HeroActionType = 1;
+			}
+		}
+	}
+	else if (lv3SubState == 1) {
+		// Click on the gun to proceed: hero now walks off towards the door
+		if (mx >= 380 && mx <= 440 && my >= 250 && my <= 280) {
+			lv3SubState = 2;
+			lv3HeroWalkFrame = 0;
+			lv3HeroWalkAnimTimer = 0;
+		}
+	}
+}
+
 void iDraw()
 {
 	iClear();
@@ -2027,6 +2438,44 @@ void iDraw()
 	{
 		vrDraw();
 	}
+	else if (gameState == GAMESTATE_DODGE_NOTE)
+	{
+		if (dodgeBgImg > 0) iShowImage(0, 0, 800, 600, dodgeBgImg);
+		if (dodgeIntroNoteImg > 0) iShowImage(130, 150, 500, 280, dodgeIntroNoteImg);
+		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+	}
+	else if (gameState == GAMESTATE_LEVEL2_NOTE)
+	{
+		if (level2MapImg > 0) iShowImage(0, 0, 800, 600, level2MapImg);
+		if (level2NoteImg > 0) iShowImage(150, 150, 500, 200, level2NoteImg);
+		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+	}
+	else if (gameState == GAMESTATE_USB_NOTE)
+	{
+		if (usbImgBg > 0) iShowImage(0, 0, 800, 600, usbImgBg);
+		else iShowImage(0, 0, 800, 600, level2Bg);
+		if (usbNoteImg > 0) iShowImage(50, 200, 700, 140, usbNoteImg);
+		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+	}
+	else if (gameState == GAMESTATE_INVEST_NOTE)
+	{
+		if (investRoomImg > 0) iShowImage(0, 0, 800, 600, investRoomImg);
+		if (evidenceRoomNoteImg > 0) iShowImage(150, 150, 480, 280, evidenceRoomNoteImg);
+		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+	}
+	else if (gameState == GAMESTATE_GUNCOLLECT_NOTE)
+	{
+		// Shown on the level 3 fight's own background (insideprison.png) so
+		// it leads straight into that scene once Next is clicked.
+		if (lv3BgImageId > 0) iShowImage(0, 0, 800, 600, lv3BgImageId);
+		else if (level3BgImg > 0) iShowImage(0, 0, 800, 600, level3BgImg);
+		if (gunCollectImg > 0) iShowImage(150, 150, 480, 280, gunCollectImg);
+		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+	}
+	else if (gameState == GAMESTATE_LEVEL3_FIGHT)
+	{
+		lv3Draw();
+	}
 
 	if (isSettingsVisibleState(gameState))
 	{
@@ -2133,6 +2582,67 @@ void iMouse(int button, int state, int mx, int my)
 
 		if (isGamePaused) return;
 
+		// ------------------------------------------------------------------
+		// NEW: intro/"note" screens. Each just waits for a click on the
+		// Next button (same 650,50 - 750,90 hotspot used elsewhere in the
+		// game for "next") and then starts the minigame exactly the way it
+		// used to start before the note screen was added.
+		// ------------------------------------------------------------------
+		if (gameState == GAMESTATE_DODGE_NOTE)
+		{
+			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
+			{
+				resetDodgeGame();
+				gameState = GAMESTATE_DODGE;
+			}
+			return;
+		}
+
+		if (gameState == GAMESTATE_LEVEL2_NOTE)
+		{
+			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
+			{
+				gameState = GAMESTATE_LEVEL2_MAP;
+			}
+			return;
+		}
+
+		if (gameState == GAMESTATE_USB_NOTE)
+		{
+			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
+			{
+				gameState = 400;
+				usbInitGame();
+			}
+			return;
+		}
+
+		if (gameState == GAMESTATE_INVEST_NOTE)
+		{
+			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
+			{
+				resetInvestPuzzle();
+				gameState = GAMESTATE_INVESTIGATION;
+			}
+			return;
+		}
+
+		if (gameState == GAMESTATE_GUNCOLLECT_NOTE)
+		{
+			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
+			{
+				lv3RestartGame();
+				gameState = GAMESTATE_LEVEL3_FIGHT;
+			}
+			return;
+		}
+
+		if (gameState == GAMESTATE_LEVEL3_FIGHT)
+		{
+			lv3HandleMouseDown(mx, my);
+			return;
+		}
+
 		if (gameState == 60 && wrong)
 		{
 			resetLevel1();
@@ -2141,11 +2651,20 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
-		if (gameState == 400 || gameState == 50 || gameState == 51 || gameState == 52 || gameState == 53 || gameState == 54 || gameState == 55 || gameState == 60 || gameState == 70 || gameState == 71)
+		if (gameState == 50 || gameState == 51 || gameState == 52 || gameState == 53 || gameState == 54 || gameState == 55 || gameState == 60 || gameState == 70 || gameState == 71)
 		{
 			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
 			{
 				gameState = 350;
+				return;
+			}
+		}
+
+		if (gameState == 400)
+		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = GAMESTATE_LEVEL2_MAP;
 				return;
 			}
 		}
@@ -2192,14 +2711,12 @@ void iMouse(int button, int state, int mx, int my)
 			}
 			else if (mx >= 15 && mx <= 240 && my >= 320 && my <= 590)
 			{
-				gameState = 400;
-				usbInitGame();
+				gameState = GAMESTATE_USB_NOTE;
 				return;
 			}
 			else if (mx >= 320 && mx <= 480 && my >= 350 && my <= 550)
 			{
-				resetInvestPuzzle();
-				gameState = GAMESTATE_INVESTIGATION;
+				gameState = GAMESTATE_INVEST_NOTE;
 				return;
 			}
 			else if (vaultUnlocked && mx >= 154 && mx <= 362 && my >= 56 && my <= 253)
@@ -2314,8 +2831,7 @@ void iMouse(int button, int state, int mx, int my)
 			else if (mx >= 530 && mx <= 730 && my >= 333 && my <= 561)
 			{
 				if (switchPuzzleCompleted && cctvUnlocked && !level1Completed) {
-					resetDodgeGame();
-					gameState = GAMESTATE_DODGE;
+					gameState = GAMESTATE_DODGE_NOTE;
 				}
 				return;
 			}
@@ -2842,7 +3358,7 @@ int main()
 	que4 = iLoadImage("Images/que4.png");
 	que5 = iLoadImage("Images/que5.png");
 
-	dodgeBgImg = iLoadImage("Images/bk.png");
+	dodgeBgImg = iLoadImage("Images/fallingboxbg.png");
 	dodgeBoxImg = iLoadImage("Images/box.png");
 	dodgeNoteImg = iLoadImage("Images/note.png");
 	dodgeImgStand = iLoadImage("Images/stand.png");
@@ -2893,6 +3409,26 @@ int main()
 	vrRunnerImg[1] = iLoadImage("Images/player2.png");
 	vrRunnerImg[2] = iLoadImage("Images/player3.png");
 	vrWinBgImg = iLoadImage("Images/background1.png");
+
+	// NEW: note/instruction screen images
+	dodgeIntroNoteImg = iLoadImage("Images/dodgenote.png");
+	level2NoteImg = iLoadImage("Images/level2note.png");
+	usbNoteImg = iLoadImage("Images/usbnote.png");
+	evidenceRoomNoteImg = iLoadImage("Images/evidenceroomnote.png");
+	gunCollectImg = iLoadImage("Images/guncollect.png");
+
+	// Level 3 fight minigame images
+	lv3BgImageId = iLoadImage("Images/insideprison.png");
+	lv3HeroStandId = iLoadImage("Images/maincharstand.png");
+	lv3HeroAnim2Id = iLoadImage("Images/mainchar2.png");
+	lv3HeroAnim3Id = iLoadImage("Images/mainchar3.png");
+	lv3HeroPunchId = iLoadImage("Images/maincharpunch.png");
+	lv3HeroKickId = iLoadImage("Images/maincharkick.png");
+	lv3GuardStId = iLoadImage("Images/guardst.png");
+	lv3GuardPunch1Id = iLoadImage("Images/guardpunch1.png");
+	lv3GuardPunch2Id = iLoadImage("Images/guardpunch2.png");
+	lv3GunImageId = iLoadImage("Images/gun.png");
+	lv3NoteImg = iLoadImage("Images/note.png");
 
 	iSetTimer(20, fixedUpdate);
 	iSetTimer(100, loadingUpdate);
