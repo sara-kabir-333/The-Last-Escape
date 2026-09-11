@@ -408,6 +408,8 @@ int level3UnlockedBtn = 0; // Images/levelbg5.png
 int level3BgImg = 0;       // Images/level3bg.png
 const int GAMESTATE_LEVEL3_LOADING = 490;
 
+
+
 void vrResetGame();
 void vrFixedUpdate();
 void vrDraw();
@@ -523,6 +525,28 @@ void lv3UpdateGame();
 void lv3Draw();
 void lv3HandleMouseDown(int mx, int my);
 
+// ============================================================================
+// LEVEL 3 - GANGSTER SHOOTOUT MINIGAME (merged from the standalone "Prison
+// Escape: 3 Gangsters Shootout" project). This is the final part of Level 3:
+// once the player reaches the door at the end of the Level 3 Fight and clicks
+// Next, this minigame starts. All variables/functions are prefixed with "gs"
+// to avoid name clashes with the rest of the game, same convention as "vr"
+// (Vault Runner) and "lv3" (Level 3 Fight).
+// ============================================================================
+const int GAMESTATE_LEVEL3_SHOOTOUT = 560;
+
+// True once all 3 gangsters have been defeated (Level 3 fully completed).
+bool level3Completed = false;
+
+int gsState = -1;
+
+void gsResetGame();
+void gsUpdateGame();
+void gsDraw();
+void gsMouseMove(int mx, int my);
+void gsHandleLeftClick(int mx, int my);
+void gsHandleRightClick(int mx, int my);
+
 // ----------------------------------------------------------------------------
 // Centralised helpers deciding on which game states the Settings icon and the
 // Pause icon should be visible / clickable. Both the drawing code (iDraw) and
@@ -535,14 +559,16 @@ bool isSettingsVisibleState(int gs) {
 		gs == 70 || gs == 71 ||
 		(gs >= 50 && gs <= 60 && gs != 56 && gs != 57) ||
 		gs == GAMESTATE_DODGE || gs == GAMESTATE_LEVEL2_MAP ||
-		gs == GAMESTATE_INVESTIGATION || gs == GAMESTATE_VAULT_RUNNER;
+		gs == GAMESTATE_INVESTIGATION || gs == GAMESTATE_VAULT_RUNNER ||
+		gs == GAMESTATE_LEVEL3_SHOOTOUT;
 }
 
 bool isPauseVisibleState(int gs) {
 	return gs == 70 || gs == 71 ||
 		(gs >= 50 && gs <= 60 && gs != 56 && gs != 57) ||
 		gs == GAMESTATE_DODGE || gs == 400 ||
-		gs == GAMESTATE_VAULT_RUNNER || gs == GAMESTATE_INVESTIGATION;
+		gs == GAMESTATE_VAULT_RUNNER || gs == GAMESTATE_INVESTIGATION ||
+		gs == GAMESTATE_LEVEL3_SHOOTOUT;
 }
 
 void drawMenu() {
@@ -1112,6 +1138,11 @@ void fixedUpdate() {
 	if (gameState == GAMESTATE_LEVEL3_FIGHT)
 	{
 		lv3UpdateGame();
+	}
+
+	if (gameState == GAMESTATE_LEVEL3_SHOOTOUT)
+	{
+		gsUpdateGame();
 	}
 }
 
@@ -2021,8 +2052,12 @@ void lv3Draw() {
 		iShowImage(30, -15, 740, 300, lv3NoteImg);
 		iSetColor(0, 0, 0);
 		iText(280, 55, "YOU REACHED THE DOOR!", GLUT_BITMAP_HELVETICA_18);
+		iText(240, 30, "3 More Gangsters Are Waiting Outside...", GLUT_BITMAP_HELVETICA_18);
+
+		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
 	}
 }
+
 
 // Mouse click handles alternating punch/kick combo (only while fighting), and
 // the gun pickup click once the guard is defeated.
@@ -2060,6 +2095,329 @@ void lv3HandleMouseDown(int mx, int my) {
 			lv3HeroWalkFrame = 0;
 			lv3HeroWalkAnimTimer = 0;
 		}
+	}
+	else if (lv3SubState == 3) {
+		// Click Next to leave the prison and face the 3 gangsters outside -
+		// the final part of Level 3.
+		if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90) {
+			gsResetGame();
+			gsState = -1;
+			gameState = GAMESTATE_LEVEL3_SHOOTOUT;
+		}
+	}
+}
+
+// ----------------------------------------------------------------------------
+// LEVEL 3 - GANGSTER SHOOTOUT MINIGAME - global variables & function
+// definitions
+// (Ported from the standalone "Prison Escape: 3 Gangsters Shootout" project;
+// only variable/function names were prefixed with "gs" to avoid clashing with
+// the rest of the game, and gameState transitions were added so this plugs
+// into Level 3 - it is not otherwise changed from the original standalone
+// gameplay logic.)
+// ----------------------------------------------------------------------------
+const int GS_SCREEN_W = 800;
+const int GS_SCREEN_H = 600;
+
+// Prisoner (Player)
+int gsPrisonerX = 100;
+int gsPrisonerY = 50;
+int gsPrisonerWidth = 160;
+int gsPrisonerHeight = 200;
+
+// Jump
+int gsPrisonerVelY = 0;
+bool gsIsJumping = false;
+int gsGroundY = 50;
+int gsJumpStrength = 18;
+int gsGravity = 1;
+
+// Gangster (Enemy)
+int gsGangsterX = 580;
+int gsGangsterY = 50;
+int gsGangsterWidth = 160;
+int gsGangsterHeight = 200;
+
+// Fixed positions for dead gangsters so they don't move with the active one
+int gsDeadX1 = 0, gsDeadX2 = 0, gsDeadX3 = 0;
+
+// Progression
+int gsCurrentGangster = 1; // 1, 2, or 3
+int gsGangsterHits = 0;    // Hits on current gangster (out of 20)
+int gsGangsterShootCounter = 0;
+
+// Images
+int gsBgImg = 0, gsWpImg = 0, gsPrisonerImg = 0, gsGangsterImg = 0, gsPbImg = 0, gsGbImg = 0;
+int gsDeadImg1 = 0, gsDeadImg2 = 0, gsDeadImg3 = 0;
+
+#define GS_MAX_BULLETS 50
+
+struct GsBullet {
+	int x, y;
+	bool active;
+};
+
+GsBullet gsPBullets[GS_MAX_BULLETS]; // Prisoner bullets (moving right)
+GsBullet gsGBullets[GS_MAX_BULLETS]; // Gangster bullets (moving left)
+
+// Stats
+int gsScore = 0;
+int gsMiss = 0;
+// -1: Instruction Screen, 0: Playing, 1: Win, 2: Game Over
+
+void gsResetGame() {
+	gsScore = 0;
+	gsMiss = 0;
+	gsGangsterHits = 0;
+	gsCurrentGangster = 1;
+	gsPrisonerX = 100;
+	gsGangsterX = 580;
+	gsDeadX1 = 0;
+	gsDeadX2 = 0;
+	gsDeadX3 = 0;
+	gsPrisonerY = gsGroundY;
+	gsPrisonerVelY = 0;
+	gsIsJumping = false;
+	gsGangsterShootCounter = 0;
+	for (int i = 0; i < GS_MAX_BULLETS; i++) {
+		gsPBullets[i].active = false;
+		gsGBullets[i].active = false;
+	}
+}
+
+void gsUpdateGame() {
+	if (gsState != 0) return;
+
+	// Apply jump physics
+	if (gsIsJumping) {
+		gsPrisonerY += gsPrisonerVelY;
+		gsPrisonerVelY -= gsGravity;
+
+		if (gsPrisonerY <= gsGroundY) {
+			gsPrisonerY = gsGroundY;
+			gsPrisonerVelY = 0;
+			gsIsJumping = false;
+		}
+	}
+
+	// Gangster shooting every 3 seconds (150 frames at 20ms)
+	gsGangsterShootCounter++;
+	if (gsGangsterShootCounter >= 150) {
+		gsGangsterShootCounter = 0;
+		for (int i = 0; i < GS_MAX_BULLETS; i++) {
+			if (!gsGBullets[i].active) {
+				gsGBullets[i].x = gsGangsterX;
+				gsGBullets[i].y = gsGangsterY + gsGangsterHeight / 2 - 12;
+				gsGBullets[i].active = true;
+				break;
+			}
+		}
+	}
+
+	// Update Prisoner Bullets & Collision with Gangster
+	for (int i = 0; i < GS_MAX_BULLETS; i++) {
+		if (gsPBullets[i].active) {
+			gsPBullets[i].x += 15;
+
+			if (gsPBullets[i].x > GS_SCREEN_W) {
+				gsPBullets[i].active = false;
+			}
+
+			if (gsCurrentGangster <= 3 &&
+				gsPBullets[i].x + 30 >= gsGangsterX && gsPBullets[i].x <= gsGangsterX + gsGangsterWidth &&
+				gsPBullets[i].y + 15 >= gsGangsterY && gsPBullets[i].y <= gsGangsterY + gsGangsterHeight) {
+
+				gsPBullets[i].active = false;
+				gsGangsterHits++;
+				gsScore++;
+
+				if (gsGangsterHits >= 20) {
+					if (gsCurrentGangster == 1) gsDeadX1 = gsGangsterX;
+					else if (gsCurrentGangster == 2) gsDeadX2 = gsGangsterX;
+					else if (gsCurrentGangster == 3) gsDeadX3 = gsGangsterX;
+
+					gsCurrentGangster++;
+					gsGangsterHits = 0;
+					gsGangsterX = 580;
+
+					if (gsCurrentGangster > 3) {
+						gsState = 1; // Win
+						level3Completed = true;
+					}
+				}
+			}
+		}
+	}
+
+	// Update Gangster Bullets & Collision with Prisoner
+	for (int i = 0; i < GS_MAX_BULLETS; i++) {
+		if (gsGBullets[i].active) {
+			gsGBullets[i].x -= 12;
+
+			if (gsGBullets[i].x < 0) {
+				gsGBullets[i].active = false;
+			}
+
+			if (gsGBullets[i].x <= gsPrisonerX + gsPrisonerWidth && gsGBullets[i].x + 50 >= gsPrisonerX &&
+				gsGBullets[i].y + 25 >= gsPrisonerY && gsGBullets[i].y <= gsPrisonerY + gsPrisonerHeight) {
+
+				gsGBullets[i].active = false;
+				gsMiss++;
+
+				if (gsMiss >= 3) {
+					gsState = 2; // Game Over
+				}
+			}
+		}
+	}
+}
+
+void gsDraw() {
+	if (gsState == -1) {
+		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
+		iShowImage(20, 50, 760, 140, gsWpImg);
+
+		iSetColor(50, 20, 10);
+		iText(220, 95, "Prisoner has to fight 3 gangsters sequentially!", GLUT_BITMAP_HELVETICA_18);
+		iText(220, 75, "Left-Click to Shoot/Start | Right-Click to Jump!", GLUT_BITMAP_HELVETICA_18);
+
+		iSetColor(255, 255, 255);
+		iText(240, 20, "Click anywhere with Mouse to Start", GLUT_BITMAP_HELVETICA_18);
+
+		iShowImage(50, 50, 100, 40, backImg);
+		return;
+	}
+
+	if (gsState == 1) {
+		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
+		iShowImage(20, 50, 760, 140, gsWpImg);
+
+		iSetColor(0, 100, 0); // Dark Green
+		iText(220, 95, "YOU WIN! All Gangsters Defeated!", GLUT_BITMAP_TIMES_ROMAN_24);
+
+		iSetColor(255, 255, 255);
+		iText(190, 75, "LEVEL 3 COMPLETE! Click to Return to Levels", GLUT_BITMAP_HELVETICA_18);
+		return;
+	}
+
+	if (gsState == 2) {
+		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
+		iShowImage(20, 50, 760, 140, gsWpImg);
+
+		iSetColor(150, 0, 0); // Dark Red
+		iText(220, 95, "GAME OVER", GLUT_BITMAP_TIMES_ROMAN_24);
+
+		iSetColor(255, 255, 255);
+		iText(220, 75, "Click anywhere with Mouse to Restart", GLUT_BITMAP_HELVETICA_18);
+
+		iShowImage(50, 50, 100, 40, backImg);
+		return;
+	}
+
+	// Gameplay Screen
+	iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
+
+	// Draw Dead Gangsters fixed at their respective death locations
+	if (gsCurrentGangster > 1) {
+		iShowImage(gsDeadX1, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsDeadImg1);
+	}
+	if (gsCurrentGangster > 2) {
+		iShowImage(gsDeadX2, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsDeadImg2);
+	}
+	if (gsState == 1) {
+		iShowImage(gsDeadX3, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsDeadImg3);
+	}
+
+	// Draw Active Gangster if game is not won
+	if (gsCurrentGangster <= 3 && gsState == 0) {
+		iShowImage(gsGangsterX, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsGangsterImg);
+	}
+
+	// Draw Prisoner
+	iShowImage(gsPrisonerX, gsPrisonerY, gsPrisonerWidth, gsPrisonerHeight, gsPrisonerImg);
+
+	// Draw Prisoner Bullets (Standard Size: 30x15)
+	for (int i = 0; i < GS_MAX_BULLETS; i++) {
+		if (gsPBullets[i].active) {
+			iShowImage(gsPBullets[i].x, gsPBullets[i].y, 30, 15, gsPbImg);
+		}
+	}
+
+	// Draw Gangster Bullets (Increased Size: 50x25)
+	for (int i = 0; i < GS_MAX_BULLETS; i++) {
+		if (gsGBullets[i].active) {
+			iShowImage(gsGBullets[i].x, gsGBullets[i].y, 50, 25, gsGbImg);
+		}
+	}
+
+	// Display Stats
+	char gsScoreStr[50], gsMissStr[50], gsBossStr[50];
+	sprintf(gsScoreStr, "Hits: %d / 20", gsGangsterHits);
+	sprintf(gsMissStr, "Damage Taken: %d / 3", gsMiss);
+	sprintf(gsBossStr, "Gangster: %d / 3", gsCurrentGangster);
+
+	iSetColor(255, 255, 255);
+	iText(50, 560, gsScoreStr, GLUT_BITMAP_HELVETICA_18);
+	iText(330, 560, gsBossStr, GLUT_BITMAP_HELVETICA_18);
+	iText(570, 560, gsMissStr, GLUT_BITMAP_HELVETICA_18);
+}
+
+// Mouse movement for Prisoner and synchronized Gangster control
+void gsMouseMove(int mx, int my) {
+	if (gsState != 0) return;
+
+	int oldPrisonerX = gsPrisonerX;
+
+	gsPrisonerX = mx - gsPrisonerWidth / 2;
+	if (gsPrisonerX < 0) gsPrisonerX = 0;
+	if (gsPrisonerX > GS_SCREEN_W / 2 - gsPrisonerWidth) gsPrisonerX = GS_SCREEN_W / 2 - gsPrisonerWidth;
+
+	// Calculate how much the prisoner moved and apply it to the active gangster
+	int deltaX = gsPrisonerX - oldPrisonerX;
+	gsGangsterX += deltaX;
+
+	// Keep gangster within reasonable bounds on the right side
+	if (gsGangsterX < GS_SCREEN_W / 2 + 50) gsGangsterX = GS_SCREEN_W / 2 + 50;
+	if (gsGangsterX > GS_SCREEN_W - gsGangsterWidth - 20) gsGangsterX = GS_SCREEN_W - gsGangsterWidth - 20;
+}
+
+// Left-Click to Start/Restart/Shoot (the Back button on the instruction,
+// game-over screens, and win screen is handled by the caller in iMouse,
+// same as the other minigames such as Dodge/USB/Investigation)
+void gsHandleLeftClick(int mx, int my) {
+	if (gsState == -1 || gsState == 2) {
+		gsResetGame();
+		gsState = 0;
+		return;
+	}
+
+	if (gsState == 1) {
+		// Level 3 fully complete - head back to the level select screen.
+		gsResetGame();
+		gsState = -1;
+		gameState = 300;
+		return;
+	}
+
+	// Gameplay shooting (Left Click)
+	if (gsState == 0) {
+		for (int i = 0; i < GS_MAX_BULLETS; i++) {
+			if (!gsPBullets[i].active) {
+				gsPBullets[i].x = gsPrisonerX + gsPrisonerWidth;
+				gsPBullets[i].y = gsPrisonerY + gsPrisonerHeight / 2 - 7;
+				gsPBullets[i].active = true;
+				break;
+			}
+		}
+	}
+}
+
+// Right-Click to Jump
+void gsHandleRightClick(int mx, int my) {
+	if (gsState != 0) return;
+	if (!gsIsJumping) {
+		gsIsJumping = true;
+		gsPrisonerVelY = gsJumpStrength;
 	}
 }
 
@@ -2476,6 +2834,10 @@ void iDraw()
 	{
 		lv3Draw();
 	}
+	else if (gameState == GAMESTATE_LEVEL3_SHOOTOUT)
+	{
+		gsDraw();
+	}
 
 	if (isSettingsVisibleState(gameState))
 	{
@@ -2640,6 +3002,17 @@ void iMouse(int button, int state, int mx, int my)
 		if (gameState == GAMESTATE_LEVEL3_FIGHT)
 		{
 			lv3HandleMouseDown(mx, my);
+			return;
+		}
+
+		if (gameState == GAMESTATE_LEVEL3_SHOOTOUT)
+		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 300;
+				return;
+			}
+			gsHandleLeftClick(mx, my);
 			return;
 		}
 
@@ -2904,6 +3277,14 @@ void iMouse(int button, int state, int mx, int my)
 			vrIsMouseHeld = false;
 		}
 	}
+	else if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+	{
+		if (isGamePaused) return;
+		if (gameState == GAMESTATE_LEVEL3_SHOOTOUT)
+		{
+			gsHandleRightClick(mx, my);
+		}
+	}
 }
 
 void iMouseMove(int mx, int my)
@@ -2911,6 +3292,10 @@ void iMouseMove(int mx, int my)
 	if (gameState == GAMESTATE_INVESTIGATION)
 	{
 		handleInvestMouseMove(mx, my);
+	}
+	else if (gameState == GAMESTATE_LEVEL3_SHOOTOUT)
+	{
+		gsMouseMove(mx, my);
 	}
 }
 
@@ -3429,6 +3814,22 @@ int main()
 	lv3GuardPunch2Id = iLoadImage("Images/guardpunch2.png");
 	lv3GunImageId = iLoadImage("Images/gun.png");
 	lv3NoteImg = iLoadImage("Images/note.png");
+
+	// Level 3 - Gangster Shootout minigame images (final part of Level 3,
+	// played right after the Level 3 Fight's "reached the door" screen)
+	gsBgImg = iLoadImage("Images/collison room.png");
+	gsWpImg = iLoadImage("Images/wp.png");
+	gsPrisonerImg = iLoadImage("Images/prisoner.png");
+	gsGangsterImg = iLoadImage("Images/gangster.png");
+	gsPbImg = iLoadImage("Images/pb.png");
+	gsGbImg = iLoadImage("Images/gb.png");
+	gsDeadImg1 = iLoadImage("Images/dead1.png");
+	gsDeadImg2 = iLoadImage("Images/dead2.png");
+	gsDeadImg3 = iLoadImage("Images/dead3.png");
+	for (int i = 0; i < GS_MAX_BULLETS; i++) {
+		gsPBullets[i].active = false;
+		gsGBullets[i].active = false;
+	}
 
 	iSetTimer(20, fixedUpdate);
 	iSetTimer(100, loadingUpdate);
