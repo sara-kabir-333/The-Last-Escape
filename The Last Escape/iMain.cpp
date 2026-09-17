@@ -338,7 +338,8 @@ void handleInvestMouseMove(int mx, int my);
 // VAULT RUNNER MINIGAME (merged from second project)
 // Triggered by clicking the vault image on the GAMESTATE_LEVEL2_MAP screen
 // once vaultUnlocked is true. All variables/functions are prefixed with "vr"
-// to avoid name clashes with the rest of the game.
+// to avoid name clashes with the rest of the game. No gameplay logic was
+// changed.
 // ============================================================================
 const int GAMESTATE_VAULT_RUNNER = 470;
 
@@ -362,6 +363,16 @@ int vrBoxY = 200;
 int vrBoxWidth = 40;
 int vrBoxHeight = 45;
 int vrGameSpeed = 4;
+
+// Runner sprite is drawn at 80x100 but has transparent padding around the
+// visible character, so a full 80x100 hitbox triggers collisions well
+// before the character visually touches anything. These insets shrink the
+// hitbox down to roughly the visible character silhouette.
+//   still triggering too early  -> increase the inset
+//   overlapping visibly before game over -> decrease the inset
+const int VR_RUNNER_HITBOX_INSET_X = 22;
+const int VR_RUNNER_HITBOX_INSET_Y = 15;
+const int VR_OBSTACLE_HITBOX_INSET = 8;
 
 int vrRockX = 1100;
 int vrRockY = 200;
@@ -447,7 +458,7 @@ int lv3SubState = 0;
 
 const int LV3_HERO_START_X = 100;
 const int LV3_HERO_START_Y = 100;
-const int LV3_HERO_START_HEALTH = 30;
+const int LV3_HERO_START_HEALTH = 50;
 
 int lv3HeroX = LV3_HERO_START_X;
 int lv3HeroY = LV3_HERO_START_Y;
@@ -496,7 +507,7 @@ struct Lv3Guard {
 };
 
 const int LV3_GUARD_START_X = 600;
-const int LV3_GUARD_START_HEALTH = 50;
+const int LV3_GUARD_START_HEALTH = 45;
 
 Lv3Guard lv3Guard = { LV3_GUARD_START_X, 100, 200, 150, LV3_GUARD_START_HEALTH, true };
 int lv3GuardActionFrame = 0;
@@ -520,12 +531,23 @@ int lv3GuardPunch2Id = 0;
 int lv3GunImageId = 0;
 int lv3NoteImg = 0;
 
+// Image-based Hero/Guard health bars. Instead of a scaling frame/fill bar,
+// each side picks one of a fixed set of "life stage" images based on its
+// current health percentage (see lv3GetHeroLifeImg / lv3GetGuardLifeImg).
+// Hero has 5 stages (100/75/50/25/0 - he can hit 0 health before restarting),
+// Guard has 4 stages (100/75/50/25 - his health bar stops being drawn as
+// soon as he dies, so a 0 stage is never needed).
+int lv3HeroLifeImg[5] = { 0, 0, 0, 0, 0 };  // charlife100/75/50/25/0.png
+int lv3GuardLifeImg[4] = { 0, 0, 0, 0 };    // guardlife100/75/50/25.png
+
 void lv3RestartGame();
 void lv3UpdateGame();
 void lv3Draw();
 void lv3HandleMouseDown(int mx, int my);
+int lv3GetHeroLifeImg(int health, int maxHealth);
+int lv3GetGuardLifeImg(int health, int maxHealth);
 
-// ============================================================================
+// ----------------------------------------------------------------------------
 // LEVEL 3 - GANGSTER SHOOTOUT MINIGAME (merged from the standalone "Prison
 // Escape: 3 Gangsters Shootout" project). This is the final part of Level 3:
 // once the player reaches the door at the end of the Level 3 Fight and clicks
@@ -1533,7 +1555,8 @@ void handleInvestMouseMove(int mx, int my) {
 // VAULT RUNNER MINIGAME - function definitions
 // (Ported as-is from the second project; only variable/function names were
 // prefixed with "vr" to avoid clashing with the rest of the game. No gameplay
-// logic was changed.)
+// logic was changed other than the collision hitbox fix and note screen
+// noted in the comments below.)
 // ----------------------------------------------------------------------------
 
 void vrResetGame() {
@@ -1675,12 +1698,20 @@ void vrFixedUpdate() {
 		}
 	}
 
-	if (vrRunnerX + 50 >= vrBoxX && vrRunnerX <= vrBoxX + vrBoxWidth && vrRunnerY <= vrBoxY + vrBoxHeight) {
+	// FIXED: hitboxes shrunk with VR_RUNNER_HITBOX_INSET_X/Y and
+	// VR_OBSTACLE_HITBOX_INSET so game over only triggers once the visible
+	// character actually touches the box/stone, instead of well before it
+	// (caused by transparent padding around the sprites).
+	if (vrRunnerX + 80 - VR_RUNNER_HITBOX_INSET_X >= vrBoxX + VR_OBSTACLE_HITBOX_INSET &&
+		vrRunnerX + VR_RUNNER_HITBOX_INSET_X <= vrBoxX + vrBoxWidth - VR_OBSTACLE_HITBOX_INSET &&
+		vrRunnerY <= vrBoxY + vrBoxHeight - VR_RUNNER_HITBOX_INSET_Y) {
 		vrGameOver = true;
 		vrGameWon = false;
 	}
 
-	if (vrRunnerX + 50 >= vrRockX && vrRunnerX <= vrRockX + 50 && vrRunnerY <= vrRockY + 38) {
+	if (vrRunnerX + 80 - VR_RUNNER_HITBOX_INSET_X >= vrRockX + VR_OBSTACLE_HITBOX_INSET &&
+		vrRunnerX + VR_RUNNER_HITBOX_INSET_X <= vrRockX + 50 - VR_OBSTACLE_HITBOX_INSET &&
+		vrRunnerY <= vrRockY + 38 - VR_RUNNER_HITBOX_INSET_Y) {
 		vrGameOver = true;
 		vrGameWon = false;
 	}
@@ -1689,9 +1720,13 @@ void vrFixedUpdate() {
 void vrDraw() {
 	if (!vrIsStarted) {
 		iShowImage(0, 0, 800, 600, vrVault1Img);
-		iShowImage(200, 45, 390, 180, vrNoteImg);
+		// FIXED: note box now uses the same axis as every other note.png
+		// screen in the game (150, 20, 500, 200), and the jump instruction
+		// was added alongside the laser instruction.
+		iShowImage(150, 20, 500, 200, vrNoteImg);
 		iSetColor(20, 20, 20);
-		iText(230, 80, "Click anywhere to disable the laser", GLUT_BITMAP_HELVETICA_18);
+		iText(230, 65, "Click anywhere to disable the laser", GLUT_BITMAP_HELVETICA_18);
+		iText(255, 50, "Click to Jump - Avoid the Boxes!", GLUT_BITMAP_HELVETICA_18);
 		return;
 	}
 
@@ -1836,7 +1871,8 @@ void vrHandleMouseDown(int mx, int my) {
 // (Ported from the standalone "Level 3 - Prison Fight" project; only
 // variable/function names were prefixed with "lv3" to avoid clashing with
 // the rest of the game. Gameplay logic kept the same, other than centering
-// the fight and adding the walk-to-the-door finish.)
+// the fight, adding the walk-to-the-door finish, and switching the health
+// bars to image-based bars as noted below.)
 // ----------------------------------------------------------------------------
 
 // Resets everything back to the initial fight state
@@ -1944,6 +1980,26 @@ void lv3UpdateGame() {
 	}
 }
 
+// Picks the hero's life-stage image (5 stages: 100/75/50/25/0) from his
+// current health as a percentage of max health.
+int lv3GetHeroLifeImg(int health, int maxHealth) {
+	if (health <= 0) return lv3HeroLifeImg[4];
+	else if (health <= maxHealth / 4) return lv3HeroLifeImg[3];
+	else if (health <= maxHealth / 2) return lv3HeroLifeImg[2];
+	else if (health <= (maxHealth * 3) / 4) return lv3HeroLifeImg[1];
+	else return lv3HeroLifeImg[0];
+}
+
+// Picks the guard's life-stage image (4 stages: 100/75/50/25) from his
+// current health as a percentage of max health. No 0-health stage is
+// needed since the guard's health bar stops being drawn once he dies.
+int lv3GetGuardLifeImg(int health, int maxHealth) {
+	if (health <= maxHealth / 4) return lv3GuardLifeImg[3];
+	else if (health <= maxHealth / 2) return lv3GuardLifeImg[2];
+	else if (health <= (maxHealth * 3) / 4) return lv3GuardLifeImg[1];
+	else return lv3GuardLifeImg[0];
+}
+
 void lv3Draw() {
 	// Draw Background Image
 	iShowImage(0, 0, 800, 600, lv3BgImageId);
@@ -1970,12 +2026,14 @@ void lv3Draw() {
 			}
 		}
 
-		// Draw Hero Health Bar
+		// Draw Hero Health Bar using a fixed life-stage image
+		// (charlife100/75/50/25/0.png) picked from his current health %.
 		iSetColor(255, 255, 255);
 		iText(50, 560, "Hero Health:", GLUT_BITMAP_HELVETICA_18);
-		iSetColor(255, 0, 0);
-		iFilledRectangle(170, 562, lv3HeroHealth * 2, 15);
-
+		{
+			int heroLifeImg = lv3GetHeroLifeImg(lv3HeroHealth, LV3_HERO_START_HEALTH);
+			if (heroLifeImg > 0) iShowImage(170, 545, 170, 60, heroLifeImg);//width,height
+		}
 		// Draw Guard if Alive
 		if (lv3Guard.isAlive) {
 			if (lv3GuardActionFrame == 0) {
@@ -1988,11 +2046,14 @@ void lv3Draw() {
 				iShowImage(lv3Guard.x, lv3Guard.y, lv3Guard.width, lv3Guard.height, lv3GuardPunch2Id);
 			}
 
-			// Draw Guard Health Bar
+			// Draw Guard Health Bar using a fixed life-stage image
+			// (guardlife100/75/50/25.png) picked from his current health %.
 			iSetColor(255, 255, 255);
 			iText(500, 560, "Guard Health:", GLUT_BITMAP_HELVETICA_18);
-			iSetColor(255, 0, 0);
-			iFilledRectangle(630, 562, lv3Guard.health * 2, 15);
+			{
+				int guardLifeImg = lv3GetGuardLifeImg(lv3Guard.health, LV3_GUARD_START_HEALTH);
+				if (guardLifeImg > 0) iShowImage(630, 545, 170, 60, guardLifeImg);
+			}
 		}
 
 		// Instructions box (original bottom placement, same as the standalone
@@ -2113,8 +2174,8 @@ void lv3HandleMouseDown(int mx, int my) {
 // (Ported from the standalone "Prison Escape: 3 Gangsters Shootout" project;
 // only variable/function names were prefixed with "gs" to avoid clashing with
 // the rest of the game, and gameState transitions were added so this plugs
-// into Level 3 - it is not otherwise changed from the original standalone
-// gameplay logic.)
+// into Level 3. The intro screen was changed to start on a Next button click
+// instead of a click-anywhere, as noted below.)
 // ----------------------------------------------------------------------------
 const int GS_SCREEN_W = 800;
 const int GS_SCREEN_H = 600;
@@ -2274,17 +2335,21 @@ void gsUpdateGame() {
 
 void gsDraw() {
 	if (gsState == -1) {
+		// FIXED: intro screen now shows a Next button instead of "click
+		// anywhere to start" - fighting only begins once Next is clicked
+		// (handled in gsHandleLeftClick).
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 		iShowImage(20, 50, 760, 140, gsWpImg);
 
 		iSetColor(50, 20, 10);
 		iText(220, 95, "Prisoner has to fight 3 gangsters sequentially!", GLUT_BITMAP_HELVETICA_18);
-		iText(220, 75, "Left-Click to Shoot/Start | Right-Click to Jump!", GLUT_BITMAP_HELVETICA_18);
+		iText(220, 75, "Left-Click to Shoot | Right-Click to Jump!", GLUT_BITMAP_HELVETICA_18);
 
 		iSetColor(255, 255, 255);
-		iText(240, 20, "Click anywhere with Mouse to Start", GLUT_BITMAP_HELVETICA_18);
+		iText(255, 20, "Click NEXT to Start", GLUT_BITMAP_HELVETICA_18);
 
 		iShowImage(50, 50, 100, 40, backImg);
+		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
 		return;
 	}
 
@@ -2385,7 +2450,18 @@ void gsMouseMove(int mx, int my) {
 // game-over screens, and win screen is handled by the caller in iMouse,
 // same as the other minigames such as Dodge/USB/Investigation)
 void gsHandleLeftClick(int mx, int my) {
-	if (gsState == -1 || gsState == 2) {
+	if (gsState == -1) {
+		// FIXED: only start when the Next button is clicked (same hotspot
+		// used by the note screens elsewhere), instead of the old
+		// click-anywhere-to-start behaviour.
+		if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90) {
+			gsResetGame();
+			gsState = 0;
+		}
+		return;
+	}
+
+	if (gsState == 2) {
 		gsResetGame();
 		gsState = 0;
 		return;
@@ -3814,6 +3890,23 @@ int main()
 	lv3GuardPunch2Id = iLoadImage("Images/guardpunch2.png");
 	lv3GunImageId = iLoadImage("Images/gun.png");
 	lv3NoteImg = iLoadImage("Images/note.png");
+
+	// Image-based Hero/Guard health bars for the Level 3 fight. Each side
+	// picks one of a fixed set of life-stage images based on current health
+	// percentage (see lv3GetHeroLifeImg / lv3GetGuardLifeImg). If these
+	// files don't exist yet, iShowImage calls using them are skipped
+	// (guarded by "> 0" checks in lv3Draw), so it's safe to add the actual
+	// art later without touching the code again.
+	lv3HeroLifeImg[0] = iLoadImage("Images/charlife100.png");
+	lv3HeroLifeImg[1] = iLoadImage("Images/charlife75.png");
+	lv3HeroLifeImg[2] = iLoadImage("Images/charlife50.png");
+	lv3HeroLifeImg[3] = iLoadImage("Images/charlife25.png");
+	lv3HeroLifeImg[4] = iLoadImage("Images/charlife0.png");
+
+	lv3GuardLifeImg[0] = iLoadImage("Images/guardlife100.png");
+	lv3GuardLifeImg[1] = iLoadImage("Images/guardlife75.png");
+	lv3GuardLifeImg[2] = iLoadImage("Images/guardlife50.png");
+	lv3GuardLifeImg[3] = iLoadImage("Images/guardlife25.png");
 
 	// Level 3 - Gangster Shootout minigame images (final part of Level 3,
 	// played right after the Level 3 Fight's "reached the door" screen)
