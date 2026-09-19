@@ -2288,7 +2288,7 @@ int gsGangsterShootCounter = 0;
 // Images
 int gsBgImg = 0, gsWpImg = 0, gsPrisonerImg = 0, gsGangsterImg = 0, gsPbImg = 0, gsGbImg = 0;
 int gsDeadImg1 = 0, gsDeadImg2 = 0, gsDeadImg3 = 0;
-
+int gsH1Img = 0, gsG1Img = 0, gsD1Img = 0;
 #define GS_MAX_BULLETS 50
 
 struct GsBullet {
@@ -2487,15 +2487,22 @@ void gsDraw() {
 	}
 
 	// Display Stats
-	char gsScoreStr[50], gsMissStr[50], gsBossStr[50];
-	sprintf(gsScoreStr, "Hits: %d / 20", gsGangsterHits);
-	sprintf(gsMissStr, "Damage Taken: %d / %d", gsMiss, GS_MAX_MISS);
-	sprintf(gsBossStr, "Gangster: %d / 3", gsCurrentGangster);
+	// Render HUD Banner Images (All equal 230x40 size)
+	// Render HUD Banners stacked vertically on the top right
+	iShowImage(550, 545, 230, 40, gsH1Img);
+	iShowImage(550, 495, 230, 40, gsG1Img);
+	iShowImage(550, 445, 230, 40, gsD1Img);
+
+	// Display Stats centered inside the dark box on the right side of each banner
+	char gsScoreStr[20], gsMissStr[20], gsBossStr[20];
+	sprintf(gsScoreStr, "%d / 20", gsGangsterHits);
+	sprintf(gsBossStr, "%d / 3", gsCurrentGangster);
+	sprintf(gsMissStr, "%d / %d", gsMiss, GS_MAX_MISS);
 
 	iSetColor(255, 255, 255);
-	iText(50, 560, gsScoreStr, GLUT_BITMAP_HELVETICA_18);
-	iText(330, 560, gsBossStr, GLUT_BITMAP_HELVETICA_18);
-	iText(570, 560, gsMissStr, GLUT_BITMAP_HELVETICA_18);
+	iText(685, 558, gsScoreStr, GLUT_BITMAP_HELVETICA_12);
+	iText(685, 508, gsBossStr, GLUT_BITMAP_HELVETICA_12);
+	iText(685, 458, gsMissStr, GLUT_BITMAP_HELVETICA_12);
 }
 
 void gsMouseMove(int mx, int my) {
@@ -4629,6 +4636,12 @@ int main()
 	gsDeadImg1 = iLoadImage("Images/dead1.png");
 	gsDeadImg2 = iLoadImage("Images/dead2.png");
 	gsDeadImg3 = iLoadImage("Images/dead3.png");
+
+	// HUD Banner Images
+	gsH1Img = iLoadImage("Images/H1.png");
+	gsG1Img = iLoadImage("Images/G1.png");
+	gsD1Img = iLoadImage("Images/D1.png");
+
 	for (int i = 0; i < GS_MAX_BULLETS; i++) {
 		gsPBullets[i].active = false;
 		gsGBullets[i].active = false;
