@@ -236,6 +236,11 @@ int dodgeImgLeft1 = 0, dodgeImgLeft2 = 0;
 int dodgeImgRight1 = 0, dodgeImgRight2 = 0;
 int dodgeCaughtPlayerImg = 0;
 
+// Timer HUD image (timer.png) used by the Dodge Game screen. Drawn at the
+// same position/size as the score HUD (score.png), with the countdown value
+// drawn on top of it.
+int timerImg = 0;
+
 int dodgeCurrentAnimState = 0;
 int dodgeAnimTimer = 0;
 
@@ -499,7 +504,7 @@ int lv3SubState = 0;
 
 const int LV3_HERO_START_X = 100;
 const int LV3_HERO_START_Y = 100;
-const int LV3_HERO_START_HEALTH = 50;
+const int LV3_HERO_START_HEALTH = 60;
 
 int lv3HeroX = LV3_HERO_START_X;
 int lv3HeroY = LV3_HERO_START_Y;
@@ -539,7 +544,7 @@ struct Lv3Guard {
 };
 
 const int LV3_GUARD_START_X = 600;
-const int LV3_GUARD_START_HEALTH = 45;
+const int LV3_GUARD_START_HEALTH = 55;
 
 Lv3Guard lv3Guard = { LV3_GUARD_START_X, 100, 200, 150, LV3_GUARD_START_HEALTH, true };
 int lv3GuardActionFrame = 0;
@@ -1339,7 +1344,7 @@ void resetDodgeGame()
 void nextDodgeLevel()
 {
 	dodgeLevel++;
-	dodgeLevelTimeLeft = 3.0f;
+	dodgeLevelTimeLeft = 4.0f;
 	dodgeLevelComplete = false;
 	dodgeRunningToDoor = false;
 
@@ -1449,15 +1454,15 @@ void drawDodgeGame()
 
 	iShowImage(0, 0, 800, 600, dodgeBgImg);
 
-	iSetColor(255, 255, 255);
-	iText(20, 570, "DODGE & REACH THE RIGHT SIDE!", GLUT_BITMAP_HELVETICA_18);
+	// Timer HUD now uses timer.png (same size/position as the score HUD),
+	// with the countdown value drawn inside it. The old top-left text HUD
+	// (title/level/time-left) has been removed.
+	iShowImage(560, 535, 220, 70, timerImg);
 
+	iSetColor(255, 215, 0);
 	char str[100];
-	sprintf(str, "Level : %d", dodgeLevel);
-	iText(20, 540, str, GLUT_BITMAP_HELVETICA_18);
-
-	sprintf(str, "Time Left : %.1f s", dodgeLevelTimeLeft);
-	iText(20, 515, str, GLUT_BITMAP_HELVETICA_18);
+	sprintf(str, "%.1f s", dodgeLevelTimeLeft);
+	iText(680, 568, str, GLUT_BITMAP_HELVETICA_18);
 
 	if (!dodgeGameOver)
 	{
@@ -1930,10 +1935,15 @@ void vrDraw() {
 	iText(700, 549, vrScoreStr, GLUT_BITMAP_HELVETICA_18);
 
 	if (vrGameOver && !vrGameWon) {
-		iSetColor(255, 50, 50);
-		iText(340, 320, "GAME OVER", GLUT_BITMAP_HELVETICA_18);
-		iSetColor(220, 220, 220);
-		iText(295, 280, "CLICK TO RETRY", GLUT_BITMAP_HELVETICA_18);
+		// Game Over now shown on the same note.png paper used by the Dodge
+		// Game's game-over screen (same position/size).
+		iShowImage(30, -15, 740, 300, vrNoteImg);
+
+		iSetColor(255, 0, 0);
+		iText(340, 55, "GAME OVER", GLUT_BITMAP_TIMES_ROMAN_24);
+
+		iSetColor(0, 0, 0);
+		iText(305, 30, "CLICK TO RETRY", GLUT_BITMAP_HELVETICA_18);
 	}
 }
 
@@ -2447,7 +2457,7 @@ void gsDraw() {
 		iSetColor(150, 0, 0); // Dark Red
 		iText(220, 95, "GAME OVER", GLUT_BITMAP_TIMES_ROMAN_24);
 
-		iSetColor(255, 255, 255);
+		iSetColor(0, 0, 0);
 		iText(220, 75, "Click anywhere with Mouse to Restart", GLUT_BITMAP_HELVETICA_18);
 
 		iShowImage(50, 50, 100, 40, backImg);
@@ -2488,7 +2498,7 @@ void gsDraw() {
 	// Display Stats
 	// Render HUD Banner Images (All equal 230x40 size)
 	// Render HUD Banners stacked vertically on the top right
-	iShowImage(550, 545, 230, 40, gsH1Img);
+	iShowImage(550, 545, 230, 45, gsH1Img);
 	iShowImage(550, 495, 230, 40, gsG1Img);
 	iShowImage(550, 445, 230, 40, gsD1Img);
 
@@ -3250,7 +3260,9 @@ void iDraw()
 		if (cctvMapImg > 0) iShowImage(62, 335, 200, 228, cctvMapImg);
 		if (alarmMapImg > 0) iShowImage(530, 333, 200, 228, alarmMapImg);
 
-		if (introImg > 0) iShowImage(150, 150, 500, 200, introImg);
+		// CHANGED: intro.png is now drawn taller (200 -> 300) so it no
+		// longer looks squashed. Same x/y anchor as before.
+		if (introImg > 0) iShowImage(150, 150, 500, 300, introImg);
 		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
 	}
 	else if (gameState == 350)
@@ -3573,7 +3585,7 @@ void iDraw()
 	{
 		if (usbImgBg > 0) iShowImage(0, 0, 800, 600, usbImgBg);
 		else iShowImage(0, 0, 800, 600, level2Bg);
-		if (usbNoteImg > 0) iShowImage(50, 200, 700, 140, usbNoteImg);
+		if (usbNoteImg > 0) iShowImage(50, 200, 700, 180, usbNoteImg);
 		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
 	}
 	else if (gameState == GAMESTATE_INVEST_NOTE)
@@ -4355,7 +4367,10 @@ void usbDrawGame() {
 		// CHANGED: the win text is now drawn on a note.png box using exactly
 		// the Traffic Runner win-screen layout, and the running character
 		// animation that used to be drawn underneath has been removed.
-		if (usbImgUsbIcon > 0) iShowImage(520, 220, 40, 40, usbImgUsbIcon);
+		// CHANGED: usb.png is now drawn bigger and centered exactly in the
+		// middle of the screen instead of the small 40x40 icon in the
+		// corner (kept square so the aspect ratio isn't stretched).
+		if (usbImgUsbIcon > 0) iShowImage(325, 225, 150, 150, usbImgUsbIcon);
 
 		int noteW = 500, noteH = 250;
 		int noteX = (800 - noteW) / 2;
@@ -4454,7 +4469,7 @@ int main()
 {
 	iInitialize(800, 600, "The Last Escape");
 
-	mciSendString(TEXT("open \"audio1.mp3\" type mpegvideo alias bgm"), NULL, 0, NULL);
+	mciSendString(TEXT("open \"audio2.mp3\" type mpegvideo alias bgm"), NULL, 0, NULL);
 	mciSendString(TEXT("open \"mouse.mp3\" type mpegvideo alias clicksound"), NULL, 0, NULL);
 
 	srand((unsigned)time(0));
@@ -4503,10 +4518,10 @@ int main()
 	level3BgImg = iLoadImage("Images/level3bg.png");
 
 	map1Img = iLoadImage("Images/map1.png");
-	cellMapImg = iLoadImage("Images/cellmap.png");
+	cellMapImg = iLoadImage("Images/cellmap1.png");
 	cellMap2Img = iLoadImage("Images/cellmap2.png");
-	cctvMapImg = iLoadImage("Images/cctvmap.png");
-	alarmMapImg = iLoadImage("Images/alarmmap.png");
+	cctvMapImg = iLoadImage("Images/cctvmap1.png");
+	alarmMapImg = iLoadImage("Images/alarmmap1.png");
 
 	imgBackground = iLoadImage("Images/b1.png");
 	imgLockScreen = iLoadImage("Images/b3.png");
@@ -4548,6 +4563,11 @@ int main()
 	dodgeImgRight1 = iLoadImage("Images/right1.png");
 	dodgeImgRight2 = iLoadImage("Images/right2.png");
 	dodgeCaughtPlayerImg = iLoadImage("Images/caughtplayer.png");
+
+	// Timer HUD image used by the Dodge Game screen (same size/position as
+	// the score HUD).
+	timerImg = iLoadImage("Images/timer.png");
+
 	resetDodgeGame();
 
 	imgCommonRoute = iLoadImage("Images/common route.png");
