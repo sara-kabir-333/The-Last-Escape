@@ -2268,7 +2268,7 @@ int gsPrisonerHeight = 200;
 int gsPrisonerVelY = 0;
 bool gsIsJumping = false;
 int gsGroundY = 50;
-int gsJumpStrength = 18;
+int gsJumpStrength = 24;
 int gsGravity = 1;
 
 // Gangster (Enemy)
@@ -2345,8 +2345,8 @@ void gsUpdateGame() {
 		gsGangsterShootCounter = 0;
 		for (int i = 0; i < GS_MAX_BULLETS; i++) {
 			if (!gsGBullets[i].active) {
-				gsGBullets[i].x = gsGangsterX;
-				gsGBullets[i].y = gsGangsterY + gsGangsterHeight / 2 - 12;
+				gsGBullets[i].x = gsGangsterX - 20;
+				gsGBullets[i].y = gsGangsterY + gsGangsterHeight *0.75;
 				gsGBullets[i].active = true;
 				break;
 			}
@@ -2418,11 +2418,10 @@ void gsDraw() {
 		iShowImage(20, 50, 760, 140, gsWpImg);
 
 		iSetColor(50, 20, 10);
-		iText(220, 95, "Prisoner has to fight 3 gangsters sequentially!", GLUT_BITMAP_HELVETICA_18);
-		iText(220, 75, "Left-Click to Shoot | Right-Click to Jump!", GLUT_BITMAP_HELVETICA_18);
+		iText(220, 95, "Prisoner has to fight 3 gangsters sequentially!Left", GLUT_BITMAP_HELVETICA_18);
+		iText(150, 75, "Click to Shoot | Right-Click to Jump!Now click next", GLUT_BITMAP_HELVETICA_18);
 
-		iSetColor(255, 255, 255);
-		iText(255, 20, "Click NEXT to Start", GLUT_BITMAP_HELVETICA_18);
+
 
 		iShowImage(50, 50, 100, 40, backImg);
 		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
@@ -2548,8 +2547,8 @@ void gsHandleLeftClick(int mx, int my) {
 	if (gsState == 0) {
 		for (int i = 0; i < GS_MAX_BULLETS; i++) {
 			if (!gsPBullets[i].active) {
-				gsPBullets[i].x = gsPrisonerX + gsPrisonerWidth;
-				gsPBullets[i].y = gsPrisonerY + gsPrisonerHeight / 2 - 7;
+				gsPBullets[i].x = gsPrisonerX + gsPrisonerWidth - 20;
+				gsPBullets[i].y = gsPrisonerY + gsPrisonerHeight *0.75;
 				gsPBullets[i].active = true;
 				break;
 			}
