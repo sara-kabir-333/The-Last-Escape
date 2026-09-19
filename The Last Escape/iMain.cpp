@@ -102,6 +102,29 @@ bool moveRight = true;
 int guardFrame = 0;
 int guardAnimCounter = 0;
 
+// ----------------------------------------------------------------------------
+// LEVEL 1 (gameState 60) sprite sizes. The guard and the player were drawn too
+// small, so only their width/height are scaled up here - every x/y position in
+// the scene is left exactly as it was.
+//   too small -> increase these
+//   too big   -> decrease these
+// ----------------------------------------------------------------------------
+const int L1_GUARD_W = 75;
+const int L1_GUARD_H = 105;
+const int L1_PLAYER_RUN_W = 105;
+const int L1_PLAYER_RUN_H = 165;
+const int L1_PLAYER_STAND_W = 90;
+const int L1_PLAYER_STAND_H = 120;
+
+// "Caught by the guard" screen: same x/y as before, only bigger.
+const int L1_CAUGHT_GUARD_W = 75;
+const int L1_CAUGHT_GUARD_H = 105;
+const int L1_CAUGHT_PLAYER_W = 90;
+const int L1_CAUGHT_PLAYER_H = 120;
+
+// The patrol-pattern question is only shown for 5 seconds now (was 10).
+const int L1_QUESTION_SECONDS = 5;
+
 bool puzzleStart = false;
 bool puzzleSolved = false;
 bool puzzleWrong = false;
@@ -350,6 +373,14 @@ int vrVault2Img = 0;
 int vrVault3Img = 0;
 int vrNoteImg = 0;
 
+// CHANGED: the runner sprite was a bit small, so it is now drawn slightly
+// bigger. Its y position (vrRunnerY) is untouched - only the drawn size (and
+// therefore the hitbox width/height) grew.
+//   too small -> increase these
+//   too big   -> decrease these
+const int VR_RUNNER_W = 100;
+const int VR_RUNNER_H = 125;
+
 int vrRunnerX = 50;
 int vrRunnerY = 200;
 int vrRunnerDy = 0;
@@ -358,20 +389,23 @@ int vrJumpCount = 0;
 bool vrIsMouseHeld = false;
 int vrFallCounter = 0;
 
+// CHANGED: the box obstacle was far too small compared to the stone, so its
+// width/height were scaled up to roughly match the rock's size. vrBoxY is
+// unchanged, so it still sits on exactly the same ground line.
 int vrBoxX = 800;
 int vrBoxY = 200;
-int vrBoxWidth = 40;
-int vrBoxHeight = 45;
+int vrBoxWidth = 55;
+int vrBoxHeight = 50;
 int vrGameSpeed = 4;
 
-// Runner sprite is drawn at 80x100 but has transparent padding around the
-// visible character, so a full 80x100 hitbox triggers collisions well
-// before the character visually touches anything. These insets shrink the
-// hitbox down to roughly the visible character silhouette.
+// Runner sprite is drawn at VR_RUNNER_W x VR_RUNNER_H but has transparent
+// padding around the visible character, so a full-size hitbox triggers
+// collisions well before the character visually touches anything. These
+// insets shrink the hitbox down to roughly the visible character silhouette.
 //   still triggering too early  -> increase the inset
 //   overlapping visibly before game over -> decrease the inset
-const int VR_RUNNER_HITBOX_INSET_X = 22;
-const int VR_RUNNER_HITBOX_INSET_Y = 15;
+const int VR_RUNNER_HITBOX_INSET_X = 27;
+const int VR_RUNNER_HITBOX_INSET_Y = 19;
 const int VR_OBSTACLE_HITBOX_INSET = 8;
 
 int vrRockX = 1100;
@@ -413,8 +447,7 @@ bool level2Completed = false;
 int vrWinBgImg = 0; // Images/background1.png
 
 // Level 3 button (locked/unlocked) + its background + the loading gamestate
-// shown after clicking the unlocked Level 3 button. Level 3 gameplay itself
-// is not implemented yet - it is left as a placeholder for later.
+// shown after clicking the unlocked Level 3 button.
 int level3UnlockedBtn = 0; // Images/levelbg5.png
 int level3BgImg = 0;       // Images/level3bg.png
 const int GAMESTATE_LEVEL3_LOADING = 490;
@@ -437,11 +470,19 @@ const int GAMESTATE_USB_NOTE = 520;         // shown before the USB match-3 mini
 const int GAMESTATE_INVEST_NOTE = 530;      // shown before GAMESTATE_INVESTIGATION
 const int GAMESTATE_GUNCOLLECT_NOTE = 540;  // shown right after the level 3 loading bar finishes
 
+// NEW: exactly the same idea as GAMESTATE_LEVEL2_NOTE, but for Level 1. It is
+// shown once right after the level 1 loading screen: map1.png with intro.png
+// in the middle (same size/place as the level 2 note) plus a Next button.
+// Clicking Next drops the player on the normal level 1 map (gameState 350),
+// which then behaves exactly as it did before.
+const int GAMESTATE_LEVEL1_NOTE = 590;
+
 int dodgeIntroNoteImg = 0;     // Images/dodgenote.png
 int level2NoteImg = 0;         // Images/level2note.png
 int usbNoteImg = 0;            // Images/usbnote.png
 int evidenceRoomNoteImg = 0;   // Images/evidenceroomnote.png
 int gunCollectImg = 0;         // Images/guncollect.png
+int introImg = 0;              // Images/intro.png  (level 1 map instruction)
 
 // ============================================================================
 // LEVEL 3 FIGHT MINIGAME (merged from the "Level 3 - Prison Fight" project)
@@ -484,17 +525,8 @@ const int LV3_CLICK_COOLDOWN = 20; // frames between allowed hits
 
 // Screen centre both fighters walk to and stop at, so the fight happens in
 // the middle of the screen instead of wherever they happened to collide.
-// LV3_FIGHT_OVERLAP is how much their bounding boxes overlap once stopped
-// (needed because of the transparent padding around the character sprites,
-// same idea as the old COLLISION_DISTANCE) - the two stop positions below
-// are derived from it so the overlap is always centred on LV3_CENTER_X.
-//   fighters too far apart  -> increase LV3_FIGHT_OVERLAP
-//   fighters overlap too much -> decrease LV3_FIGHT_OVERLAP
 const int LV3_CENTER_X = 400;
 const int LV3_FIGHT_OVERLAP = 125;
-// Derived so the 125px overlap between the two 200-wide sprites is centred
-// exactly on LV3_CENTER_X: LV3_HERO_STOP_X + 200 - LV3_GUARD_STOP_X == 125,
-// and (LV3_GUARD_STOP_X + LV3_HERO_STOP_X + 200) / 2 == LV3_CENTER_X.
 const int LV3_HERO_STOP_X = 263;
 const int LV3_GUARD_STOP_X = 338;
 
@@ -514,9 +546,7 @@ int lv3GuardActionFrame = 0;
 int lv3GuardAnimTimer = 0;
 int lv3AttackTimer = 0;
 
-// Walking-to-the-door sequence played once the gun has been collected. The
-// hero stops just short of the door drawn in insideprison.png instead of
-// walking through it, to make it clear he has reached it.
+// Walking-to-the-door sequence played once the gun has been collected.
 const int LV3_DOOR_STOP_X = 620;
 
 int lv3BgImageId = 0;
@@ -531,12 +561,7 @@ int lv3GuardPunch2Id = 0;
 int lv3GunImageId = 0;
 int lv3NoteImg = 0;
 
-// Image-based Hero/Guard health bars. Instead of a scaling frame/fill bar,
-// each side picks one of a fixed set of "life stage" images based on its
-// current health percentage (see lv3GetHeroLifeImg / lv3GetGuardLifeImg).
-// Hero has 5 stages (100/75/50/25/0 - he can hit 0 health before restarting),
-// Guard has 4 stages (100/75/50/25 - his health bar stops being drawn as
-// soon as he dies, so a 0 stage is never needed).
+// Image-based Hero/Guard health bars.
 int lv3HeroLifeImg[5] = { 0, 0, 0, 0, 0 };  // charlife100/75/50/25/0.png
 int lv3GuardLifeImg[4] = { 0, 0, 0, 0 };    // guardlife100/75/50/25.png
 
@@ -548,13 +573,8 @@ int lv3GetHeroLifeImg(int health, int maxHealth);
 int lv3GetGuardLifeImg(int health, int maxHealth);
 
 // ----------------------------------------------------------------------------
-// LEVEL 3 - GANGSTER SHOOTOUT MINIGAME (merged from the standalone "Prison
-// Escape: 3 Gangsters Shootout" project). This is the final part of Level 3:
-// once the player reaches the door at the end of the Level 3 Fight and clicks
-// Next, this minigame starts. All variables/functions are prefixed with "gs"
-// to avoid name clashes with the rest of the game, same convention as "vr"
-// (Vault Runner) and "lv3" (Level 3 Fight).
-// ============================================================================
+// LEVEL 3 - GANGSTER SHOOTOUT MINIGAME
+// ----------------------------------------------------------------------------
 const int GAMESTATE_LEVEL3_SHOOTOUT = 560;
 
 // True once all 3 gangsters have been defeated (Level 3 fully completed).
@@ -569,28 +589,137 @@ void gsMouseMove(int mx, int my);
 void gsHandleLeftClick(int mx, int my);
 void gsHandleRightClick(int mx, int my);
 
+// ============================================================================
+// TRAFFIC RUNNER MINIGAME
+// ============================================================================
+const int GAMESTATE_TRAFFIC = 570;
+const int GAMESTATE_TRAFFIC_LOADING = 580;
+
+const int TR_SCREEN_W = 800;
+const int TR_SCREEN_H = 600;
+
+int trBgY1 = 0;
+int trBgY2 = 600;
+
+int trStartImg = 0, trBgImg = 0, trWinImg1 = 0, trWinImg2 = 0, trWinImg3 = 0, trFinalBgImg = 0;
+int trNoteImg = 0;
+int trScoreImg = 0; // Images/score.png - also reused by the Vault Runner HUD
+int trRunImg1 = 0, trRunImg2 = 0;
+int trCarImgs[6] = { 0, 0, 0, 0, 0, 0 };
+int trTruckImgs[4] = { 0, 0, 0, 0 };
+
+bool trGameStarted = false;
+
+int trCurrentRunFrame = 0;
+bool trIsJumping = false;
+int trPlayerLane = 1;
+
+int trLaneX[3] = { 230, 370, 510 };
+int trBasePlayerY = 80;
+int trPlayerY = 80;
+int trJumpHeight = 0;
+bool trJumpUp = true;
+bool trIsOnRoof = false;
+
+double trPlayerDrawX = 375.0;
+
+const int TR_MAX_OBS = 25;
+
+struct TrObstacle {
+	int lane;
+	int y;
+	int type;
+	int colorIndex;
+	bool active;
+};
+
+TrObstacle trObsList[TR_MAX_OBS];
+
+const int TR_CAR_W = 70, TR_CAR_H = 120;
+const int TR_TRUCK_W = 80, TR_TRUCK_H = 190;
+
+const int TR_MAX_ROOF_GEMS = 200;
+
+struct TrGem {
+	int lane;
+	int y;
+	bool active;
+};
+
+TrGem trRoofGems[TR_MAX_ROOF_GEMS];
+
+const int TR_MAX_MANHOLES = 5;
+
+struct TrManhole {
+	int lane;
+	int y;
+	bool active;
+};
+
+TrManhole trManholeList[TR_MAX_MANHOLES];
+const int TR_MANHOLE_W = 65, TR_MANHOLE_H = 65;
+
+int trScore = 0;
+bool trGameOver = false;
+
+int trWinState = 0;
+int trWinTimer = 0;
+
+void trResetGame();
+void trSpawnTrafficCluster(int startY);
+void trUpdateObstacles();
+void trUpdateRoofGems();
+void trUpdateManholes();
+void trDrawGreenGem(int x, int y);
+void trDrawManhole(int x, int y);
+void trDrawCar(int x, int y, int colorIndex);
+void trDrawTruck(int x, int y, int colorIndex);
+void trDraw();
+void trFixedUpdate();
+void trHandleMouseDown(int mx, int my);
+
 // ----------------------------------------------------------------------------
 // Centralised helpers deciding on which game states the Settings icon and the
 // Pause icon should be visible / clickable. Both the drawing code (iDraw) and
 // the input code (iMouse) call these SAME functions, so the two can never
-// drift apart again (this is what caused the Pause icon to be clickable but
-// not behave consistently in some minigames before).
+// drift apart.
+//
+// CHANGED:
+//   * Settings is now shown on EVERY screen except the loading screens.
+//   * Pause is now also available in every Level 3 screen (fight, shootout,
+//     traffic runner) exactly like it already was in Levels 1 and 2 - but it
+//     is still hidden on every instruction/note screen (and on the shootout's
+//     own instruction screen, gsState == -1, and on the traffic runner's
+//     "click to start" screen).
 // ----------------------------------------------------------------------------
+bool isLoadingState(int gs) {
+	return gs == 0 || gs == 5 || gs == 6 || gs == 56 || gs == 57 ||
+		gs == GAMESTATE_VR_WIN_LOADING || gs == GAMESTATE_LEVEL3_LOADING ||
+		gs == GAMESTATE_TRAFFIC_LOADING;
+}
+
+bool isNoteScreenState(int gs) {
+	return gs == GAMESTATE_DODGE_NOTE || gs == GAMESTATE_LEVEL2_NOTE ||
+		gs == GAMESTATE_USB_NOTE || gs == GAMESTATE_INVEST_NOTE ||
+		gs == GAMESTATE_GUNCOLLECT_NOTE || gs == GAMESTATE_LEVEL1_NOTE;
+}
+
 bool isSettingsVisibleState(int gs) {
-	return gs == 100 || gs == 300 || gs == 350 || gs == 400 ||
-		gs == 70 || gs == 71 ||
-		(gs >= 50 && gs <= 60 && gs != 56 && gs != 57) ||
-		gs == GAMESTATE_DODGE || gs == GAMESTATE_LEVEL2_MAP ||
-		gs == GAMESTATE_INVESTIGATION || gs == GAMESTATE_VAULT_RUNNER ||
-		gs == GAMESTATE_LEVEL3_SHOOTOUT;
+	// Everywhere except the loading screens.
+	return !isLoadingState(gs);
 }
 
 bool isPauseVisibleState(int gs) {
+	if (isLoadingState(gs)) return false;
+	if (isNoteScreenState(gs)) return false;
+
 	return gs == 70 || gs == 71 ||
 		(gs >= 50 && gs <= 60 && gs != 56 && gs != 57) ||
 		gs == GAMESTATE_DODGE || gs == 400 ||
 		gs == GAMESTATE_VAULT_RUNNER || gs == GAMESTATE_INVESTIGATION ||
-		gs == GAMESTATE_LEVEL3_SHOOTOUT;
+		gs == GAMESTATE_LEVEL3_FIGHT ||
+		(gs == GAMESTATE_LEVEL3_SHOOTOUT && gsState != -1) ||
+		(gs == GAMESTATE_TRAFFIC && trGameStarted);
 }
 
 void drawMenu() {
@@ -758,7 +887,8 @@ void loadingUpdate()
 {
 	if (isGamePaused) return;
 	if (gameState != 0 && gameState != 5 && gameState != 6 && gameState != 56 && gameState != 57 &&
-		gameState != GAMESTATE_VR_WIN_LOADING && gameState != GAMESTATE_LEVEL3_LOADING)
+		gameState != GAMESTATE_VR_WIN_LOADING && gameState != GAMESTATE_LEVEL3_LOADING &&
+		gameState != GAMESTATE_TRAFFIC_LOADING)
 		return;
 
 	loadingStep += 4;
@@ -775,7 +905,10 @@ void loadingUpdate()
 		}
 		else if (gameState == 5)
 		{
-			gameState = 350;
+			// CHANGED: level 1 now shows its own instruction screen
+			// (map1.png + intro.png + Next) before the normal map, exactly
+			// like level 2 already did.
+			gameState = GAMESTATE_LEVEL1_NOTE;
 			loadingStep = 0;
 			if (musicPlaying) {
 				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
@@ -816,10 +949,15 @@ void loadingUpdate()
 		}
 		else if (gameState == GAMESTATE_LEVEL3_LOADING)
 		{
-			// Bar fills up, then shows the gun-collect note before entering
-			// the level 3 placeholder screen (level 3 gameplay isn't built
-			// yet, so that placeholder just displays level3bg.png).
 			gameState = GAMESTATE_GUNCOLLECT_NOTE;
+			loadingStep = 0;
+			if (musicPlaying) {
+				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
+			}
+		}
+		else if (gameState == GAMESTATE_TRAFFIC_LOADING)
+		{
+			gameState = 300;
 			loadingStep = 0;
 			if (musicPlaying) {
 				mciSendString(TEXT("play bgm repeat"), NULL, 0, NULL);
@@ -1052,7 +1190,9 @@ void fixedUpdate() {
 
 		if (puzzleScreen && showQuestion)
 		{
-			if ((clock() - questionStartTime) / CLOCKS_PER_SEC >= 10)
+			// CHANGED: the patrol pattern question is only visible for 5
+			// seconds now (it used to stay up for 10).
+			if ((clock() - questionStartTime) / CLOCKS_PER_SEC >= L1_QUESTION_SECONDS)
 			{
 				showQuestion = false;
 			}
@@ -1232,9 +1372,6 @@ void updateDodgeGame()
 
 	if (dodgeRunningToDoor)
 	{
-		// All boxes dodged: keep the character auto-running right towards
-		// the door instead of freezing on the spot, then show the level
-		// complete note once he actually gets there.
 		dodgePlayerX += dodgePlayerSpeed;
 
 		dodgeAnimTimer++;
@@ -1553,10 +1690,6 @@ void handleInvestMouseMove(int mx, int my) {
 
 // ----------------------------------------------------------------------------
 // VAULT RUNNER MINIGAME - function definitions
-// (Ported as-is from the second project; only variable/function names were
-// prefixed with "vr" to avoid clashing with the rest of the game. No gameplay
-// logic was changed other than the collision hitbox fix and note screen
-// noted in the comments below.)
 // ----------------------------------------------------------------------------
 
 void vrResetGame() {
@@ -1614,7 +1747,7 @@ void vrFixedUpdate() {
 	}
 
 	vrBoxX -= vrGameSpeed;
-	if (vrBoxX < -40) {
+	if (vrBoxX < -vrBoxWidth) {
 		vrBoxX = 850 + (rand() % 300);
 	}
 
@@ -1668,7 +1801,7 @@ void vrFixedUpdate() {
 		}
 	}
 
-	if (vrBall1X + 12 >= vrRunnerX && vrBall1X - 12 <= vrRunnerX + 80 && vrBall1Y + 12 >= vrRunnerY && vrBall1Y - 12 <= vrRunnerY + 100) {
+	if (vrBall1X + 12 >= vrRunnerX && vrBall1X - 12 <= vrRunnerX + VR_RUNNER_W && vrBall1Y + 12 >= vrRunnerY && vrBall1Y - 12 <= vrRunnerY + VR_RUNNER_H) {
 		vrCoinScore += 5;
 		vrBall1X = 900 + (rand() % 300);
 		vrBall1Y = (rand() % 2 == 0) ? 220 : 285;
@@ -1678,7 +1811,7 @@ void vrFixedUpdate() {
 		}
 	}
 
-	if (vrBall2X + 12 >= vrRunnerX && vrBall2X - 12 <= vrRunnerX + 80 && vrBall2Y + 12 >= vrRunnerY && vrBall2Y - 12 <= vrRunnerY + 100) {
+	if (vrBall2X + 12 >= vrRunnerX && vrBall2X - 12 <= vrRunnerX + VR_RUNNER_W && vrBall2Y + 12 >= vrRunnerY && vrBall2Y - 12 <= vrRunnerY + VR_RUNNER_H) {
 		vrCoinScore += 5;
 		vrBall2X = 1000 + (rand() % 300);
 		vrBall2Y = (rand() % 2 == 0) ? 220 : 285;
@@ -1688,7 +1821,7 @@ void vrFixedUpdate() {
 		}
 	}
 
-	if (vrRedBallX + 12 >= vrRunnerX && vrRedBallX - 12 <= vrRunnerX + 80 && vrRedBallY + 12 >= vrRunnerY && vrRedBallY - 12 <= vrRunnerY + 100) {
+	if (vrRedBallX + 12 >= vrRunnerX && vrRedBallX - 12 <= vrRunnerX + VR_RUNNER_W && vrRedBallY + 12 >= vrRunnerY && vrRedBallY - 12 <= vrRunnerY + VR_RUNNER_H) {
 		vrCoinScore += 15;
 		vrRedBallX = 1600 + (rand() % 500);
 		vrRedBallY = (rand() % 2 == 0) ? 220 : 285;
@@ -1698,18 +1831,17 @@ void vrFixedUpdate() {
 		}
 	}
 
-	// FIXED: hitboxes shrunk with VR_RUNNER_HITBOX_INSET_X/Y and
+	// Hitboxes shrunk with VR_RUNNER_HITBOX_INSET_X/Y and
 	// VR_OBSTACLE_HITBOX_INSET so game over only triggers once the visible
-	// character actually touches the box/stone, instead of well before it
-	// (caused by transparent padding around the sprites).
-	if (vrRunnerX + 80 - VR_RUNNER_HITBOX_INSET_X >= vrBoxX + VR_OBSTACLE_HITBOX_INSET &&
+	// character actually touches the box/stone.
+	if (vrRunnerX + VR_RUNNER_W - VR_RUNNER_HITBOX_INSET_X >= vrBoxX + VR_OBSTACLE_HITBOX_INSET &&
 		vrRunnerX + VR_RUNNER_HITBOX_INSET_X <= vrBoxX + vrBoxWidth - VR_OBSTACLE_HITBOX_INSET &&
 		vrRunnerY <= vrBoxY + vrBoxHeight - VR_RUNNER_HITBOX_INSET_Y) {
 		vrGameOver = true;
 		vrGameWon = false;
 	}
 
-	if (vrRunnerX + 80 - VR_RUNNER_HITBOX_INSET_X >= vrRockX + VR_OBSTACLE_HITBOX_INSET &&
+	if (vrRunnerX + VR_RUNNER_W - VR_RUNNER_HITBOX_INSET_X >= vrRockX + VR_OBSTACLE_HITBOX_INSET &&
 		vrRunnerX + VR_RUNNER_HITBOX_INSET_X <= vrRockX + 50 - VR_OBSTACLE_HITBOX_INSET &&
 		vrRunnerY <= vrRockY + 38 - VR_RUNNER_HITBOX_INSET_Y) {
 		vrGameOver = true;
@@ -1720,9 +1852,6 @@ void vrFixedUpdate() {
 void vrDraw() {
 	if (!vrIsStarted) {
 		iShowImage(0, 0, 800, 600, vrVault1Img);
-		// FIXED: note box now uses the same axis as every other note.png
-		// screen in the game (150, 20, 500, 200), and the jump instruction
-		// was added alongside the laser instruction.
 		iShowImage(150, 20, 500, 200, vrNoteImg);
 		iSetColor(20, 20, 20);
 		iText(230, 65, "Click anywhere to disable the laser", GLUT_BITMAP_HELVETICA_18);
@@ -1777,15 +1906,12 @@ void vrDraw() {
 	iSetColor(255, 182, 193);
 	iFilledCircle(vrRedBallX - 3, vrRedBallY + 3, 3);
 
-	iShowImage(vrRunnerX, vrRunnerY, 80, 100, vrRunnerImg[vrCurrentFrame]);
+	// CHANGED: runner is drawn slightly bigger now (same y position).
+	iShowImage(vrRunnerX, vrRunnerY, VR_RUNNER_W, VR_RUNNER_H, vrRunnerImg[vrCurrentFrame]);
 
-	iSetColor(139, 69, 19);
-	iFilledRectangle(vrBoxX, vrBoxY, vrBoxWidth, vrBoxHeight);
-	iSetColor(90, 40, 10);
-	iRectangle(vrBoxX, vrBoxY, vrBoxWidth, vrBoxHeight);
-	iSetColor(110, 50, 15);
-	iLine(vrBoxX, vrBoxY, vrBoxX + vrBoxWidth, vrBoxY + vrBoxHeight);
-	iLine(vrBoxX, vrBoxY + vrBoxHeight, vrBoxX + vrBoxWidth, vrBoxY);
+	// CHANGED: box.png is drawn bigger (vrBoxWidth/vrBoxHeight above), sized
+	// to roughly match the stone obstacle. Same y position as before.
+	iShowImage(vrBoxX, vrBoxY, vrBoxWidth, vrBoxHeight, dodgeBoxImg);
 
 	iSetColor(95, 85, 75);
 	double vrRockPolyX[] = { (double)vrRockX, (double)vrRockX + 10, (double)vrRockX + 25, (double)vrRockX + 45, (double)vrRockX + 52, (double)vrRockX };
@@ -1795,13 +1921,13 @@ void vrDraw() {
 	iSetColor(130, 120, 110);
 	iFilledCircle(vrRockX + 22, vrRockY + 22, 5);
 
-	char vrDistStr[50], vrScoreStr[50];
-	sprintf(vrDistStr, "DISTANCE: %05d m", vrDistance);
-	sprintf(vrScoreStr, "SCORE:    %05d", vrCoinScore);
+	// Score badge (score.png), same position/size/colour as Traffic Runner.
+	iShowImage(560, 535, 220, 45, trScoreImg);
 
-	iSetColor(255, 255, 255);
-	iText(570, 550, vrDistStr, GLUT_BITMAP_HELVETICA_18);
-	iText(570, 520, vrScoreStr, GLUT_BITMAP_HELVETICA_18);
+	iSetColor(255, 215, 0); // Golden Color
+	char vrScoreStr[50];
+	sprintf(vrScoreStr, "%d", vrCoinScore);
+	iText(700, 549, vrScoreStr, GLUT_BITMAP_HELVETICA_18);
 
 	if (vrGameOver && !vrGameWon) {
 		iSetColor(255, 50, 50);
@@ -1822,10 +1948,6 @@ void vrHandleMouseDown(int mx, int my) {
 				vrShowVault3 = true;
 				return;
 			}
-			// Vault3 ("access granted") screen is showing: this transitions
-			// to the loading screen automatically after 2 seconds (handled
-			// in vrDraw). Ignore clicks here so an accidental click during
-			// that 2-second window doesn't restart the whole minigame.
 			return;
 		}
 		else {
@@ -1868,14 +1990,8 @@ void vrHandleMouseDown(int mx, int my) {
 
 // ----------------------------------------------------------------------------
 // LEVEL 3 FIGHT MINIGAME - function definitions
-// (Ported from the standalone "Level 3 - Prison Fight" project; only
-// variable/function names were prefixed with "lv3" to avoid clashing with
-// the rest of the game. Gameplay logic kept the same, other than centering
-// the fight, adding the walk-to-the-door finish, and switching the health
-// bars to image-based bars as noted below.)
 // ----------------------------------------------------------------------------
 
-// Resets everything back to the initial fight state
 void lv3RestartGame() {
 	lv3HeroX = LV3_HERO_START_X;
 	lv3HeroY = LV3_HERO_START_Y;
@@ -1900,7 +2016,6 @@ void lv3RestartGame() {
 
 void lv3UpdateGame() {
 	if (lv3SubState == 0) {
-		// Attack visual duration timer
 		if (lv3IsAttacking) {
 			lv3AttackCooldown--;
 			if (lv3AttackCooldown <= 0) {
@@ -1908,12 +2023,10 @@ void lv3UpdateGame() {
 			}
 		}
 
-		// Click cooldown timer (limits attack rate -> longer fight)
 		if (lv3ClickCooldownTimer > 0) {
 			lv3ClickCooldownTimer--;
 		}
 
-		// Guard animates constantly (idle/attack frames)
 		lv3GuardAnimTimer++;
 		if (lv3GuardAnimTimer >= 15) {
 			lv3GuardActionFrame = (lv3GuardActionFrame + 1) % 3;
@@ -1921,9 +2034,6 @@ void lv3UpdateGame() {
 		}
 
 		if (!lv3HeroReachedGuard) {
-			// Hero and guard both auto-walk towards the centre of the screen
-			// and stop there, so the fight always happens in the middle
-			// instead of wherever they happened to meet.
 			if (lv3HeroX < LV3_HERO_STOP_X) {
 				lv3HeroX += 3;
 				lv3HeroWalkAnimTimer++;
@@ -1940,20 +2050,18 @@ void lv3UpdateGame() {
 			if (lv3HeroX >= LV3_HERO_STOP_X && (!lv3Guard.isAlive || lv3Guard.x <= LV3_GUARD_STOP_X)) {
 				lv3HeroX = LV3_HERO_STOP_X;
 				lv3Guard.x = LV3_GUARD_STOP_X;
-				lv3HeroReachedGuard = true; // stop both hero and guard movement here
-				lv3HeroWalkFrame = 0;       // reset to standing frame
+				lv3HeroReachedGuard = true;
+				lv3HeroWalkFrame = 0;
 			}
 		}
 		else {
-			// Once collided: guard can still attack hero periodically
 			if (lv3Guard.isAlive) {
 				lv3AttackTimer++;
-				if (lv3AttackTimer >= 40) { // Slower attack rate to prolong fighting duration
+				if (lv3AttackTimer >= 40) {
 					lv3HeroHealth -= 5;
 					lv3AttackTimer = 0;
 					if (lv3HeroHealth < 0) lv3HeroHealth = 0;
 
-					// Restart the level if hero health hits 0
 					if (lv3HeroHealth <= 0) {
 						lv3RestartGame();
 					}
@@ -1962,8 +2070,6 @@ void lv3UpdateGame() {
 		}
 	}
 	else if (lv3SubState == 2) {
-		// Walking towards the door; stop just short of it so it's clear the
-		// hero has reached it rather than walking through it.
 		if (lv3HeroX < LV3_DOOR_STOP_X) {
 			lv3HeroX += 3;
 			lv3HeroWalkAnimTimer++;
@@ -1980,8 +2086,6 @@ void lv3UpdateGame() {
 	}
 }
 
-// Picks the hero's life-stage image (5 stages: 100/75/50/25/0) from his
-// current health as a percentage of max health.
 int lv3GetHeroLifeImg(int health, int maxHealth) {
 	if (health <= 0) return lv3HeroLifeImg[4];
 	else if (health <= maxHealth / 4) return lv3HeroLifeImg[3];
@@ -1990,9 +2094,6 @@ int lv3GetHeroLifeImg(int health, int maxHealth) {
 	else return lv3HeroLifeImg[0];
 }
 
-// Picks the guard's life-stage image (4 stages: 100/75/50/25) from his
-// current health as a percentage of max health. No 0-health stage is
-// needed since the guard's health bar stops being drawn once he dies.
 int lv3GetGuardLifeImg(int health, int maxHealth) {
 	if (health <= maxHealth / 4) return lv3GuardLifeImg[3];
 	else if (health <= maxHealth / 2) return lv3GuardLifeImg[2];
@@ -2001,11 +2102,9 @@ int lv3GetGuardLifeImg(int health, int maxHealth) {
 }
 
 void lv3Draw() {
-	// Draw Background Image
 	iShowImage(0, 0, 800, 600, lv3BgImageId);
 
 	if (lv3SubState == 0) {
-		// Draw Hero: Priority to Attack animation, otherwise show walking or standing frames
 		if (lv3IsAttacking) {
 			if (lv3HeroActionType == 1) {
 				iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroPunchId);
@@ -2026,15 +2125,13 @@ void lv3Draw() {
 			}
 		}
 
-		// Draw Hero Health Bar using a fixed life-stage image
-		// (charlife100/75/50/25/0.png) picked from his current health %.
 		iSetColor(255, 255, 255);
 		iText(50, 560, "Hero Health:", GLUT_BITMAP_HELVETICA_18);
 		{
 			int heroLifeImg = lv3GetHeroLifeImg(lv3HeroHealth, LV3_HERO_START_HEALTH);
 			if (heroLifeImg > 0) iShowImage(170, 545, 170, 60, heroLifeImg);//width,height
 		}
-		// Draw Guard if Alive
+
 		if (lv3Guard.isAlive) {
 			if (lv3GuardActionFrame == 0) {
 				iShowImage(lv3Guard.x, lv3Guard.y, lv3Guard.width, lv3Guard.height, lv3GuardStId);
@@ -2046,8 +2143,6 @@ void lv3Draw() {
 				iShowImage(lv3Guard.x, lv3Guard.y, lv3Guard.width, lv3Guard.height, lv3GuardPunch2Id);
 			}
 
-			// Draw Guard Health Bar using a fixed life-stage image
-			// (guardlife100/75/50/25.png) picked from his current health %.
 			iSetColor(255, 255, 255);
 			iText(500, 560, "Guard Health:", GLUT_BITMAP_HELVETICA_18);
 			{
@@ -2056,8 +2151,6 @@ void lv3Draw() {
 			}
 		}
 
-		// Instructions box (original bottom placement, same as the standalone
-		// Level 3 fight project - not moved).
 		iShowImage(30, -15, 740, 300, lv3NoteImg);
 
 		iSetColor(0, 0, 0);
@@ -2069,7 +2162,6 @@ void lv3Draw() {
 		}
 	}
 	else if (lv3SubState == 1) {
-		// Level Complete / Gun Prompt Note Box & Text (original placement)
 		iShowImage(30, -15, 740, 300, lv3NoteImg);
 
 		iSetColor(0, 150, 0);
@@ -2080,22 +2172,18 @@ void lv3Draw() {
 
 		iShowImage(330, 200, 180, 100, lv3GunImageId);
 
-		// Draw Arrow Pointing Down to the Gun with Increased Thickness
 		iSetColor(255, 0, 0); // Red arrow
 
-		// Draw multiple parallel lines side-by-side to make the shaft thick
 		for (int offset = -2; offset <= 2; offset++) {
 			iLine(410 + offset, 330, 410 + offset, 290);
 		}
 
-		// Draw multiple lines for the arrow head to make it bold
 		for (int offset = -2; offset <= 2; offset++) {
 			iLine(410 + offset, 290, 400 + offset, 305);
 			iLine(410 + offset, 290, 420 + offset, 305);
 		}
 	}
 	else if (lv3SubState == 2) {
-		// Walking towards the door after collecting the gun
 		if (lv3HeroWalkFrame == 0) {
 			iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroStandId);
 		}
@@ -2107,7 +2195,6 @@ void lv3Draw() {
 		}
 	}
 	else if (lv3SubState == 3) {
-		// Stopped right before the door
 		iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroStandId);
 
 		iShowImage(30, -15, 740, 300, lv3NoteImg);
@@ -2120,18 +2207,15 @@ void lv3Draw() {
 }
 
 
-// Mouse click handles alternating punch/kick combo (only while fighting), and
-// the gun pickup click once the guard is defeated.
 void lv3HandleMouseDown(int mx, int my) {
 	if (lv3SubState == 0 && lv3HeroReachedGuard) {
-		// Enforce a cooldown between hits so fights last longer
 		if (lv3ClickCooldownTimer <= 0) {
 			lv3IsAttacking = true;
-			lv3AttackCooldown = 15; // Keep attack frame visible
+			lv3AttackCooldown = 15;
 			lv3ClickCooldownTimer = LV3_CLICK_COOLDOWN;
 
 			if (lv3Guard.isAlive) {
-				lv3Guard.health -= 5; // reduced from 10 -> longer fight
+				lv3Guard.health -= 5;
 
 				if (lv3Guard.health <= 0) {
 					lv3Guard.health = 0;
@@ -2140,7 +2224,6 @@ void lv3HandleMouseDown(int mx, int my) {
 				}
 			}
 
-			// Alternate between Punch (1) and Kick (2)
 			if (lv3HeroActionType == 1) {
 				lv3HeroActionType = 2;
 			}
@@ -2150,7 +2233,6 @@ void lv3HandleMouseDown(int mx, int my) {
 		}
 	}
 	else if (lv3SubState == 1) {
-		// Click on the gun to proceed: hero now walks off towards the door
 		if (mx >= 380 && mx <= 440 && my >= 250 && my <= 280) {
 			lv3SubState = 2;
 			lv3HeroWalkFrame = 0;
@@ -2158,8 +2240,6 @@ void lv3HandleMouseDown(int mx, int my) {
 		}
 	}
 	else if (lv3SubState == 3) {
-		// Click Next to leave the prison and face the 3 gangsters outside -
-		// the final part of Level 3.
 		if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90) {
 			gsResetGame();
 			gsState = -1;
@@ -2169,16 +2249,14 @@ void lv3HandleMouseDown(int mx, int my) {
 }
 
 // ----------------------------------------------------------------------------
-// LEVEL 3 - GANGSTER SHOOTOUT MINIGAME - global variables & function
-// definitions
-// (Ported from the standalone "Prison Escape: 3 Gangsters Shootout" project;
-// only variable/function names were prefixed with "gs" to avoid clashing with
-// the rest of the game, and gameState transitions were added so this plugs
-// into Level 3. The intro screen was changed to start on a Next button click
-// instead of a click-anywhere, as noted below.)
+// LEVEL 3 - GANGSTER SHOOTOUT MINIGAME - globals & function definitions
 // ----------------------------------------------------------------------------
 const int GS_SCREEN_W = 800;
 const int GS_SCREEN_H = 600;
+
+// CHANGED: the prisoner can now take 5 hits before dying (used to be 3). The
+// on-screen damage counter uses this same constant, so it reads "/ 5".
+const int GS_MAX_MISS = 5;
 
 // Prisoner (Player)
 int gsPrisonerX = 100;
@@ -2325,7 +2403,8 @@ void gsUpdateGame() {
 				gsGBullets[i].active = false;
 				gsMiss++;
 
-				if (gsMiss >= 3) {
+				// CHANGED: 5 hits instead of 3.
+				if (gsMiss >= GS_MAX_MISS) {
 					gsState = 2; // Game Over
 				}
 			}
@@ -2335,9 +2414,6 @@ void gsUpdateGame() {
 
 void gsDraw() {
 	if (gsState == -1) {
-		// FIXED: intro screen now shows a Next button instead of "click
-		// anywhere to start" - fighting only begins once Next is clicked
-		// (handled in gsHandleLeftClick).
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 		iShowImage(20, 50, 760, 140, gsWpImg);
 
@@ -2361,7 +2437,7 @@ void gsDraw() {
 		iText(220, 95, "YOU WIN! All Gangsters Defeated!", GLUT_BITMAP_TIMES_ROMAN_24);
 
 		iSetColor(255, 255, 255);
-		iText(190, 75, "LEVEL 3 COMPLETE! Click to Return to Levels", GLUT_BITMAP_HELVETICA_18);
+		iText(230, 75, "LEVEL 3 COMPLETE! Click to Continue", GLUT_BITMAP_HELVETICA_18);
 		return;
 	}
 
@@ -2382,7 +2458,6 @@ void gsDraw() {
 	// Gameplay Screen
 	iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 
-	// Draw Dead Gangsters fixed at their respective death locations
 	if (gsCurrentGangster > 1) {
 		iShowImage(gsDeadX1, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsDeadImg1);
 	}
@@ -2393,22 +2468,18 @@ void gsDraw() {
 		iShowImage(gsDeadX3, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsDeadImg3);
 	}
 
-	// Draw Active Gangster if game is not won
 	if (gsCurrentGangster <= 3 && gsState == 0) {
 		iShowImage(gsGangsterX, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsGangsterImg);
 	}
 
-	// Draw Prisoner
 	iShowImage(gsPrisonerX, gsPrisonerY, gsPrisonerWidth, gsPrisonerHeight, gsPrisonerImg);
 
-	// Draw Prisoner Bullets (Standard Size: 30x15)
 	for (int i = 0; i < GS_MAX_BULLETS; i++) {
 		if (gsPBullets[i].active) {
 			iShowImage(gsPBullets[i].x, gsPBullets[i].y, 30, 15, gsPbImg);
 		}
 	}
 
-	// Draw Gangster Bullets (Increased Size: 50x25)
 	for (int i = 0; i < GS_MAX_BULLETS; i++) {
 		if (gsGBullets[i].active) {
 			iShowImage(gsGBullets[i].x, gsGBullets[i].y, 50, 25, gsGbImg);
@@ -2418,7 +2489,7 @@ void gsDraw() {
 	// Display Stats
 	char gsScoreStr[50], gsMissStr[50], gsBossStr[50];
 	sprintf(gsScoreStr, "Hits: %d / 20", gsGangsterHits);
-	sprintf(gsMissStr, "Damage Taken: %d / 3", gsMiss);
+	sprintf(gsMissStr, "Damage Taken: %d / %d", gsMiss, GS_MAX_MISS);
 	sprintf(gsBossStr, "Gangster: %d / 3", gsCurrentGangster);
 
 	iSetColor(255, 255, 255);
@@ -2427,7 +2498,6 @@ void gsDraw() {
 	iText(570, 560, gsMissStr, GLUT_BITMAP_HELVETICA_18);
 }
 
-// Mouse movement for Prisoner and synchronized Gangster control
 void gsMouseMove(int mx, int my) {
 	if (gsState != 0) return;
 
@@ -2437,23 +2507,15 @@ void gsMouseMove(int mx, int my) {
 	if (gsPrisonerX < 0) gsPrisonerX = 0;
 	if (gsPrisonerX > GS_SCREEN_W / 2 - gsPrisonerWidth) gsPrisonerX = GS_SCREEN_W / 2 - gsPrisonerWidth;
 
-	// Calculate how much the prisoner moved and apply it to the active gangster
 	int deltaX = gsPrisonerX - oldPrisonerX;
 	gsGangsterX += deltaX;
 
-	// Keep gangster within reasonable bounds on the right side
 	if (gsGangsterX < GS_SCREEN_W / 2 + 50) gsGangsterX = GS_SCREEN_W / 2 + 50;
 	if (gsGangsterX > GS_SCREEN_W - gsGangsterWidth - 20) gsGangsterX = GS_SCREEN_W - gsGangsterWidth - 20;
 }
 
-// Left-Click to Start/Restart/Shoot (the Back button on the instruction,
-// game-over screens, and win screen is handled by the caller in iMouse,
-// same as the other minigames such as Dodge/USB/Investigation)
 void gsHandleLeftClick(int mx, int my) {
 	if (gsState == -1) {
-		// FIXED: only start when the Next button is clicked (same hotspot
-		// used by the note screens elsewhere), instead of the old
-		// click-anywhere-to-start behaviour.
 		if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90) {
 			gsResetGame();
 			gsState = 0;
@@ -2468,14 +2530,14 @@ void gsHandleLeftClick(int mx, int my) {
 	}
 
 	if (gsState == 1) {
-		// Level 3 fully complete - head back to the level select screen.
 		gsResetGame();
 		gsState = -1;
-		gameState = 300;
+		trResetGame();
+		trGameStarted = false;
+		gameState = GAMESTATE_TRAFFIC;
 		return;
 	}
 
-	// Gameplay shooting (Left Click)
 	if (gsState == 0) {
 		for (int i = 0; i < GS_MAX_BULLETS; i++) {
 			if (!gsPBullets[i].active) {
@@ -2488,12 +2550,604 @@ void gsHandleLeftClick(int mx, int my) {
 	}
 }
 
-// Right-Click to Jump
 void gsHandleRightClick(int mx, int my) {
 	if (gsState != 0) return;
 	if (!gsIsJumping) {
 		gsIsJumping = true;
 		gsPrisonerVelY = gsJumpStrength;
+	}
+}
+
+// ----------------------------------------------------------------------------
+// TRAFFIC RUNNER MINIGAME - function definitions
+// ----------------------------------------------------------------------------
+
+void trDrawCar(int x, int y, int colorIndex) {
+	if (colorIndex >= 0 && colorIndex < 6) {
+		iShowImage(x, y, TR_CAR_W, TR_CAR_H, trCarImgs[colorIndex]);
+	}
+}
+
+void trDrawTruck(int x, int y, int colorIndex) {
+	if (colorIndex >= 0 && colorIndex < 4) {
+		iShowImage(x, y, TR_TRUCK_W, TR_TRUCK_H, trTruckImgs[colorIndex]);
+	}
+}
+
+void trDrawManhole(int x, int y) {
+	int cx = x + TR_MANHOLE_W / 2;
+	int cy = y + TR_MANHOLE_H / 2;
+	int r = TR_MANHOLE_W / 2;
+
+	iSetColor(15, 15, 15);
+	iFilledCircle(cx, cy, r + 2);
+
+	iSetColor(50, 50, 50);
+	iFilledCircle(cx, cy, r);
+
+	iSetColor(110, 110, 110);
+	iCircle(cx, cy, r - 2);
+	iCircle(cx, cy, r - 5);
+
+	iSetColor(35, 35, 35);
+	iFilledCircle(cx, cy, r - 8);
+
+	iSetColor(75, 75, 75);
+	iLine(cx - (r - 10), cy, cx + (r - 10), cy);
+	iLine(cx, cy - (r - 10), cx, cy + (r - 10));
+
+	iLine(cx - (r - 12), cy - (r - 12), cx + (r - 12), cy + (r - 12));
+	iLine(cx - (r - 12), cy + (r - 12), cx + (r - 12), cy - (r - 12));
+
+	iSetColor(85, 85, 85);
+	iFilledCircle(cx, cy, 8);
+	iSetColor(25, 25, 25);
+	iFilledCircle(cx, cy, 4);
+}
+
+void trDrawGreenGem(int x, int y) {
+	int size = 25;
+	int cx = x + size / 2;
+	int topY = y + size;
+	int midY = y + size / 2;
+	int botY = y;
+	int leftX = x;
+	int rightX = x + size;
+
+	iSetColor(20, 130, 55);
+	double x1[] = { (double)cx, (double)leftX, (double)cx };
+	double y1[] = { (double)topY, (double)midY, (double)botY };
+	iFilledPolygon(x1, y1, 3);
+
+	iSetColor(70, 210, 100);
+	double x2[] = { (double)cx, (double)rightX, (double)cx };
+	double y2[] = { (double)topY, (double)midY, (double)botY };
+	iFilledPolygon(x2, y2, 3);
+
+	iSetColor(200, 255, 215);
+	double x3[] = { (double)cx, (double)cx - 5, (double)cx + 5 };
+	double y3[] = { (double)topY, (double)midY - 3, (double)midY - 3 };
+	iFilledPolygon(x3, y3, 3);
+
+	iSetColor(10, 80, 35);
+	iLine(cx, topY, leftX, midY);
+	iLine(leftX, midY, cx, botY);
+	iLine(cx, botY, rightX, midY);
+	iLine(rightX, midY, cx, topY);
+}
+
+void trDraw() {
+	if (!trGameStarted) {
+		iShowImage(0, 0, TR_SCREEN_W, TR_SCREEN_H, trStartImg);
+
+		int noteW = 500, noteH = 250;
+		int noteX = (TR_SCREEN_W - noteW) / 2;
+		int noteY = 20;
+		iShowImage(noteX, noteY, noteW, noteH, trNoteImg);
+
+		iSetColor(0, 0, 0);
+		iText(noteX + 35, noteY + 63, "Press Right/Left Arrow to move,Space/Up to jump", GLUT_BITMAP_HELVETICA_18);
+		iText(noteX + 100, noteY + 40, "Click anywhere to start the game", GLUT_BITMAP_HELVETICA_18);
+
+		return;
+	}
+
+	if (trWinState == 1) {
+		iShowImage(0, 0, TR_SCREEN_W, TR_SCREEN_H, trWinImg1);
+
+		int noteW = 500, noteH = 250;
+		int noteX = (TR_SCREEN_W - noteW) / 2;
+		int noteY = 20;
+		iShowImage(noteX, noteY, noteW, noteH, trNoteImg);
+
+		iSetColor(0, 0, 0);
+		iText(noteX + 190, noteY + 63, "YOU WIN!", GLUT_BITMAP_TIMES_ROMAN_24);
+		iText(noteX + 110, noteY + 40, "Click anywhere to continue...", GLUT_BITMAP_HELVETICA_18);
+
+		return;
+	}
+	else if (trWinState == 2) {
+		iShowImage(0, 0, TR_SCREEN_W, TR_SCREEN_H, trWinImg2);
+		return;
+	}
+	else if (trWinState == 3) {
+		iShowImage(0, 0, TR_SCREEN_W, TR_SCREEN_H, trWinImg3);
+		return;
+	}
+	else if (trWinState == 4) {
+		iShowImage(0, 0, TR_SCREEN_W, TR_SCREEN_H, trFinalBgImg);
+		return;
+	}
+
+	iShowImage(0, trBgY1, TR_SCREEN_W, TR_SCREEN_H, trBgImg);
+	iShowImage(0, trBgY2, TR_SCREEN_W, TR_SCREEN_H, trBgImg);
+
+	for (int i = 0; i < TR_MAX_MANHOLES; i++) {
+		if (trManholeList[i].active) {
+			trDrawManhole(trLaneX[trManholeList[i].lane] + 2, trManholeList[i].y);
+		}
+	}
+
+	for (int i = 0; i < TR_MAX_OBS; i++) {
+		if (trObsList[i].active) {
+			int l = trObsList[i].lane;
+			if (trObsList[i].type == 0) {
+				trDrawCar(trLaneX[l], trObsList[i].y, trObsList[i].colorIndex);
+			}
+			else {
+				trDrawTruck(trLaneX[l] - 5, trObsList[i].y, trObsList[i].colorIndex);
+			}
+		}
+	}
+
+	for (int i = 0; i < TR_MAX_ROOF_GEMS; i++) {
+		if (trRoofGems[i].active) {
+			trDrawGreenGem(trLaneX[trRoofGems[i].lane] + 20, trRoofGems[i].y);
+		}
+	}
+
+	int drawX = (int)trPlayerDrawX;
+	int drawY = trPlayerY + trJumpHeight;
+
+	if (trCurrentRunFrame == 0)
+		iShowImage(drawX, drawY, 60, 90, trRunImg1);
+	else
+		iShowImage(drawX, drawY, 60, 90, trRunImg2);
+
+	// Draw Score Image and Golden Score Number
+	iShowImage(560, 535, 220, 45, trScoreImg);
+
+	iSetColor(255, 215, 0); // Golden Color
+	char scoreStr[50];
+	sprintf(scoreStr, "%d", trScore);
+	iText(700, 549, scoreStr, GLUT_BITMAP_HELVETICA_18);
+
+	if (trGameOver) {
+		iSetColor(255, 0, 0);
+		iText(260, 300, "GAME OVER! Press 'R' to Restart.", GLUT_BITMAP_HELVETICA_18);
+	}
+}
+
+void trSpawnTrafficCluster(int startY) {
+	int jamLane = rand() % 3;
+	int currentY = startY;
+
+	bool isFullJam = (rand() % 2 == 0);
+	int count = isFullJam ? (4 + rand() % 3) : (2 + rand() % 2);
+
+	int modeChoice = rand() % 100;
+	bool gemOnJam = false;
+	bool gemOnManhole = false;
+	bool gemOnSideCars = false;
+
+	if (modeChoice < 20) {
+		gemOnJam = true; gemOnManhole = true;
+	}
+	else if (modeChoice < 40) {
+		gemOnManhole = true; gemOnSideCars = true;
+	}
+	else if (modeChoice < 60) {
+		gemOnJam = true; gemOnSideCars = true;
+	}
+	else if (modeChoice < 75) {
+		gemOnJam = true;
+	}
+	else if (modeChoice < 90) {
+		gemOnManhole = true;
+	}
+	else {
+		gemOnSideCars = true;
+	}
+
+	for (int c = 0; c < count; c++) {
+		int slot = -1;
+		for (int j = 0; j < TR_MAX_OBS; j++) {
+			if (!trObsList[j].active) {
+				slot = j;
+				break;
+			}
+		}
+
+		if (slot != -1) {
+			trObsList[slot].lane = jamLane;
+			trObsList[slot].y = currentY;
+			trObsList[slot].type = rand() % 2;
+
+			int h = (trObsList[slot].type == 1) ? TR_TRUCK_H : TR_CAR_H;
+			trObsList[slot].colorIndex = (trObsList[slot].type == 0) ? rand() % 6 : rand() % 4;
+			trObsList[slot].active = true;
+
+			if (gemOnJam && (isFullJam ? (c >= 1 && c < count - 1) : true)) {
+				for (int gy = currentY + 20; gy <= currentY + h - 20; gy += 40) {
+					for (int k = 0; k < TR_MAX_ROOF_GEMS; k++) {
+						if (!trRoofGems[k].active) {
+							trRoofGems[k].lane = jamLane;
+							trRoofGems[k].y = gy;
+							trRoofGems[k].active = true;
+							break;
+						}
+					}
+				}
+			}
+
+			int jamGap = isFullJam ? 5 : 80;
+			currentY += h + jamGap;
+		}
+	}
+
+	int otherLanes[2];
+	int idx = 0;
+	for (int i = 0; i < 3; i++) {
+		if (i != jamLane) {
+			otherLanes[idx++] = i;
+		}
+	}
+
+	int manholeLane = otherLanes[0];
+	int sideCarLane = otherLanes[1];
+
+	if (rand() % 2 == 1) {
+		manholeLane = otherLanes[1];
+		sideCarLane = otherLanes[0];
+	}
+
+	int mY = startY + (rand() % (abs(currentY - startY - 100) + 1));
+
+	for (int m = 0; m < TR_MAX_MANHOLES; m++) {
+		if (!trManholeList[m].active) {
+			trManholeList[m].lane = manholeLane;
+			trManholeList[m].y = mY;
+			trManholeList[m].active = true;
+			break;
+		}
+	}
+
+	if (gemOnManhole) {
+		int gemCount = 0;
+		for (int gy = mY - 30; gy <= mY + 110; gy += 35) {
+			if (gemCount >= 5) break;
+			for (int k = 0; k < TR_MAX_ROOF_GEMS; k++) {
+				if (!trRoofGems[k].active) {
+					trRoofGems[k].lane = manholeLane;
+					trRoofGems[k].y = gy;
+					trRoofGems[k].active = true;
+					gemCount++;
+					break;
+				}
+			}
+		}
+	}
+
+	int vehicleCount = (rand() % 2 == 0) ? 1 : 2;
+	int sideY = startY + (rand() % (abs(currentY - startY - 260) + 1));
+
+	for (int v = 0; v < vehicleCount; v++) {
+		int slot = -1;
+		for (int j = 0; j < TR_MAX_OBS; j++) {
+			if (!trObsList[j].active) {
+				slot = j;
+				break;
+			}
+		}
+
+		if (slot != -1) {
+			trObsList[slot].lane = sideCarLane;
+			trObsList[slot].y = sideY;
+			trObsList[slot].type = rand() % 2;
+
+			int sH = (trObsList[slot].type == 1) ? TR_TRUCK_H : TR_CAR_H;
+			trObsList[slot].colorIndex = (trObsList[slot].type == 0) ? rand() % 6 : rand() % 4;
+			trObsList[slot].active = true;
+
+			if (gemOnSideCars) {
+				int gCount = 0;
+				for (int gy = sideY + 20; gy <= sideY + sH - 20; gy += 35) {
+					if (gCount >= 3) break;
+					for (int k = 0; k < TR_MAX_ROOF_GEMS; k++) {
+						if (!trRoofGems[k].active) {
+							trRoofGems[k].lane = sideCarLane;
+							trRoofGems[k].y = gy;
+							trRoofGems[k].active = true;
+							gCount++;
+							break;
+						}
+					}
+				}
+			}
+
+			int gap = 80;
+			sideY += sH + gap;
+		}
+	}
+}
+
+void trUpdateObstacles() {
+	bool anyActive = false;
+	int maxObsY = -999;
+
+	int pX = (int)trPlayerDrawX;
+	int pW = 60;
+
+	bool currentlyOnVehicleRoof = false;
+
+	for (int i = 0; i < TR_MAX_OBS; i++) {
+		if (trObsList[i].active) {
+			anyActive = true;
+			trObsList[i].y -= 7;
+
+			if (trObsList[i].y > maxObsY) {
+				maxObsY = trObsList[i].y;
+			}
+
+			if (trObsList[i].y < -400) {
+				trObsList[i].active = false;
+			}
+
+			int l = trObsList[i].lane;
+			int obsW = (trObsList[i].type == 1) ? TR_TRUCK_W : TR_CAR_W;
+			int obsH = (trObsList[i].type == 1) ? TR_TRUCK_H : TR_CAR_H;
+			int obsX = trLaneX[l];
+			if (trObsList[i].type == 1) obsX -= 5;
+
+			int obsBottom = trObsList[i].y;
+			int obsTop = trObsList[i].y + obsH;
+
+			bool xOverlap = (pX + pW - 15 > obsX) && (pX + 15 < obsX + obsW);
+
+			if (xOverlap && l == trPlayerLane) {
+				int curPlayerY = trPlayerY + trJumpHeight;
+
+				if (curPlayerY >= obsBottom - 10 && curPlayerY <= obsTop + 30) {
+					currentlyOnVehicleRoof = true;
+				}
+
+				if (trIsJumping && curPlayerY >= obsBottom) {
+					trIsOnRoof = true;
+				}
+
+				if (!trIsJumping && !trIsOnRoof) {
+					if (trPlayerY + 15 >= obsBottom && trPlayerY + 15 <= obsBottom + 35) {
+						trGameOver = true;
+					}
+				}
+			}
+		}
+	}
+
+	if (!currentlyOnVehicleRoof && !trIsJumping) {
+		trIsOnRoof = false;
+	}
+
+	if (!anyActive || maxObsY < TR_SCREEN_H - 150) {
+		trSpawnTrafficCluster(TR_SCREEN_H + 100);
+	}
+}
+
+void trUpdateRoofGems() {
+	int currentPPosY = trPlayerY + trJumpHeight;
+
+	for (int i = 0; i < TR_MAX_ROOF_GEMS; i++) {
+		if (trRoofGems[i].active) {
+			trRoofGems[i].y -= 7;
+
+			if (trRoofGems[i].lane == trPlayerLane) {
+				if (abs(trRoofGems[i].y - currentPPosY) < 45) {
+					trScore += 10;
+					trRoofGems[i].active = false;
+				}
+			}
+
+			if (trRoofGems[i].y < -100) {
+				trRoofGems[i].active = false;
+			}
+		}
+	}
+}
+
+void trUpdateManholes() {
+	int pX = (int)trPlayerDrawX;
+	int pW = 60;
+
+	for (int i = 0; i < TR_MAX_MANHOLES; i++) {
+		if (trManholeList[i].active) {
+			trManholeList[i].y -= 7;
+
+			if (trManholeList[i].lane == trPlayerLane) {
+				int mX = trLaneX[trManholeList[i].lane] + 2;
+				bool xOverlap = (pX + pW - 15 > mX) && (pX + 15 < mX + TR_MANHOLE_W);
+
+				if (xOverlap && !trIsJumping && !trIsOnRoof) {
+					if (trPlayerY + 20 >= trManholeList[i].y && trPlayerY <= trManholeList[i].y + TR_MANHOLE_H) {
+						trGameOver = true;
+					}
+				}
+			}
+
+			if (trManholeList[i].y < -100) {
+				trManholeList[i].active = false;
+			}
+		}
+	}
+}
+
+void trResetGame() {
+	trGameOver = false;
+	trWinState = 0;
+	trWinTimer = 0;
+	trScore = 0;
+	trJumpHeight = 0;
+	trIsJumping = false;
+	trJumpUp = true;
+	trIsOnRoof = false;
+	trPlayerLane = 1;
+	trPlayerY = trBasePlayerY;
+	trPlayerDrawX = trLaneX[trPlayerLane] + 5;
+	trBgY1 = 0;
+	trBgY2 = 600;
+
+	for (int i = 0; i < TR_MAX_OBS; i++) {
+		trObsList[i].active = false;
+	}
+
+	for (int k = 0; k < TR_MAX_ROOF_GEMS; k++) {
+		trRoofGems[k].active = false;
+	}
+
+	for (int m = 0; m < TR_MAX_MANHOLES; m++) {
+		trManholeList[m].active = false;
+	}
+
+	trSpawnTrafficCluster(500);
+}
+
+void trFixedUpdate() {
+	if (gameState != GAMESTATE_TRAFFIC) return;
+	if (isGamePaused) return;
+
+	if (isKeyPressed('r') || isKeyPressed('R')) {
+		trResetGame();
+	}
+
+	if (!trGameStarted) return;
+
+	if (trGameOver) return;
+
+	if (trWinState == 1) return;
+
+	if (trWinState == 2) {
+		trWinTimer += 50;
+		if (trWinTimer >= 4000) {
+			trWinState = 3;
+			trWinTimer = 0;
+		}
+		return;
+	}
+	else if (trWinState == 3) {
+		trWinTimer += 50;
+		if (trWinTimer >= 7000) {
+			trWinState = 4;
+			trWinTimer = 0;
+
+			gameState = GAMESTATE_TRAFFIC_LOADING;
+			loadingStep = 0;
+			if (musicPlaying) {
+				mciSendString(TEXT("pause bgm"), NULL, 0, NULL);
+			}
+		}
+		return;
+	}
+	else if (trWinState == 4) {
+		return;
+	}
+
+	if (trScore >= 1500) {
+		trWinState = 1;
+		return;
+	}
+
+	if (isSpecialKeyPressed(GLUT_KEY_LEFT)) {
+		trPlayerDrawX -= 10.0;
+		if (trPlayerDrawX < trLaneX[0] + 5) {
+			trPlayerDrawX = trLaneX[0] + 5;
+		}
+	}
+
+	if (isSpecialKeyPressed(GLUT_KEY_RIGHT)) {
+		trPlayerDrawX += 10.0;
+		if (trPlayerDrawX > trLaneX[2] + 5) {
+			trPlayerDrawX = trLaneX[2] + 5;
+		}
+	}
+
+	if (trPlayerDrawX < (trLaneX[0] + trLaneX[1]) / 2.0 + 5) {
+		trPlayerLane = 0;
+	}
+	else if (trPlayerDrawX >(trLaneX[1] + trLaneX[2]) / 2.0 + 5) {
+		trPlayerLane = 2;
+	}
+	else {
+		trPlayerLane = 1;
+	}
+
+	if (isSpecialKeyPressed(GLUT_KEY_UP)) {
+		if (!trIsJumping) {
+			trIsJumping = true;
+			trJumpUp = true;
+		}
+	}
+
+	if (isKeyPressed(' ')) {
+		if (!trIsJumping) {
+			trIsJumping = true;
+			trJumpUp = true;
+		}
+	}
+
+	trBgY1 -= 6;
+	trBgY2 -= 6;
+
+	if (trBgY1 <= -TR_SCREEN_H)
+		trBgY1 = trBgY2 + TR_SCREEN_H;
+
+	if (trBgY2 <= -TR_SCREEN_H)
+		trBgY2 = trBgY1 + TR_SCREEN_H;
+
+	trUpdateObstacles();
+	trUpdateRoofGems();
+	trUpdateManholes();
+
+	if (trIsJumping) {
+		if (trJumpUp) {
+			trJumpHeight += 12;
+			if (trJumpHeight >= 150)
+				trJumpUp = false;
+		}
+		else {
+			trJumpHeight -= 12;
+			if (trJumpHeight <= 0) {
+				trJumpHeight = 0;
+				trIsJumping = false;
+			}
+		}
+	}
+
+	static int trAnimCounter = 0;
+	trAnimCounter++;
+	if (trAnimCounter >= 10) {
+		trCurrentRunFrame = 1 - trCurrentRunFrame;
+		trAnimCounter = 0;
+	}
+}
+
+void trHandleMouseDown(int mx, int my) {
+	if (!trGameStarted) {
+		trGameStarted = true;
+		return;
+	}
+
+	if (trWinState == 1) {
+		trWinState = 2;
+		trWinTimer = 0;
 	}
 }
 
@@ -2503,7 +3157,9 @@ void iDraw()
 	iSetColor(0, 0, 0);
 	iFilledRectangle(0, 0, 800, 600);
 
-	if (gameState == 0 || gameState == 5 || gameState == 6 || gameState == 57 || gameState == GAMESTATE_VR_WIN_LOADING || gameState == GAMESTATE_LEVEL3_LOADING)
+	if (gameState == 0 || gameState == 5 || gameState == 6 || gameState == 57 ||
+		gameState == GAMESTATE_VR_WIN_LOADING || gameState == GAMESTATE_LEVEL3_LOADING ||
+		gameState == GAMESTATE_TRAFFIC_LOADING)
 	{
 		if (gameState == 0) {
 			iShowImage(0, 0, 800, 600, loadBg);
@@ -2522,6 +3178,9 @@ void iDraw()
 		}
 		else if (gameState == GAMESTATE_LEVEL3_LOADING) {
 			iShowImage(0, 0, 800, 600, level3BgImg);
+		}
+		else if (gameState == GAMESTATE_TRAFFIC_LOADING) {
+			iShowImage(0, 0, 800, 600, trFinalBgImg);
 		}
 
 		iSetColor(180, 122, 33);
@@ -2573,6 +3232,20 @@ void iDraw()
 			iShowImage(492, 115, 175, 342, level3Btn);
 		}
 		iShowImage(68, 26, 120, 53, backImg);
+	}
+	else if (gameState == GAMESTATE_LEVEL1_NOTE)
+	{
+		// NEW: level 1 instruction screen - the normal level 1 map with
+		// intro.png in the middle (same size/place as the level 2 note) and
+		// a Next button on the right. Clicking Next goes to gameState 350
+		// where the map behaves exactly as it always did.
+		if (map1Img > 0) iShowImage(0, 0, 800, 600, map1Img);
+		if (cellMapImg > 0) iShowImage(150, 80, 480, 150, cellMapImg);
+		if (cctvMapImg > 0) iShowImage(62, 335, 200, 228, cctvMapImg);
+		if (alarmMapImg > 0) iShowImage(530, 333, 200, 228, alarmMapImg);
+
+		if (introImg > 0) iShowImage(150, 150, 500, 200, introImg);
+		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
 	}
 	else if (gameState == 350)
 	{
@@ -2755,11 +3428,15 @@ void iDraw()
 
 		if (wrong)
 		{
+			// CHANGED: same x/y as before (totalWidth kept at 50 + 60 so the
+			// two sprites keep their original positions), only the drawn
+			// width/height of the guard and the caught player were
+			// increased.
 			int totalWidth = 50 + 60;
 			int startX = (800 - totalWidth) / 2;
 
-			iShowImage(startX, guardY, 50, 70, guard6);
-			iShowImage(startX + 50, playerY, 60, 80, caughtPlayer);
+			iShowImage(startX, guardY, L1_CAUGHT_GUARD_W, L1_CAUGHT_GUARD_H, guard6);
+			iShowImage(startX + 50, playerY, L1_CAUGHT_PLAYER_W, L1_CAUGHT_PLAYER_H, caughtPlayer);
 
 			if (imgnote > 0) {
 				iShowImage(150, 20, 500, 200, imgnote);
@@ -2771,35 +3448,37 @@ void iDraw()
 		}
 		else
 		{
+			// CHANGED: guard sprites are drawn bigger (same guardX/guardY).
 			if (moveRight)
 			{
 				if (guardFrame == 0 || guardFrame == 2)
-					iShowImage(guardX, guardY, 50, 70, guard1);
+					iShowImage(guardX, guardY, L1_GUARD_W, L1_GUARD_H, guard1);
 				else if (guardFrame == 1)
-					iShowImage(guardX, guardY, 50, 70, guard3);
+					iShowImage(guardX, guardY, L1_GUARD_W, L1_GUARD_H, guard3);
 			}
 			else
 			{
 				if (guardFrame == 0 || guardFrame == 2)
-					iShowImage(guardX, guardY, 50, 70, guard4);
+					iShowImage(guardX, guardY, L1_GUARD_W, L1_GUARD_H, guard4);
 				else if (guardFrame == 1)
-					iShowImage(guardX, guardY, 50, 70, guard5);
+					iShowImage(guardX, guardY, L1_GUARD_W, L1_GUARD_H, guard5);
 			}
 
+			// CHANGED: player sprites are drawn bigger (same playerX/playerY).
 			if (playerRunning)
 			{
 				if (playerFrame == 0)
-					iShowImage(playerX, playerY, 70, 110, playerOne);
+					iShowImage(playerX, playerY, L1_PLAYER_RUN_W, L1_PLAYER_RUN_H, playerOne);
 				else if (playerFrame == 1)
-					iShowImage(playerX, playerY, 70, 110, playerTwo);
+					iShowImage(playerX, playerY, L1_PLAYER_RUN_W, L1_PLAYER_RUN_H, playerTwo);
 				else if (playerFrame == 2)
-					iShowImage(playerX, playerY, 70, 110, playerThree);
+					iShowImage(playerX, playerY, L1_PLAYER_RUN_W, L1_PLAYER_RUN_H, playerThree);
 			}
 			else
 			{
 				if (!playerEscaped)
 				{
-					iShowImage(playerX, playerY, 60, 80, playerImg);
+					iShowImage(playerX, playerY, L1_PLAYER_STAND_W, L1_PLAYER_STAND_H, playerImg);
 				}
 			}
 
@@ -2899,8 +3578,6 @@ void iDraw()
 	}
 	else if (gameState == GAMESTATE_GUNCOLLECT_NOTE)
 	{
-		// Shown on the level 3 fight's own background (insideprison.png) so
-		// it leads straight into that scene once Next is clicked.
 		if (lv3BgImageId > 0) iShowImage(0, 0, 800, 600, lv3BgImageId);
 		else if (level3BgImg > 0) iShowImage(0, 0, 800, 600, level3BgImg);
 		if (gunCollectImg > 0) iShowImage(150, 150, 480, 280, gunCollectImg);
@@ -2913,6 +3590,10 @@ void iDraw()
 	else if (gameState == GAMESTATE_LEVEL3_SHOOTOUT)
 	{
 		gsDraw();
+	}
+	else if (gameState == GAMESTATE_TRAFFIC)
+	{
+		trDraw();
 	}
 
 	if (isSettingsVisibleState(gameState))
@@ -3021,11 +3702,19 @@ void iMouse(int button, int state, int mx, int my)
 		if (isGamePaused) return;
 
 		// ------------------------------------------------------------------
-		// NEW: intro/"note" screens. Each just waits for a click on the
-		// Next button (same 650,50 - 750,90 hotspot used elsewhere in the
-		// game for "next") and then starts the minigame exactly the way it
-		// used to start before the note screen was added.
+		// Intro/"note" screens. Each just waits for a click on the Next
+		// button (same 650,50 - 750,90 hotspot used elsewhere in the game)
+		// and then starts the level/minigame exactly the way it used to.
 		// ------------------------------------------------------------------
+		if (gameState == GAMESTATE_LEVEL1_NOTE)
+		{
+			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
+			{
+				gameState = 350;
+			}
+			return;
+		}
+
 		if (gameState == GAMESTATE_DODGE_NOTE)
 		{
 			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
@@ -3089,6 +3778,12 @@ void iMouse(int button, int state, int mx, int my)
 				return;
 			}
 			gsHandleLeftClick(mx, my);
+			return;
+		}
+
+		if (gameState == GAMESTATE_TRAFFIC)
+		{
+			trHandleMouseDown(mx, my);
 			return;
 		}
 
@@ -3371,6 +4066,7 @@ void iMouseMove(int mx, int my)
 	}
 	else if (gameState == GAMESTATE_LEVEL3_SHOOTOUT)
 	{
+		if (isGamePaused) return;
 		gsMouseMove(mx, my);
 	}
 }
@@ -3449,6 +4145,12 @@ void iKeyboard(unsigned char key) {
 
 	if (gameState == 400) {
 		usbHandleKeyboard(key);
+	}
+
+	if (gameState == GAMESTATE_TRAFFIC) {
+		if (key == 'r' || key == 'R') {
+			trResetGame();
+		}
 	}
 }
 
@@ -3591,14 +4293,19 @@ void usbDrawGame() {
 	}
 
 	if (usbSubState == 0) {
-		if (usbImgWp > 0) iShowImage(50, 80, 700, 140, usbImgWp);
+		// CHANGED: the first of the three lines ("PRISON ESCAPE: SECURITY
+		// OVERRIDE") has been removed. The remaining two lines now sit on a
+		// note.png box placed at exactly the same spot/size the Traffic
+		// Runner uses for its own note, with the same text offsets.
+		int noteW = 500, noteH = 250;
+		int noteX = (800 - noteW) / 2;
+		int noteY = 20;
 
-		iSetColor(50, 30, 10);
-		iText(150, 160, "PRISON ESCAPE: SECURITY OVERRIDE", GLUT_BITMAP_HELVETICA_18);
-		iSetColor(30, 30, 30);
-		iText(135, 125, "Play this match-3 game to get the USB!", GLUT_BITMAP_HELVETICA_18);
-		iSetColor(180, 40, 40);
-		iText(185, 95, "Click anywhere or press ENTER to Start", GLUT_BITMAP_HELVETICA_18);
+		if (imgnote > 0) iShowImage(noteX, noteY, noteW, noteH, imgnote);
+
+		iSetColor(0, 0, 0);
+		iText(noteX + 55, noteY + 63, "Play this match-3 game to get the USB!", GLUT_BITMAP_HELVETICA_18);
+		iText(noteX + 45, noteY + 40, "Click anywhere or press ENTER to Start", GLUT_BITMAP_HELVETICA_18);
 	}
 	else if (usbSubState == 1) {
 		iSetColor(30, 30, 40);
@@ -3639,13 +4346,20 @@ void usbDrawGame() {
 		iText(530, 545, movesStr, GLUT_BITMAP_HELVETICA_18);
 	}
 	else if (usbSubState == 2) {
+		// CHANGED: the win text is now drawn on a note.png box using exactly
+		// the Traffic Runner win-screen layout, and the running character
+		// animation that used to be drawn underneath has been removed.
 		if (usbImgUsbIcon > 0) iShowImage(520, 220, 40, 40, usbImgUsbIcon);
-		if (usbImgChar[usbCurrentFrame] > 0) iShowImage((int)usbCharX, (int)usbCharY, 80, 100, usbImgChar[usbCurrentFrame]);
 
-		iSetColor(50, 255, 50);
-		iText(275, 480, "SECURITY BYPASSED!", GLUT_BITMAP_TIMES_ROMAN_24);
-		iSetColor(255, 255, 255);
-		iText(220, 440, "Character acquired the USB! Press R to Restart.", GLUT_BITMAP_HELVETICA_18);
+		int noteW = 500, noteH = 250;
+		int noteX = (800 - noteW) / 2;
+		int noteY = 20;
+
+		if (imgnote > 0) iShowImage(noteX, noteY, noteW, noteH, imgnote);
+
+		iSetColor(0, 0, 0);
+		iText(noteX + 125, noteY + 63, "SECURITY BYPASSED!", GLUT_BITMAP_TIMES_ROMAN_24);
+		iText(noteX + 105, noteY + 40, "Character acquired the USB!", GLUT_BITMAP_HELVETICA_18);
 
 		if (!usbCompletionTimerStarted) {
 			usbCompletionTimerStarted = true;
@@ -3871,12 +4585,15 @@ int main()
 	vrRunnerImg[2] = iLoadImage("Images/player3.png");
 	vrWinBgImg = iLoadImage("Images/background1.png");
 
-	// NEW: note/instruction screen images
+	// Note/instruction screen images
 	dodgeIntroNoteImg = iLoadImage("Images/dodgenote.png");
 	level2NoteImg = iLoadImage("Images/level2note.png");
 	usbNoteImg = iLoadImage("Images/usbnote.png");
 	evidenceRoomNoteImg = iLoadImage("Images/evidenceroomnote.png");
 	gunCollectImg = iLoadImage("Images/guncollect.png");
+
+	// NEW: level 1 map instruction image (shown on top of map1.png)
+	introImg = iLoadImage("Images/intro.png");
 
 	// Level 3 fight minigame images
 	lv3BgImageId = iLoadImage("Images/insideprison.png");
@@ -3891,12 +4608,6 @@ int main()
 	lv3GunImageId = iLoadImage("Images/gun.png");
 	lv3NoteImg = iLoadImage("Images/note.png");
 
-	// Image-based Hero/Guard health bars for the Level 3 fight. Each side
-	// picks one of a fixed set of life-stage images based on current health
-	// percentage (see lv3GetHeroLifeImg / lv3GetGuardLifeImg). If these
-	// files don't exist yet, iShowImage calls using them are skipped
-	// (guarded by "> 0" checks in lv3Draw), so it's safe to add the actual
-	// art later without touching the code again.
 	lv3HeroLifeImg[0] = iLoadImage("Images/charlife100.png");
 	lv3HeroLifeImg[1] = iLoadImage("Images/charlife75.png");
 	lv3HeroLifeImg[2] = iLoadImage("Images/charlife50.png");
@@ -3908,8 +4619,7 @@ int main()
 	lv3GuardLifeImg[2] = iLoadImage("Images/guardlife50.png");
 	lv3GuardLifeImg[3] = iLoadImage("Images/guardlife25.png");
 
-	// Level 3 - Gangster Shootout minigame images (final part of Level 3,
-	// played right after the Level 3 Fight's "reached the door" screen)
+	// Level 3 - Gangster Shootout minigame images
 	gsBgImg = iLoadImage("Images/collison room.png");
 	gsWpImg = iLoadImage("Images/wp.png");
 	gsPrisonerImg = iLoadImage("Images/prisoner.png");
@@ -3924,12 +4634,41 @@ int main()
 		gsGBullets[i].active = false;
 	}
 
+	// Traffic Runner minigame images
+	trStartImg = iLoadImage("Images/temple1.png");
+	trBgImg = iLoadImage("Images/temple2.png");
+	trWinImg1 = iLoadImage("Images/temple3.png");
+	trWinImg2 = iLoadImage("Images/temple4.png");
+	trWinImg3 = iLoadImage("Images/temple5.png");
+	trFinalBgImg = iLoadImage("Images/background2.png");
+	trNoteImg = iLoadImage("Images/note.png");
+	trScoreImg = iLoadImage("Images/score.png");
+
+	trRunImg1 = iLoadImage("Images/temprun1.png");
+	trRunImg2 = iLoadImage("Images/temprun2.png");
+
+	trCarImgs[0] = iLoadImage("Images/car1.png");
+	trCarImgs[1] = iLoadImage("Images/car2.png");
+	trCarImgs[2] = iLoadImage("Images/car3.png");
+	trCarImgs[3] = iLoadImage("Images/car4.png");
+	trCarImgs[4] = iLoadImage("Images/car5.png");
+	trCarImgs[5] = iLoadImage("Images/car6.png");
+
+	trTruckImgs[0] = iLoadImage("Images/truck1.png");
+	trTruckImgs[1] = iLoadImage("Images/truck2.png");
+	trTruckImgs[2] = iLoadImage("Images/truck3.png");
+	trTruckImgs[3] = iLoadImage("Images/truck4.png");
+
+	trResetGame();
+
 	iSetTimer(20, fixedUpdate);
 	iSetTimer(100, loadingUpdate);
 	iSetTimer(1000, narrativeTimer);
 	iSetTimer(400, updateSequence);
 
 	iSetTimer(120, usbAnimateCharacter);
+
+	iSetTimer(50, trFixedUpdate);
 
 	iStart();
 	return 0;
