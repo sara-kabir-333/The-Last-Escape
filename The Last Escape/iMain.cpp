@@ -4519,7 +4519,7 @@ int main()
 
 	map1Img = iLoadImage("Images/map1.png");
 	cellMapImg = iLoadImage("Images/cellmap1.png");
-	cellMap2Img = iLoadImage("Images/cellmap2.png");
+	cellMap2Img = iLoadImage("Images/cellmap1.png");
 	cctvMapImg = iLoadImage("Images/cctvmap1.png");
 	alarmMapImg = iLoadImage("Images/alarmmap1.png");
 
