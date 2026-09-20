@@ -66,6 +66,15 @@
   <ItemGroup>
     <ClCompile Include="iMain.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Level1Functions.h" />
+    <ClInclude Include="Level1Variables.h" />
+    <ClInclude Include="Level2Functions.h" />
+    <ClInclude Include="Level2Variables.h" />
+    <ClInclude Include="Level3Functions.h" />
+    <ClInclude Include="Level3Variables.h" />
+    <ClInclude Include="Menu.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

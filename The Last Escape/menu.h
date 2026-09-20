@@ -1,5 +1,53 @@
-#ifndef MENU_H
-#define MENU_H
+#pragma once
+
+// ============================================================================
+// Menu.h
+// Common (game-wide) variables + Main Menu functions
+// ============================================================================
+
+int loadBg = 0;
+int menuBg = 0;
+int settingsImg = 0;
+int settingsOnImg = 0;
+int on1 = 0, on2 = 0;
+int off1 = 0, off2 = 0;
+
+int pauseImg = 0;
+int pauseToPlayImg = 0;
+bool isGamePaused = false;
+
+bool showSettingsPanel = false;
+bool musicPlaying = true;
+bool soundEnabled = true;
+
+int about1 = 0, about2 = 0, about3 = 0, about4 = 0, about5 = 0;
+int creditnoteImg = 0;
+
+int backImg = 0;
+int nextImg = 0;
+
+int levelBg = 0;
+int level1Bg = 0;
+int level2Bg = 0;
+int level1Btn = 0, level2Btn = 0, level3Btn = 0, level2UnlockedBtn = 0;
+bool level1Completed = false;
+
+int btnPlay = 0, btnAbout = 0, btncredit = 0, btnExit = 0;
+int btnPlayHover = 0, btnAboutHover = 0, btncreditHover = 0, btnExitHover = 0;
+
+int gameState = 0;
+int loadingStep = 0;
+int btnHoverState = 0;
+
+int x = 0;
+int y = 0;
+
+int aboutBg1, aboutBg2, btnSetting, btnSettingHover, wpOne;
+int menuHover = 0;
+
+void drawMenu();
+void handleMenuPassiveMouse(int mx, int my);
+void handleMenuMouse(int mx, int my);
 
 void drawMenu() {
 	if (menuBg > 0) {
@@ -41,5 +89,3 @@ void handleMenuMouse(int mx, int my) {
 		exit(0);
 	}
 }
-
-#endif
