@@ -1,10 +1,6 @@
 #pragma once
+#include <ctime>
 
-// ============================================================================
-// Level1Variables.h
-// Level 1: cell escape (map, patrol-pattern puzzle, lock memory puzzle,
-// CCTV switch puzzle) + Dodge Game
-// ============================================================================
 
 int map1Img = 0;
 int cellMapImg = 0;
@@ -55,30 +51,25 @@ bool playerRun = false;
 int playerFrame = 0;
 
 int guardX = 40;
-int guardY = 276;
+int guardY = 271;
+
 bool moveRight = true;
 int guardFrame = 0;
 int guardAnimCounter = 0;
 
-// ----------------------------------------------------------------------------
-// LEVEL 1 (gameState 60) sprite sizes. The guard and the player were drawn too
-// small, so only their width/height are scaled up here - every x/y position in
-// the scene is left exactly as it was.
-//   too small -> increase these
-//   too big   -> decrease these
-// ----------------------------------------------------------------------------
-const int L1_GUARD_W = 75;
-const int L1_GUARD_H = 105;
+const int L1_GUARD_W = 85;    // was 75
+const int L1_GUARD_H = 115;   // was 105
 const int L1_PLAYER_RUN_W = 105;
 const int L1_PLAYER_RUN_H = 165;
-const int L1_PLAYER_STAND_W = 90;
-const int L1_PLAYER_STAND_H = 120;
+const int L1_PLAYER_STAND_W = 105;  // was 90 (width only)
+const int L1_PLAYER_STAND_H = 120;  // unchanged
 
-// "Caught by the guard" screen: same x/y as before, only bigger.
-const int L1_CAUGHT_GUARD_W = 75;
-const int L1_CAUGHT_GUARD_H = 105;
-const int L1_CAUGHT_PLAYER_W = 90;
-const int L1_CAUGHT_PLAYER_H = 120;
+const int L1_CAUGHT_GUARD_W = 85;    // was 75
+const int L1_CAUGHT_GUARD_H = 115;   // was 105
+const int L1_CAUGHT_PLAYER_W = 105;  // was 90
+const int L1_CAUGHT_PLAYER_H = 130;  // was 120
+const int L1_CAUGHT_GUARD_Y = 271;   // was guardY (276)
+const int L1_CAUGHT_PLAYER_Y = 125;  // was playerY (130)
 
 // The patrol-pattern question is only shown for 5 seconds now (was 10).
 const int L1_QUESTION_SECONDS = 5;
@@ -153,7 +144,7 @@ int switchTickCounter = 0;
 int switchSolvedTickCounter = 0;
 
 int charX = 50;
-int charY = 150;
+int charY = 146;
 int charFrame = 0;
 int targetX = -1;
 

@@ -9,6 +9,7 @@
 #include <ctime>
 #include <windows.h>
 #include <mmsystem.h>
+#include <stdlib.h>
 #pragma comment(lib, "winmm.lib")
 
 // All variables first (so every function file can see every variable), then
@@ -435,6 +436,7 @@ void iDraw()
 			iShowImage(0, 0, 800, 600, trFinalBgImg);
 		}
 
+		// Loading text/bar colour is deliberately UNCHANGED.
 		iSetColor(180, 122, 33);
 		iText(100, 120, "LOADING...", GLUT_BITMAP_TIMES_ROMAN_24);
 
@@ -561,6 +563,8 @@ void iDraw()
 			iSetColor(0, 0, 0);
 			iText(255, 60, "MEMORIZE PATTERN........... ", GLUT_BITMAP_HELVETICA_18);
 
+			// These ON/OFF markers are gameplay indicators (not note text),
+			// so they keep their green/red colours.
 			for (int i = 0; i < 5; i++) {
 				char text[10];
 				sprintf(text, "[%s]", switchSequence[i] == 1 ? "ON" : "OFF");
@@ -570,7 +574,8 @@ void iDraw()
 			}
 		}
 		else if (switchWrong) {
-			iSetColor(255, 0, 0);
+			// CHANGED: was red, now black (note.png text).
+			iSetColor(0, 0, 0);
 			iText(245, 65, "WRONG PATTERN! ALARM TRIGGERED", GLUT_BITMAP_HELVETICA_18);
 			iSetColor(0, 0, 0);
 			iText(245, 50, "PRESS SPACE OR R TO RETRY", GLUT_BITMAP_HELVETICA_18);
@@ -622,7 +627,8 @@ void iDraw()
 
 		iSetColor(0, 0, 0);
 		if (memoryWrong) {
-			iSetColor(255, 0, 0);
+			// CHANGED: was red, now black (note.png text).
+			iSetColor(0, 0, 0);
 			iText(230, 65, "WRONG SEQUENCE!", GLUT_BITMAP_HELVETICA_18);
 			iSetColor(0, 0, 0);
 			iText(230, 50, "CLICK ANYWHERE TO RETRY", GLUT_BITMAP_HELVETICA_18);
@@ -682,15 +688,14 @@ void iDraw()
 
 		if (wrong)
 		{
-			// CHANGED: same x/y as before (totalWidth kept at 50 + 60 so the
-			// two sprites keep their original positions), only the drawn
-			// width/height of the guard and the caught player were
-			// increased.
+			// CHANGED: the two "caught" sprites keep their original X layout
+			// (totalWidth is still 50 + 60), but they now sit 2 pixels lower
+			// (L1_CAUGHT_*_Y) and are drawn wider/taller.
 			int totalWidth = 50 + 60;
 			int startX = (800 - totalWidth) / 2;
 
-			iShowImage(startX, guardY, L1_CAUGHT_GUARD_W, L1_CAUGHT_GUARD_H, guard6);
-			iShowImage(startX + 50, playerY, L1_CAUGHT_PLAYER_W, L1_CAUGHT_PLAYER_H, caughtPlayer);
+			iShowImage(startX, L1_CAUGHT_GUARD_Y, L1_CAUGHT_GUARD_W, L1_CAUGHT_GUARD_H, guard6);
+			iShowImage(startX + 50, L1_CAUGHT_PLAYER_Y, L1_CAUGHT_PLAYER_W, L1_CAUGHT_PLAYER_H, caughtPlayer);
 
 			if (imgnote > 0) {
 				iShowImage(150, 20, 500, 200, imgnote);
@@ -702,7 +707,8 @@ void iDraw()
 		}
 		else
 		{
-			// CHANGED: guard sprites are drawn bigger (same guardX/guardY).
+			// CHANGED: guard sprites are drawn bigger and 2px lower
+			// (guardY is 274 now instead of 276).
 			if (moveRight)
 			{
 				if (guardFrame == 0 || guardFrame == 2)
@@ -718,7 +724,7 @@ void iDraw()
 					iShowImage(guardX, guardY, L1_GUARD_W, L1_GUARD_H, guard5);
 			}
 
-			// CHANGED: player sprites are drawn bigger (same playerX/playerY).
+			// Running player sprites: unchanged.
 			if (playerRunning)
 			{
 				if (playerFrame == 0)
@@ -730,6 +736,8 @@ void iDraw()
 			}
 			else
 			{
+				// CHANGED: the standing player is WIDER now
+				// (L1_PLAYER_STAND_W), same height and same y position.
 				if (!playerEscaped)
 				{
 					iShowImage(playerX, playerY, L1_PLAYER_STAND_W, L1_PLAYER_STAND_H, playerImg);
@@ -778,6 +786,7 @@ void iDraw()
 	else if (gameState == 56) {
 		if (imgEscapeScreen > 0) iShowImage(0, 0, 800, 600, imgEscapeScreen);
 
+		// Loading text/bar colour unchanged.
 		iSetColor(180, 122, 33);
 		iText(100, 120, "LOADING...", GLUT_BITMAP_TIMES_ROMAN_24);
 
@@ -1664,7 +1673,9 @@ int main()
 
 	iSetTimer(120, usbAnimateCharacter);
 
-	iSetTimer(50, trFixedUpdate);
+	// CHANGED: the Traffic Runner now updates every TR_TICK_MS (25 ms)
+	// instead of every 50 ms, which is half of what made it feel so slow.
+	iSetTimer(TR_TICK_MS, trFixedUpdate);
 
 	iStart();
 	return 0;

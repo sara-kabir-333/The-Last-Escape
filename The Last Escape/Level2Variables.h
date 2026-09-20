@@ -103,13 +103,13 @@ int vrVault2Img = 0;
 int vrVault3Img = 0;
 int vrNoteImg = 0;
 
-// CHANGED: the runner sprite was a bit small, so it is now drawn slightly
-// bigger. Its y position (vrRunnerY) is untouched - only the drawn size (and
-// therefore the hitbox width/height) grew.
-//   too small -> increase these
-//   too big   -> decrease these
-const int VR_RUNNER_W = 100;
-const int VR_RUNNER_H = 125;
+// CHANGED: the runner is now drawn WIDER (100 -> 115). Its height and its y
+// position (vrRunnerY) are untouched, so he still stands on exactly the same
+// ground line as before.
+//   too narrow -> increase VR_RUNNER_W
+//   too wide   -> decrease VR_RUNNER_W
+const int VR_RUNNER_W = 115;  // was 100 (width only)
+const int VR_RUNNER_H = 125;  // unchanged
 
 int vrRunnerX = 50;
 int vrRunnerY = 200;
@@ -119,13 +119,12 @@ int vrJumpCount = 0;
 bool vrIsMouseHeld = false;
 int vrFallCounter = 0;
 
-// CHANGED: the box obstacle was far too small compared to the stone, so its
-// width/height were scaled up to roughly match the rock's size. vrBoxY is
+// CHANGED: the box obstacle is bigger again (55x50 -> 65x58). vrBoxY is
 // unchanged, so it still sits on exactly the same ground line.
 int vrBoxX = 800;
 int vrBoxY = 200;
-int vrBoxWidth = 55;
-int vrBoxHeight = 50;
+int vrBoxWidth = 65;    // was 55
+int vrBoxHeight = 58;   // was 50
 int vrGameSpeed = 4;
 
 // Runner sprite is drawn at VR_RUNNER_W x VR_RUNNER_H but has transparent
@@ -134,7 +133,9 @@ int vrGameSpeed = 4;
 // insets shrink the hitbox down to roughly the visible character silhouette.
 //   still triggering too early  -> increase the inset
 //   overlapping visibly before game over -> decrease the inset
-const int VR_RUNNER_HITBOX_INSET_X = 27;
+// CHANGED: the X inset grew with the wider sprite (27 -> 32) so collisions
+// still line up with the visible character.
+const int VR_RUNNER_HITBOX_INSET_X = 32;  // was 27
 const int VR_RUNNER_HITBOX_INSET_Y = 19;
 const int VR_OBSTACLE_HITBOX_INSET = 8;
 

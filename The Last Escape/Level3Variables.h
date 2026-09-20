@@ -190,6 +190,14 @@ const int GAMESTATE_TRAFFIC_LOADING = 580;
 const int TR_SCREEN_W = 800;
 const int TR_SCREEN_H = 600;
 
+const int TR_TICK_MS = 25;           // game tick in ms (was 50)
+const int TR_SCROLL_SPEED = 11;       // cars/trucks/gems/manholes (was 7)
+const int TR_BG_SCROLL_SPEED = 8;    // road background (was 6)
+const int TR_SIDE_MOVE_SPEED = 10;    // left/right movement per tick (was 10)
+const int TR_JUMP_SPEED = 10;        // jump up/down per tick (was 12)
+const int TR_JUMP_MAX_HEIGHT = 100;  // unchanged
+const int TR_RUN_ANIM_TICKS = 6;     // run animation speed (was 10)
+
 int trBgY1 = 0;
 int trBgY2 = 600;
 

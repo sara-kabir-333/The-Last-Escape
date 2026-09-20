@@ -1,4 +1,6 @@
 #pragma once
+#include "Menu.h"
+#include "Level3Variables.h"
 
 // ============================================================================
 // Level3Functions.h
@@ -143,6 +145,7 @@ void lv3Draw() {
 			}
 		}
 
+		// Health labels are HUD text (not on note.png) -> colour unchanged.
 		iSetColor(255, 255, 255);
 		iText(50, 560, "Hero Health:", GLUT_BITMAP_HELVETICA_18);
 		{
@@ -182,7 +185,8 @@ void lv3Draw() {
 	else if (lv3SubState == 1) {
 		iShowImage(30, -15, 740, 300, lv3NoteImg);
 
-		iSetColor(0, 150, 0);
+		// CHANGED: was green, now black (note.png text).
+		iSetColor(0, 0, 0);
 		iText(290, 55, "GUARD DEFEATED!", GLUT_BITMAP_TIMES_ROMAN_24);
 
 		iSetColor(0, 0, 0);
@@ -190,7 +194,7 @@ void lv3Draw() {
 
 		iShowImage(330, 200, 180, 100, lv3GunImageId);
 
-		iSetColor(255, 0, 0); // Red arrow
+		iSetColor(255, 0, 0); // Red arrow (a drawing, not note text)
 
 		for (int offset = -2; offset <= 2; offset++) {
 			iLine(410 + offset, 330, 410 + offset, 290);
@@ -383,11 +387,10 @@ void gsDraw() {
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 		iShowImage(20, 50, 760, 140, gsWpImg);
 
-		iSetColor(50, 20, 10);
+		// CHANGED: instruction text on the note paper is plain black now.
+		iSetColor(0, 0, 0);
 		iText(220, 95, "Prisoner has to fight 3 gangsters sequentially!Left", GLUT_BITMAP_HELVETICA_18);
 		iText(150, 75, "Click to Shoot | Right-Click to Jump!Now click next", GLUT_BITMAP_HELVETICA_18);
-
-
 
 		iShowImage(50, 50, 100, 40, backImg);
 		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
@@ -398,10 +401,11 @@ void gsDraw() {
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 		iShowImage(20, 50, 760, 140, gsWpImg);
 
-		iSetColor(0, 100, 0); // Dark Green
+		// CHANGED: was green / white, now black (note paper text).
+		iSetColor(0, 0, 0);
 		iText(220, 95, "YOU WIN! All Gangsters Defeated!", GLUT_BITMAP_TIMES_ROMAN_24);
 
-		iSetColor(255, 255, 255);
+		iSetColor(0, 0, 0);
 		iText(230, 75, "LEVEL 3 COMPLETE! Click to Continue", GLUT_BITMAP_HELVETICA_18);
 		return;
 	}
@@ -410,7 +414,8 @@ void gsDraw() {
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 		iShowImage(20, 50, 760, 140, gsWpImg);
 
-		iSetColor(150, 0, 0); // Dark Red
+		// CHANGED: was dark red, now black (note paper text).
+		iSetColor(0, 0, 0);
 		iText(220, 95, "GAME OVER", GLUT_BITMAP_TIMES_ROMAN_24);
 
 		iSetColor(0, 0, 0);
@@ -451,14 +456,11 @@ void gsDraw() {
 		}
 	}
 
-	// Display Stats
-	// Render HUD Banner Images (All equal 230x40 size)
-	// Render HUD Banners stacked vertically on the top right
+	// Display Stats - HUD banners, colours unchanged.
 	iShowImage(550, 545, 230, 45, gsH1Img);
 	iShowImage(550, 495, 230, 40, gsG1Img);
 	iShowImage(550, 445, 230, 40, gsD1Img);
 
-	// Display Stats centered inside the dark box on the right side of each banner
 	char gsScoreStr[20], gsMissStr[20], gsBossStr[20];
 	sprintf(gsScoreStr, "%d / 10", gsGangsterHits);
 	sprintf(gsBossStr, "%d / 3", gsCurrentGangster);
@@ -532,6 +534,9 @@ void gsHandleRightClick(int mx, int my) {
 
 // ----------------------------------------------------------------------------
 // TRAFFIC RUNNER MINIGAME - function definitions
+//
+// CHANGED: every hard-coded speed in here now uses the TR_* constants from
+// Level3Variables.h, and they are all faster than before.
 // ----------------------------------------------------------------------------
 
 void trDrawCar(int x, int y, int colorIndex) {
@@ -686,7 +691,7 @@ void trDraw() {
 	else
 		iShowImage(drawX, drawY, 60, 90, trRunImg2);
 
-	// Draw Score Image and Golden Score Number
+	// Score HUD - colour unchanged (golden).
 	iShowImage(560, 535, 220, 45, trScoreImg);
 
 	iSetColor(255, 215, 0); // Golden Color
@@ -695,8 +700,16 @@ void trDraw() {
 	iText(700, 549, scoreStr, GLUT_BITMAP_HELVETICA_18);
 
 	if (trGameOver) {
-		iSetColor(255, 0, 0);
-		iText(260, 300, "GAME OVER! Press 'R' to Restart.", GLUT_BITMAP_HELVETICA_18);
+		// CHANGED: the game-over message now sits on note.png and is black,
+		// like every other instruction text in the game.
+		int noteW = 500, noteH = 250;
+		int noteX = (TR_SCREEN_W - noteW) / 2;
+		int noteY = 20;
+		iShowImage(noteX, noteY, noteW, noteH, trNoteImg);
+
+		iSetColor(0, 0, 0);
+		iText(noteX + 175, noteY + 63, "GAME OVER!", GLUT_BITMAP_TIMES_ROMAN_24);
+		iText(noteX + 145, noteY + 40, "Press 'R' to Restart", GLUT_BITMAP_HELVETICA_18);
 	}
 }
 
@@ -865,7 +878,8 @@ void trUpdateObstacles() {
 	for (int i = 0; i < TR_MAX_OBS; i++) {
 		if (trObsList[i].active) {
 			anyActive = true;
-			trObsList[i].y -= 7;
+			// CHANGED: faster traffic (was 7).
+			trObsList[i].y -= TR_SCROLL_SPEED;
 
 			if (trObsList[i].y > maxObsY) {
 				maxObsY = trObsList[i].y;
@@ -898,7 +912,9 @@ void trUpdateObstacles() {
 				}
 
 				if (!trIsJumping && !trIsOnRoof) {
-					if (trPlayerY + 15 >= obsBottom && trPlayerY + 15 <= obsBottom + 35) {
+					// Window widened a little so the faster traffic can't
+					// skip past the crash check between two ticks.
+					if (trPlayerY + 15 >= obsBottom && trPlayerY + 15 <= obsBottom + 40) {
 						trGameOver = true;
 					}
 				}
@@ -920,7 +936,7 @@ void trUpdateRoofGems() {
 
 	for (int i = 0; i < TR_MAX_ROOF_GEMS; i++) {
 		if (trRoofGems[i].active) {
-			trRoofGems[i].y -= 7;
+			trRoofGems[i].y -= TR_SCROLL_SPEED;
 
 			if (trRoofGems[i].lane == trPlayerLane) {
 				if (abs(trRoofGems[i].y - currentPPosY) < 45) {
@@ -942,7 +958,7 @@ void trUpdateManholes() {
 
 	for (int i = 0; i < TR_MAX_MANHOLES; i++) {
 		if (trManholeList[i].active) {
-			trManholeList[i].y -= 7;
+			trManholeList[i].y -= TR_SCROLL_SPEED;
 
 			if (trManholeList[i].lane == trPlayerLane) {
 				int mX = trLaneX[trManholeList[i].lane] + 2;
@@ -1007,7 +1023,9 @@ void trFixedUpdate() {
 	if (trWinState == 1) return;
 
 	if (trWinState == 2) {
-		trWinTimer += 50;
+		// CHANGED: the tick is TR_TICK_MS ms long now, so the cut-scene
+		// timers count in TR_TICK_MS steps (thresholds stay in ms).
+		trWinTimer += TR_TICK_MS;
 		if (trWinTimer >= 4000) {
 			trWinState = 3;
 			trWinTimer = 0;
@@ -1015,7 +1033,7 @@ void trFixedUpdate() {
 		return;
 	}
 	else if (trWinState == 3) {
-		trWinTimer += 50;
+		trWinTimer += TR_TICK_MS;
 		if (trWinTimer >= 7000) {
 			trWinState = 4;
 			trWinTimer = 0;
@@ -1038,14 +1056,14 @@ void trFixedUpdate() {
 	}
 
 	if (isSpecialKeyPressed(GLUT_KEY_LEFT)) {
-		trPlayerDrawX -= 10.0;
+		trPlayerDrawX -= (double)TR_SIDE_MOVE_SPEED;
 		if (trPlayerDrawX < trLaneX[0] + 5) {
 			trPlayerDrawX = trLaneX[0] + 5;
 		}
 	}
 
 	if (isSpecialKeyPressed(GLUT_KEY_RIGHT)) {
-		trPlayerDrawX += 10.0;
+		trPlayerDrawX += (double)TR_SIDE_MOVE_SPEED;
 		if (trPlayerDrawX > trLaneX[2] + 5) {
 			trPlayerDrawX = trLaneX[2] + 5;
 		}
@@ -1075,8 +1093,9 @@ void trFixedUpdate() {
 		}
 	}
 
-	trBgY1 -= 6;
-	trBgY2 -= 6;
+	// CHANGED: road scrolls faster (was 6).
+	trBgY1 -= TR_BG_SCROLL_SPEED;
+	trBgY2 -= TR_BG_SCROLL_SPEED;
 
 	if (trBgY1 <= -TR_SCREEN_H)
 		trBgY1 = trBgY2 + TR_SCREEN_H;
@@ -1090,12 +1109,12 @@ void trFixedUpdate() {
 
 	if (trIsJumping) {
 		if (trJumpUp) {
-			trJumpHeight += 12;
-			if (trJumpHeight >= 150)
+			trJumpHeight += TR_JUMP_SPEED;
+			if (trJumpHeight >= TR_JUMP_MAX_HEIGHT)
 				trJumpUp = false;
 		}
 		else {
-			trJumpHeight -= 12;
+			trJumpHeight -= TR_JUMP_SPEED;
 			if (trJumpHeight <= 0) {
 				trJumpHeight = 0;
 				trIsJumping = false;
@@ -1105,7 +1124,7 @@ void trFixedUpdate() {
 
 	static int trAnimCounter = 0;
 	trAnimCounter++;
-	if (trAnimCounter >= 10) {
+	if (trAnimCounter >= TR_RUN_ANIM_TICKS) {
 		trCurrentRunFrame = 1 - trCurrentRunFrame;
 		trAnimCounter = 0;
 	}

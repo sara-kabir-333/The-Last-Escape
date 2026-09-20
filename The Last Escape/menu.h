@@ -14,8 +14,8 @@ int off1 = 0, off2 = 0;
 
 int pauseImg = 0;
 int pauseToPlayImg = 0;
-bool isGamePaused = false;
 
+bool isGamePaused = false;
 bool showSettingsPanel = false;
 bool musicPlaying = true;
 bool soundEnabled = true;

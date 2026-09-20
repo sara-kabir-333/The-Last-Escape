@@ -1,4 +1,8 @@
 #pragma once
+#include "Menu.h"
+#include "Level2Variables.h"
+
+
 
 // ============================================================================
 // Level2Functions.h
@@ -62,9 +66,11 @@ void drawInvestPuzzle() {
 		if (investRoomImg > 0) iShowImage(0, 0, 800, 600, investRoomImg);
 		if (investNoteImg > 0) iShowImage(150, -25, 480, 280, investNoteImg);
 
+		// note.png text -> black
 		iSetColor(0, 0, 0);
 		iText(220, 35, "Collect 6 torn pieces from the room", GLUT_BITMAP_HELVETICA_18);
 
+		// HUD counter (not note text) -> colour unchanged
 		char counterText[50];
 		sprintf(counterText, "Pieces Found: %d/6", investPiecesFoundCount);
 		iSetColor(255, 255, 255);
@@ -101,7 +107,8 @@ void drawInvestPuzzle() {
 			double elapsedTime = (GetTickCount64() - investCompletionTimerStart) / 1000.0;
 
 			if (elapsedTime < 3.0) {
-				iSetColor(0, 0, 255);
+				// CHANGED: this line sits on note.png -> black now.
+				iSetColor(0, 0, 0);
 				iText(280, 20, "Assembling Room Data...", GLUT_BITMAP_HELVETICA_18);
 			}
 			else {
@@ -321,7 +328,7 @@ void vrDraw() {
 	if (!vrIsStarted) {
 		iShowImage(0, 0, 800, 600, vrVault1Img);
 		iShowImage(150, 20, 500, 200, vrNoteImg);
-		iSetColor(20, 20, 20);
+		iSetColor(0, 0, 0);
 		iText(230, 65, "Click anywhere to disable the laser", GLUT_BITMAP_HELVETICA_18);
 		iText(255, 50, "Click to Jump - Avoid the Boxes!", GLUT_BITMAP_HELVETICA_18);
 		return;
@@ -331,7 +338,7 @@ void vrDraw() {
 		if (!vrShowVault3) {
 			iShowImage(0, 0, 800, 600, vrVault2Img);
 			iShowImage(200, 45, 390, 180, vrNoteImg);
-			iSetColor(20, 20, 20);
+			iSetColor(0, 0, 0);
 			iText(220, 80, "Click anywhere to use the access card", GLUT_BITMAP_HELVETICA_18);
 		}
 		else {
@@ -374,11 +381,11 @@ void vrDraw() {
 	iSetColor(255, 182, 193);
 	iFilledCircle(vrRedBallX - 3, vrRedBallY + 3, 3);
 
-	// CHANGED: runner is drawn slightly bigger now (same y position).
+	// CHANGED: runner is drawn wider now (same y position / same height).
 	iShowImage(vrRunnerX, vrRunnerY, VR_RUNNER_W, VR_RUNNER_H, vrRunnerImg[vrCurrentFrame]);
 
-	// CHANGED: box.png is drawn bigger (vrBoxWidth/vrBoxHeight above), sized
-	// to roughly match the stone obstacle. Same y position as before.
+	// CHANGED: box.png is drawn bigger (vrBoxWidth/vrBoxHeight above).
+	// Same y position as before.
 	iShowImage(vrBoxX, vrBoxY, vrBoxWidth, vrBoxHeight, dodgeBoxImg);
 
 	iSetColor(95, 85, 75);
@@ -389,7 +396,7 @@ void vrDraw() {
 	iSetColor(130, 120, 110);
 	iFilledCircle(vrRockX + 22, vrRockY + 22, 5);
 
-	// Score badge (score.png), same position/size/colour as Traffic Runner.
+	// Score badge (score.png) - HUD, colour unchanged (golden).
 	iShowImage(560, 535, 220, 45, trScoreImg);
 
 	iSetColor(255, 215, 0); // Golden Color
@@ -398,11 +405,12 @@ void vrDraw() {
 	iText(700, 549, vrScoreStr, GLUT_BITMAP_HELVETICA_18);
 
 	if (vrGameOver && !vrGameWon) {
-		// Game Over now shown on the same note.png paper used by the Dodge
+		// Game Over shown on the same note.png paper used by the Dodge
 		// Game's game-over screen (same position/size).
 		iShowImage(30, -15, 740, 300, vrNoteImg);
 
-		iSetColor(255, 0, 0);
+		// CHANGED: was red, now black (note.png text).
+		iSetColor(0, 0, 0);
 		iText(340, 55, "GAME OVER", GLUT_BITMAP_TIMES_ROMAN_24);
 
 		iSetColor(0, 0, 0);
@@ -588,10 +596,6 @@ void usbDrawGame() {
 	}
 
 	if (usbSubState == 0) {
-		// CHANGED: the first of the three lines ("PRISON ESCAPE: SECURITY
-		// OVERRIDE") has been removed. The remaining two lines now sit on a
-		// note.png box placed at exactly the same spot/size the Traffic
-		// Runner uses for its own note, with the same text offsets.
 		int noteW = 500, noteH = 250;
 		int noteX = (800 - noteW) / 2;
 		int noteY = 20;
@@ -632,11 +636,10 @@ void usbDrawGame() {
 			}
 		}
 
-		// Draw S1 (Score) & M1 (Moves) UI Banners
+		// Draw S1 (Score) & M1 (Moves) UI Banners - HUD, colour unchanged.
 		iShowImage(100, 530, 240, 65, imgS1);
 		iShowImage(460, 530, 240, 65, imgM1);
 
-		// Draw numerical score & moves over the graphic banners
 		char scoreStr[20], movesStr[20];
 		sprintf_s(scoreStr, sizeof(scoreStr), "%d / 150", usbScore);
 		sprintf_s(movesStr, sizeof(movesStr), "%d", usbMovesLeft);
@@ -646,12 +649,6 @@ void usbDrawGame() {
 		iText(585, 560, movesStr, GLUT_BITMAP_HELVETICA_18);
 	}
 	else if (usbSubState == 2) {
-		// CHANGED: the win text is now drawn on a note.png box using exactly
-		// the Traffic Runner win-screen layout, and the running character
-		// animation that used to be drawn underneath has been removed.
-		// CHANGED: usb.png is now drawn bigger and centered exactly in the
-		// middle of the screen instead of the small 40x40 icon in the
-		// corner (kept square so the aspect ratio isn't stretched).
 		if (usbImgUsbIcon > 0) iShowImage(325, 225, 150, 150, usbImgUsbIcon);
 
 		int noteW = 500, noteH = 250;
@@ -677,10 +674,17 @@ void usbDrawGame() {
 		}
 	}
 	else if (usbSubState == 3) {
-		iSetColor(255, 50, 50);
-		iText(265, 300, "LOCKDOWN TRIGGERED!", GLUT_BITMAP_TIMES_ROMAN_24);
-		iSetColor(255, 255, 255);
-		iText(310, 260, "Press R to Retry", GLUT_BITMAP_HELVETICA_18);
+		// CHANGED: the lockdown message is now drawn on note.png in black,
+		// like every other instruction text.
+		int noteW = 500, noteH = 250;
+		int noteX = (800 - noteW) / 2;
+		int noteY = 20;
+
+		if (imgnote > 0) iShowImage(noteX, noteY, noteW, noteH, imgnote);
+
+		iSetColor(0, 0, 0);
+		iText(noteX + 110, noteY + 63, "LOCKDOWN TRIGGERED!", GLUT_BITMAP_TIMES_ROMAN_24);
+		iText(noteX + 165, noteY + 40, "Press R to Retry", GLUT_BITMAP_HELVETICA_18);
 	}
 
 	iShowImage(50, 50, 100, 40, backImg);

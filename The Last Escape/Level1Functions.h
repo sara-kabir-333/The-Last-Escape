@@ -1,10 +1,6 @@
 #pragma once
-
-// ============================================================================
-// Level1Functions.h
-// Level 1 functions: cell puzzles, guard/player logic, CCTV switch puzzle,
-// Dodge Game
-// ============================================================================
+#include "Menu.h"
+#include "Level1Variables.h"
 
 void resetLevel1() {
 	loadingStep = 0;
@@ -358,9 +354,9 @@ void drawDodgeGame()
 
 	iShowImage(0, 0, 800, 600, dodgeBgImg);
 
-	// Timer HUD now uses timer.png (same size/position as the score HUD),
-	// with the countdown value drawn inside it. The old top-left text HUD
-	// (title/level/time-left) has been removed.
+	// Timer HUD uses timer.png (same size/position as the score HUD), with
+	// the countdown value drawn inside it. This is a HUD value, NOT note
+	// text, so its colour stays golden.
 	iShowImage(560, 535, 220, 70, timerImg);
 
 	iSetColor(255, 215, 0);
@@ -391,7 +387,8 @@ void drawDodgeGame()
 	{
 		iShowImage(30, -15, 740, 300, dodgeNoteImg);
 
-		iSetColor(0, 150, 0);
+		// CHANGED: every line written on note.png is black now.
+		iSetColor(0, 0, 0);
 		iText(315, 55, "LEVEL COMPLETE!", GLUT_BITMAP_TIMES_ROMAN_24);
 
 		iSetColor(0, 0, 0);
@@ -409,7 +406,8 @@ void drawDodgeGame()
 
 		iShowImage(30, -15, 740, 300, dodgeNoteImg);
 
-		iSetColor(255, 0, 0);
+		// CHANGED: was red, now black (note.png text).
+		iSetColor(0, 0, 0);
 		iText(320, 55, "CAUGHT BY GUARD!", GLUT_BITMAP_TIMES_ROMAN_24);
 
 		iSetColor(0, 0, 0);
