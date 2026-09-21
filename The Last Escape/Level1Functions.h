@@ -209,10 +209,6 @@ void showQuestionPattern() {
 	else if (currentPuzzle == 4) iShowImage(200, 220, 400, 350, que5);
 }
 
-// ----------------------------------------------------------------------------
-// DODGE GAME
-// ----------------------------------------------------------------------------
-
 void resetDodgeBox(int i)
 {
 	dodgeBoxes[i].width = 50 + rand() % 25;
@@ -354,9 +350,6 @@ void drawDodgeGame()
 
 	iShowImage(0, 0, 800, 600, dodgeBgImg);
 
-	// Timer HUD uses timer.png (same size/position as the score HUD), with
-	// the countdown value drawn inside it. This is a HUD value, NOT note
-	// text, so its colour stays golden.
 	iShowImage(560, 535, 220, 70, timerImg);
 
 	iSetColor(255, 215, 0);
@@ -387,7 +380,6 @@ void drawDodgeGame()
 	{
 		iShowImage(30, -15, 740, 300, dodgeNoteImg);
 
-		// CHANGED: every line written on note.png is black now.
 		iSetColor(0, 0, 0);
 		iText(315, 55, "LEVEL COMPLETE!", GLUT_BITMAP_TIMES_ROMAN_24);
 

@@ -2,16 +2,6 @@
 #include "Menu.h"
 #include "Level3Variables.h"
 
-// ============================================================================
-// Level3Functions.h
-// Level 3 functions: Prison Fight minigame, Gangster Shootout minigame,
-// Traffic Runner minigame
-// ============================================================================
-
-// ----------------------------------------------------------------------------
-// LEVEL 3 FIGHT MINIGAME - function definitions
-// ----------------------------------------------------------------------------
-
 void lv3RestartGame() {
 	lv3HeroX = LV3_HERO_START_X;
 	lv3HeroY = LV3_HERO_START_Y;
@@ -145,7 +135,6 @@ void lv3Draw() {
 			}
 		}
 
-		// Health labels are HUD text (not on note.png) -> colour unchanged.
 		iSetColor(255, 255, 255);
 		iText(50, 560, "Hero Health:", GLUT_BITMAP_HELVETICA_18);
 		{
@@ -185,7 +174,6 @@ void lv3Draw() {
 	else if (lv3SubState == 1) {
 		iShowImage(30, -15, 740, 300, lv3NoteImg);
 
-		// CHANGED: was green, now black (note.png text).
 		iSetColor(0, 0, 0);
 		iText(290, 55, "GUARD DEFEATED!", GLUT_BITMAP_TIMES_ROMAN_24);
 
@@ -194,7 +182,7 @@ void lv3Draw() {
 
 		iShowImage(330, 200, 180, 100, lv3GunImageId);
 
-		iSetColor(255, 0, 0); // Red arrow (a drawing, not note text)
+		iSetColor(255, 0, 0);
 
 		for (int offset = -2; offset <= 2; offset++) {
 			iLine(410 + offset, 330, 410 + offset, 290);
@@ -270,10 +258,6 @@ void lv3HandleMouseDown(int mx, int my) {
 	}
 }
 
-// ----------------------------------------------------------------------------
-// LEVEL 3 - GANGSTER SHOOTOUT MINIGAME - function definitions
-// ----------------------------------------------------------------------------
-
 void gsResetGame() {
 	gsScore = 0;
 	gsMiss = 0;
@@ -297,7 +281,6 @@ void gsResetGame() {
 void gsUpdateGame() {
 	if (gsState != 0) return;
 
-	// Apply jump physics
 	if (gsIsJumping) {
 		gsPrisonerY += gsPrisonerVelY;
 		gsPrisonerVelY -= gsGravity;
@@ -309,7 +292,6 @@ void gsUpdateGame() {
 		}
 	}
 
-	// Gangster shooting every 3 seconds (150 frames at 20ms)
 	gsGangsterShootCounter++;
 	if (gsGangsterShootCounter >= 150) {
 		gsGangsterShootCounter = 0;
@@ -323,7 +305,6 @@ void gsUpdateGame() {
 		}
 	}
 
-	// Update Prisoner Bullets & Collision with Gangster
 	for (int i = 0; i < GS_MAX_BULLETS; i++) {
 		if (gsPBullets[i].active) {
 			gsPBullets[i].x += 15;
@@ -350,7 +331,7 @@ void gsUpdateGame() {
 					gsGangsterX = 580;
 
 					if (gsCurrentGangster > 3) {
-						gsState = 1; // Win
+						gsState = 1; 
 						level3Completed = true;
 					}
 				}
@@ -358,7 +339,6 @@ void gsUpdateGame() {
 		}
 	}
 
-	// Update Gangster Bullets & Collision with Prisoner
 	for (int i = 0; i < GS_MAX_BULLETS; i++) {
 		if (gsGBullets[i].active) {
 			gsGBullets[i].x -= 12;
@@ -373,9 +353,8 @@ void gsUpdateGame() {
 				gsGBullets[i].active = false;
 				gsMiss++;
 
-				// CHANGED: 5 hits instead of 3.
 				if (gsMiss >= GS_MAX_MISS) {
-					gsState = 2; // Game Over
+					gsState = 2; 
 				}
 			}
 		}
@@ -387,7 +366,6 @@ void gsDraw() {
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 		iShowImage(20, 50, 760, 140, gsWpImg);
 
-		// CHANGED: instruction text on the note paper is plain black now.
 		iSetColor(0, 0, 0);
 		iText(220, 95, "Prisoner has to fight 3 gangsters sequentially!Left", GLUT_BITMAP_HELVETICA_18);
 		iText(150, 75, "Click to Shoot | Right-Click to Jump!Now click next", GLUT_BITMAP_HELVETICA_18);
@@ -401,7 +379,6 @@ void gsDraw() {
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 		iShowImage(20, 50, 760, 140, gsWpImg);
 
-		// CHANGED: was green / white, now black (note paper text).
 		iSetColor(0, 0, 0);
 		iText(220, 95, "YOU WIN! All Gangsters Defeated!", GLUT_BITMAP_TIMES_ROMAN_24);
 
@@ -414,7 +391,6 @@ void gsDraw() {
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 		iShowImage(20, 50, 760, 140, gsWpImg);
 
-		// CHANGED: was dark red, now black (note paper text).
 		iSetColor(0, 0, 0);
 		iText(220, 95, "GAME OVER", GLUT_BITMAP_TIMES_ROMAN_24);
 
@@ -425,7 +401,6 @@ void gsDraw() {
 		return;
 	}
 
-	// Gameplay Screen
 	iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 
 	if (gsCurrentGangster > 1) {
@@ -456,7 +431,6 @@ void gsDraw() {
 		}
 	}
 
-	// Display Stats - HUD banners, colours unchanged.
 	iShowImage(550, 545, 230, 45, gsH1Img);
 	iShowImage(550, 495, 230, 40, gsG1Img);
 	iShowImage(550, 445, 230, 40, gsD1Img);
@@ -532,12 +506,6 @@ void gsHandleRightClick(int mx, int my) {
 	}
 }
 
-// ----------------------------------------------------------------------------
-// TRAFFIC RUNNER MINIGAME - function definitions
-//
-// CHANGED: every hard-coded speed in here now uses the TR_* constants from
-// Level3Variables.h, and they are all faster than before.
-// ----------------------------------------------------------------------------
 
 void trDrawCar(int x, int y, int colorIndex) {
 	if (colorIndex >= 0 && colorIndex < 6) {
@@ -691,17 +659,14 @@ void trDraw() {
 	else
 		iShowImage(drawX, drawY, 60, 90, trRunImg2);
 
-	// Score HUD - colour unchanged (golden).
 	iShowImage(560, 535, 220, 45, trScoreImg);
 
-	iSetColor(255, 215, 0); // Golden Color
+	iSetColor(255, 215, 0);
 	char scoreStr[50];
 	sprintf(scoreStr, "%d", trScore);
 	iText(700, 549, scoreStr, GLUT_BITMAP_HELVETICA_18);
 
 	if (trGameOver) {
-		// CHANGED: the game-over message now sits on note.png and is black,
-		// like every other instruction text in the game.
 		int noteW = 500, noteH = 250;
 		int noteX = (TR_SCREEN_W - noteW) / 2;
 		int noteY = 20;
@@ -878,7 +843,6 @@ void trUpdateObstacles() {
 	for (int i = 0; i < TR_MAX_OBS; i++) {
 		if (trObsList[i].active) {
 			anyActive = true;
-			// CHANGED: faster traffic (was 7).
 			trObsList[i].y -= TR_SCROLL_SPEED;
 
 			if (trObsList[i].y > maxObsY) {
@@ -912,8 +876,6 @@ void trUpdateObstacles() {
 				}
 
 				if (!trIsJumping && !trIsOnRoof) {
-					// Window widened a little so the faster traffic can't
-					// skip past the crash check between two ticks.
 					if (trPlayerY + 15 >= obsBottom && trPlayerY + 15 <= obsBottom + 40) {
 						trGameOver = true;
 					}
@@ -1023,8 +985,6 @@ void trFixedUpdate() {
 	if (trWinState == 1) return;
 
 	if (trWinState == 2) {
-		// CHANGED: the tick is TR_TICK_MS ms long now, so the cut-scene
-		// timers count in TR_TICK_MS steps (thresholds stay in ms).
 		trWinTimer += TR_TICK_MS;
 		if (trWinTimer >= 4000) {
 			trWinState = 3;

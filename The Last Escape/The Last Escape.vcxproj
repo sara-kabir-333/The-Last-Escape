@@ -74,6 +74,7 @@
     <ClInclude Include="Level3Functions.h" />
     <ClInclude Include="Level3Variables.h" />
     <ClInclude Include="Menu.h" />
+    <ClInclude Include="SaveSystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

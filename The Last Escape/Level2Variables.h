@@ -1,11 +1,5 @@
 #pragma once
 
-// ============================================================================
-// Level2Variables.h
-// Level 2: USB match-3 minigame, Evidence Room (investigation) puzzle,
-// Vault Runner minigame
-// ============================================================================
-
 #define USB_GRID_SIZE 8
 #define USB_TILE_SIZE 55
 #define USB_BOARD_X ((800 - (USB_GRID_SIZE * USB_TILE_SIZE)) / 2)
@@ -87,13 +81,6 @@ void handleInvestMouseDown(int mx, int my);
 void handleInvestMouseUp(int mx, int my);
 void handleInvestMouseMove(int mx, int my);
 
-// ============================================================================
-// VAULT RUNNER MINIGAME (merged from second project)
-// Triggered by clicking the vault image on the GAMESTATE_LEVEL2_MAP screen
-// once vaultUnlocked is true. All variables/functions are prefixed with "vr"
-// to avoid name clashes with the rest of the game. No gameplay logic was
-// changed.
-// ============================================================================
 const int GAMESTATE_VAULT_RUNNER = 470;
 
 bool vrIsStarted = false;
@@ -103,13 +90,8 @@ int vrVault2Img = 0;
 int vrVault3Img = 0;
 int vrNoteImg = 0;
 
-// CHANGED: the runner is now drawn WIDER (100 -> 115). Its height and its y
-// position (vrRunnerY) are untouched, so he still stands on exactly the same
-// ground line as before.
-//   too narrow -> increase VR_RUNNER_W
-//   too wide   -> decrease VR_RUNNER_W
-const int VR_RUNNER_W = 115;  // was 100 (width only)
-const int VR_RUNNER_H = 125;  // unchanged
+const int VR_RUNNER_W = 115;  
+const int VR_RUNNER_H = 125;  
 
 int vrRunnerX = 50;
 int vrRunnerY = 200;
@@ -119,23 +101,13 @@ int vrJumpCount = 0;
 bool vrIsMouseHeld = false;
 int vrFallCounter = 0;
 
-// CHANGED: the box obstacle is bigger again (55x50 -> 65x58). vrBoxY is
-// unchanged, so it still sits on exactly the same ground line.
 int vrBoxX = 800;
 int vrBoxY = 200;
-int vrBoxWidth = 65;    // was 55
-int vrBoxHeight = 58;   // was 50
+int vrBoxWidth = 65;    
+int vrBoxHeight = 58;   
 int vrGameSpeed = 4;
 
-// Runner sprite is drawn at VR_RUNNER_W x VR_RUNNER_H but has transparent
-// padding around the visible character, so a full-size hitbox triggers
-// collisions well before the character visually touches anything. These
-// insets shrink the hitbox down to roughly the visible character silhouette.
-//   still triggering too early  -> increase the inset
-//   overlapping visibly before game over -> decrease the inset
-// CHANGED: the X inset grew with the wider sprite (27 -> 32) so collisions
-// still line up with the visible character.
-const int VR_RUNNER_HITBOX_INSET_X = 32;  // was 27
+const int VR_RUNNER_HITBOX_INSET_X = 32; 
 const int VR_RUNNER_HITBOX_INSET_Y = 19;
 const int VR_OBSTACLE_HITBOX_INSET = 8;
 
@@ -162,33 +134,24 @@ int vrRedBallY = 285;
 bool vrGameOver = false;
 bool vrGameWon = false;
 
-// Vault3 "access granted" screen -> auto-advance to a loading screen after
-// showing it for 2 seconds, then return to the level page.
 bool vrVault3TimerStarted = false;
 double vrVault3TimerStart = 0;
 
-// New gamestate used only for the loading bar shown right after Vault
-// Runner is won (background1.png with the same loading bar as elsewhere).
 const int GAMESTATE_VR_WIN_LOADING = 480;
 
-// True once the Vault Runner minigame (Level 2) has been completed. Used to
-// unlock the Level 3 button on the level select page.
 bool level2Completed = false;
 
-int vrWinBgImg = 0; // Images/background1.png
+int vrWinBgImg = 0; 
 
 void vrResetGame();
 void vrFixedUpdate();
 void vrDraw();
 void vrHandleMouseDown(int mx, int my);
 
-// ----------------------------------------------------------------------------
-// NEW: instruction/"note" screens inserted ahead of a few minigames (Level 2).
-// ----------------------------------------------------------------------------
-const int GAMESTATE_LEVEL2_NOTE = 510;      // shown once, right after the level 2 loading screen, before GAMESTATE_LEVEL2_MAP
-const int GAMESTATE_USB_NOTE = 520;         // shown before the USB match-3 minigame (gameState 400)
-const int GAMESTATE_INVEST_NOTE = 530;      // shown before GAMESTATE_INVESTIGATION
+const int GAMESTATE_LEVEL2_NOTE = 510;      
+const int GAMESTATE_USB_NOTE = 520;         
+const int GAMESTATE_INVEST_NOTE = 530;      
 
-int level2NoteImg = 0;         // Images/level2note.png
-int usbNoteImg = 0;            // Images/usbnote.png
-int evidenceRoomNoteImg = 0;   // Images/evidenceroomnote.png
+int level2NoteImg = 0;         
+int usbNoteImg = 0;           
+int evidenceRoomNoteImg = 0;   

@@ -12,8 +12,6 @@
 #include <stdlib.h>
 #pragma comment(lib, "winmm.lib")
 
-// All variables first (so every function file can see every variable), then
-// all function files.
 #include "Menu.h"
 #include "Level1Variables.h"
 #include "Level2Variables.h"
@@ -21,21 +19,8 @@
 #include "Level1Functions.h"
 #include "Level2Functions.h"
 #include "Level3Functions.h"
+#include "SaveSystem.h"
 
-// ----------------------------------------------------------------------------
-// Centralised helpers deciding on which game states the Settings icon and the
-// Pause icon should be visible / clickable. Both the drawing code (iDraw) and
-// the input code (iMouse) call these SAME functions, so the two can never
-// drift apart.
-//
-// CHANGED:
-//   * Settings is now shown on EVERY screen except the loading screens.
-//   * Pause is now also available in every Level 3 screen (fight, shootout,
-//     traffic runner) exactly like it already was in Levels 1 and 2 - but it
-//     is still hidden on every instruction/note screen (and on the shootout's
-//     own instruction screen, gsState == -1, and on the traffic runner's
-//     "click to start" screen).
-// ----------------------------------------------------------------------------
 bool isLoadingState(int gs) {
 	return gs == 0 || gs == 5 || gs == 6 || gs == 56 || gs == 57 ||
 		gs == GAMESTATE_VR_WIN_LOADING || gs == GAMESTATE_LEVEL3_LOADING ||
@@ -49,7 +34,7 @@ bool isNoteScreenState(int gs) {
 }
 
 bool isSettingsVisibleState(int gs) {
-	// Everywhere except the loading screens.
+	
 	return !isLoadingState(gs);
 }
 
@@ -88,9 +73,6 @@ void loadingUpdate()
 		}
 		else if (gameState == 5)
 		{
-			// CHANGED: level 1 now shows its own instruction screen
-			// (map1.png + intro.png + Next) before the normal map, exactly
-			// like level 2 already did.
 			gameState = GAMESTATE_LEVEL1_NOTE;
 			loadingStep = 0;
 			if (musicPlaying) {
@@ -286,8 +268,6 @@ void fixedUpdate() {
 
 		if (puzzleScreen && showQuestion)
 		{
-			// CHANGED: the patrol pattern question is only visible for 5
-			// seconds now (it used to stay up for 10).
 			if ((clock() - questionStartTime) / CLOCKS_PER_SEC >= L1_QUESTION_SECONDS)
 			{
 				showQuestion = false;
@@ -436,7 +416,6 @@ void iDraw()
 			iShowImage(0, 0, 800, 600, trFinalBgImg);
 		}
 
-		// Loading text/bar colour is deliberately UNCHANGED.
 		iSetColor(180, 122, 33);
 		iText(100, 120, "LOADING...", GLUT_BITMAP_TIMES_ROMAN_24);
 
@@ -467,6 +446,10 @@ void iDraw()
 		if (creditnoteImg > 0) iShowImage(0, 0, 800, 600, creditnoteImg);
 		if (backImg > 0) iShowImage(50, 50, 100, 40, backImg);
 	}
+	else if (gameState == GAMESTATE_SAVE_CHOICE)
+	{
+		drawSaveChoice();
+	}
 	else if (gameState == 300)
 	{
 		iShowImage(0, 0, 800, 600, levelBg);
@@ -489,17 +472,11 @@ void iDraw()
 	}
 	else if (gameState == GAMESTATE_LEVEL1_NOTE)
 	{
-		// NEW: level 1 instruction screen - the normal level 1 map with
-		// intro.png in the middle (same size/place as the level 2 note) and
-		// a Next button on the right. Clicking Next goes to gameState 350
-		// where the map behaves exactly as it always did.
 		if (map1Img > 0) iShowImage(0, 0, 800, 600, map1Img);
 		if (cellMapImg > 0) iShowImage(150, 80, 480, 150, cellMapImg);
 		if (cctvMapImg > 0) iShowImage(62, 335, 200, 228, cctvMapImg);
 		if (alarmMapImg > 0) iShowImage(530, 333, 200, 228, alarmMapImg);
 
-		// CHANGED: intro.png is now drawn taller (200 -> 300) so it no
-		// longer looks squashed. Same x/y anchor as before.
 		if (introImg > 0) iShowImage(150, 150, 500, 300, introImg);
 		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
 	}
@@ -563,8 +540,6 @@ void iDraw()
 			iSetColor(0, 0, 0);
 			iText(255, 60, "MEMORIZE PATTERN........... ", GLUT_BITMAP_HELVETICA_18);
 
-			// These ON/OFF markers are gameplay indicators (not note text),
-			// so they keep their green/red colours.
 			for (int i = 0; i < 5; i++) {
 				char text[10];
 				sprintf(text, "[%s]", switchSequence[i] == 1 ? "ON" : "OFF");
@@ -574,7 +549,6 @@ void iDraw()
 			}
 		}
 		else if (switchWrong) {
-			// CHANGED: was red, now black (note.png text).
 			iSetColor(0, 0, 0);
 			iText(245, 65, "WRONG PATTERN! ALARM TRIGGERED", GLUT_BITMAP_HELVETICA_18);
 			iSetColor(0, 0, 0);
@@ -627,7 +601,7 @@ void iDraw()
 
 		iSetColor(0, 0, 0);
 		if (memoryWrong) {
-			// CHANGED: was red, now black (note.png text).
+			
 			iSetColor(0, 0, 0);
 			iText(230, 65, "WRONG SEQUENCE!", GLUT_BITMAP_HELVETICA_18);
 			iSetColor(0, 0, 0);
@@ -688,9 +662,6 @@ void iDraw()
 
 		if (wrong)
 		{
-			// CHANGED: the two "caught" sprites keep their original X layout
-			// (totalWidth is still 50 + 60), but they now sit 2 pixels lower
-			// (L1_CAUGHT_*_Y) and are drawn wider/taller.
 			int totalWidth = 50 + 60;
 			int startX = (800 - totalWidth) / 2;
 
@@ -707,8 +678,6 @@ void iDraw()
 		}
 		else
 		{
-			// CHANGED: guard sprites are drawn bigger and 2px lower
-			// (guardY is 274 now instead of 276).
 			if (moveRight)
 			{
 				if (guardFrame == 0 || guardFrame == 2)
@@ -724,7 +693,6 @@ void iDraw()
 					iShowImage(guardX, guardY, L1_GUARD_W, L1_GUARD_H, guard5);
 			}
 
-			// Running player sprites: unchanged.
 			if (playerRunning)
 			{
 				if (playerFrame == 0)
@@ -736,8 +704,6 @@ void iDraw()
 			}
 			else
 			{
-				// CHANGED: the standing player is WIDER now
-				// (L1_PLAYER_STAND_W), same height and same y position.
 				if (!playerEscaped)
 				{
 					iShowImage(playerX, playerY, L1_PLAYER_STAND_W, L1_PLAYER_STAND_H, playerImg);
@@ -786,7 +752,6 @@ void iDraw()
 	else if (gameState == 56) {
 		if (imgEscapeScreen > 0) iShowImage(0, 0, 800, 600, imgEscapeScreen);
 
-		// Loading text/bar colour unchanged.
 		iSetColor(180, 122, 33);
 		iText(100, 120, "LOADING...", GLUT_BITMAP_TIMES_ROMAN_24);
 
@@ -964,11 +929,12 @@ void iMouse(int button, int state, int mx, int my)
 
 		if (isGamePaused) return;
 
-		// ------------------------------------------------------------------
-		// Intro/"note" screens. Each just waits for a click on the Next
-		// button (same 650,50 - 750,90 hotspot used elsewhere in the game)
-		// and then starts the level/minigame exactly the way it used to.
-		// ------------------------------------------------------------------
+		if (gameState == GAMESTATE_SAVE_CHOICE)
+		{
+			svChoiceMouseClick(mx, my);
+			return;
+		}
+
 		if (gameState == GAMESTATE_LEVEL1_NOTE)
 		{
 			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
@@ -1150,6 +1116,11 @@ void iMouse(int button, int state, int mx, int my)
 		if (gameState == 100)
 		{
 			handleMenuMouse(mx, my);
+
+			if (gameState == 300 && svHasSave())
+			{
+				gameState = GAMESTATE_SAVE_CHOICE;
+			}
 		}
 		else if (gameState >= 200 && gameState <= 204)
 		{
@@ -1340,6 +1311,12 @@ void iPassiveMouseMove(int mx, int my)
 	{
 		handleMenuPassiveMouse(mx, my);
 	}
+
+	else if (gameState == GAMESTATE_SAVE_CHOICE)
+	{
+		svChoiceMouseMove(mx, my);
+	}
+
 	else if (gameState == 350)
 	{
 		mapHoverState = 0;
@@ -1441,6 +1418,8 @@ int main()
 	mciSendString(TEXT("open \"mouse.mp3\" type mpegvideo alias clicksound"), NULL, 0, NULL);
 
 	srand((unsigned)time(0));
+	atexit(saveGame);
+	svLoadImages();
 
 	loadBg = iLoadImage("Images/loadbg.png");
 	menuBg = iLoadImage("Images/menubg.png");
@@ -1532,8 +1511,6 @@ int main()
 	dodgeImgRight2 = iLoadImage("Images/right2.png");
 	dodgeCaughtPlayerImg = iLoadImage("Images/caughtplayer.png");
 
-	// Timer HUD image used by the Dodge Game screen (same size/position as
-	// the score HUD).
 	timerImg = iLoadImage("Images/timer.png");
 
 	resetDodgeGame();
@@ -1544,7 +1521,7 @@ int main()
 
 	usbImgBg = iLoadImage("Images/usb room.png");
 	usbImgWp = iLoadImage("Images/wp.png");
-	// Load HUD UI image banners
+	
 	imgS1 = iLoadImage("Images/S1.png");
 	imgM1 = iLoadImage("Images/M1.png");
 
@@ -1573,7 +1550,6 @@ int main()
 	investPieceImg[4] = iLoadImage("Images/piece5.png");
 	investPieceImg[5] = iLoadImage("Images/piece6.png");
 
-	// Vault Runner minigame images
 	vrVault1Img = iLoadImage("Images/vault1.png");
 	vrVault2Img = iLoadImage("Images/vault2.png");
 	vrVault3Img = iLoadImage("Images/vault3.png");
@@ -1584,17 +1560,14 @@ int main()
 	vrRunnerImg[2] = iLoadImage("Images/player3.png");
 	vrWinBgImg = iLoadImage("Images/background1.png");
 
-	// Note/instruction screen images
 	dodgeIntroNoteImg = iLoadImage("Images/dodgenote.png");
 	level2NoteImg = iLoadImage("Images/level2note.png");
 	usbNoteImg = iLoadImage("Images/usbnote.png");
 	evidenceRoomNoteImg = iLoadImage("Images/evidenceroomnote.png");
 	gunCollectImg = iLoadImage("Images/guncollect.png");
 
-	// NEW: level 1 map instruction image (shown on top of map1.png)
 	introImg = iLoadImage("Images/intro.png");
 
-	// Level 3 fight minigame images
 	lv3BgImageId = iLoadImage("Images/insideprison.png");
 	lv3HeroStandId = iLoadImage("Images/maincharstand.png");
 	lv3HeroAnim2Id = iLoadImage("Images/mainchar2.png");
@@ -1618,7 +1591,6 @@ int main()
 	lv3GuardLifeImg[2] = iLoadImage("Images/guardlife50.png");
 	lv3GuardLifeImg[3] = iLoadImage("Images/guardlife25.png");
 
-	// Level 3 - Gangster Shootout minigame images
 	gsBgImg = iLoadImage("Images/collison room.png");
 	gsWpImg = iLoadImage("Images/wp.png");
 	gsPrisonerImg = iLoadImage("Images/prisoner.png");
@@ -1629,7 +1601,6 @@ int main()
 	gsDeadImg2 = iLoadImage("Images/dead2.png");
 	gsDeadImg3 = iLoadImage("Images/dead3.png");
 
-	// HUD Banner Images
 	gsH1Img = iLoadImage("Images/H1.png");
 	gsG1Img = iLoadImage("Images/G1.png");
 	gsD1Img = iLoadImage("Images/D1.png");
@@ -1639,7 +1610,6 @@ int main()
 		gsGBullets[i].active = false;
 	}
 
-	// Traffic Runner minigame images
 	trStartImg = iLoadImage("Images/temple1.png");
 	trBgImg = iLoadImage("Images/temple2.png");
 	trWinImg1 = iLoadImage("Images/temple3.png");
@@ -1673,10 +1643,9 @@ int main()
 
 	iSetTimer(120, usbAnimateCharacter);
 
-	// CHANGED: the Traffic Runner now updates every TR_TICK_MS (25 ms)
-	// instead of every 50 ms, which is half of what made it feel so slow.
 	iSetTimer(TR_TICK_MS, trFixedUpdate);
-
+	iSetTimer(2000, saveGame);
+	
 	iStart();
 	return 0;
 }

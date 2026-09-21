@@ -225,19 +225,9 @@ void startSwitchPuzzleLevel();
 void updateSequence();
 void createSequence();
 
-// ----------------------------------------------------------------------------
-// NEW: instruction/"note" screens inserted ahead of a few minigames. Each one
-// just shows a background plus a note image and a Next button; clicking Next
-// starts the game exactly like it used to start before these were added.
-// ----------------------------------------------------------------------------
-const int GAMESTATE_DODGE_NOTE = 500;       // shown before GAMESTATE_DODGE
+const int GAMESTATE_DODGE_NOTE = 500;       
 
-// NEW: exactly the same idea as GAMESTATE_LEVEL2_NOTE, but for Level 1. It is
-// shown once right after the level 1 loading screen: map1.png with intro.png
-// in the middle (same size/place as the level 2 note) plus a Next button.
-// Clicking Next drops the player on the normal level 1 map (gameState 350),
-// which then behaves exactly as it did before.
 const int GAMESTATE_LEVEL1_NOTE = 590;
 
-int dodgeIntroNoteImg = 0;     // Images/dodgenote.png
-int introImg = 0;              // Images/intro.png  (level 1 map instruction)
+int dodgeIntroNoteImg = 0;     
+int introImg = 0;              

@@ -2,14 +2,6 @@
 #include "Menu.h"
 #include "Level2Variables.h"
 
-
-
-// ============================================================================
-// Level2Functions.h
-// Level 2 functions: Evidence Room (investigation) puzzle, Vault Runner
-// minigame, USB match-3 minigame
-// ============================================================================
-
 void resetInvestPuzzle() {
 	investStage = 1;
 	investPiecesFoundCount = 0;
@@ -66,11 +58,9 @@ void drawInvestPuzzle() {
 		if (investRoomImg > 0) iShowImage(0, 0, 800, 600, investRoomImg);
 		if (investNoteImg > 0) iShowImage(150, -25, 480, 280, investNoteImg);
 
-		// note.png text -> black
 		iSetColor(0, 0, 0);
 		iText(220, 35, "Collect 6 torn pieces from the room", GLUT_BITMAP_HELVETICA_18);
 
-		// HUD counter (not note text) -> colour unchanged
 		char counterText[50];
 		sprintf(counterText, "Pieces Found: %d/6", investPiecesFoundCount);
 		iSetColor(255, 255, 255);
@@ -107,7 +97,6 @@ void drawInvestPuzzle() {
 			double elapsedTime = (GetTickCount64() - investCompletionTimerStart) / 1000.0;
 
 			if (elapsedTime < 3.0) {
-				// CHANGED: this line sits on note.png -> black now.
 				iSetColor(0, 0, 0);
 				iText(280, 20, "Assembling Room Data...", GLUT_BITMAP_HELVETICA_18);
 			}
@@ -163,9 +152,6 @@ void handleInvestMouseMove(int mx, int my) {
 	}
 }
 
-// ----------------------------------------------------------------------------
-// VAULT RUNNER MINIGAME - function definitions
-// ----------------------------------------------------------------------------
 
 void vrResetGame() {
 	vrIsStarted = false;
@@ -306,9 +292,6 @@ void vrFixedUpdate() {
 		}
 	}
 
-	// Hitboxes shrunk with VR_RUNNER_HITBOX_INSET_X/Y and
-	// VR_OBSTACLE_HITBOX_INSET so game over only triggers once the visible
-	// character actually touches the box/stone.
 	if (vrRunnerX + VR_RUNNER_W - VR_RUNNER_HITBOX_INSET_X >= vrBoxX + VR_OBSTACLE_HITBOX_INSET &&
 		vrRunnerX + VR_RUNNER_HITBOX_INSET_X <= vrBoxX + vrBoxWidth - VR_OBSTACLE_HITBOX_INSET &&
 		vrRunnerY <= vrBoxY + vrBoxHeight - VR_RUNNER_HITBOX_INSET_Y) {
@@ -381,11 +364,8 @@ void vrDraw() {
 	iSetColor(255, 182, 193);
 	iFilledCircle(vrRedBallX - 3, vrRedBallY + 3, 3);
 
-	// CHANGED: runner is drawn wider now (same y position / same height).
 	iShowImage(vrRunnerX, vrRunnerY, VR_RUNNER_W, VR_RUNNER_H, vrRunnerImg[vrCurrentFrame]);
 
-	// CHANGED: box.png is drawn bigger (vrBoxWidth/vrBoxHeight above).
-	// Same y position as before.
 	iShowImage(vrBoxX, vrBoxY, vrBoxWidth, vrBoxHeight, dodgeBoxImg);
 
 	iSetColor(95, 85, 75);
@@ -396,20 +376,16 @@ void vrDraw() {
 	iSetColor(130, 120, 110);
 	iFilledCircle(vrRockX + 22, vrRockY + 22, 5);
 
-	// Score badge (score.png) - HUD, colour unchanged (golden).
 	iShowImage(560, 535, 220, 45, trScoreImg);
 
-	iSetColor(255, 215, 0); // Golden Color
+	iSetColor(255, 215, 0); 
 	char vrScoreStr[50];
 	sprintf(vrScoreStr, "%d", vrCoinScore);
 	iText(700, 549, vrScoreStr, GLUT_BITMAP_HELVETICA_18);
 
 	if (vrGameOver && !vrGameWon) {
-		// Game Over shown on the same note.png paper used by the Dodge
-		// Game's game-over screen (same position/size).
 		iShowImage(30, -15, 740, 300, vrNoteImg);
 
-		// CHANGED: was red, now black (note.png text).
 		iSetColor(0, 0, 0);
 		iText(340, 55, "GAME OVER", GLUT_BITMAP_TIMES_ROMAN_24);
 
@@ -468,10 +444,6 @@ void vrHandleMouseDown(int mx, int my) {
 		}
 	}
 }
-
-// ----------------------------------------------------------------------------
-// USB MATCH-3 MINIGAME - function definitions
-// ----------------------------------------------------------------------------
 
 void usbGenerateBoard() {
 	for (int r = 0; r < USB_GRID_SIZE; r++) {
@@ -636,7 +608,6 @@ void usbDrawGame() {
 			}
 		}
 
-		// Draw S1 (Score) & M1 (Moves) UI Banners - HUD, colour unchanged.
 		iShowImage(100, 530, 240, 65, imgS1);
 		iShowImage(460, 530, 240, 65, imgM1);
 
@@ -674,8 +645,6 @@ void usbDrawGame() {
 		}
 	}
 	else if (usbSubState == 3) {
-		// CHANGED: the lockdown message is now drawn on note.png in black,
-		// like every other instruction text.
 		int noteW = 500, noteH = 250;
 		int noteX = (800 - noteW) / 2;
 		int noteY = 20;
