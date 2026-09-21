@@ -51,27 +51,26 @@ bool playerRun = false;
 int playerFrame = 0;
 
 int guardX = 40;
-int guardY = 271;
+int guardY = 281;
 
 bool moveRight = true;
 int guardFrame = 0;
 int guardAnimCounter = 0;
 
-const int L1_GUARD_W = 85;    // was 75
-const int L1_GUARD_H = 115;   // was 105
+const int L1_GUARD_W = 85;    
+const int L1_GUARD_H = 115;   
 const int L1_PLAYER_RUN_W = 105;
 const int L1_PLAYER_RUN_H = 165;
-const int L1_PLAYER_STAND_W = 105;  // was 90 (width only)
-const int L1_PLAYER_STAND_H = 120;  // unchanged
+const int L1_PLAYER_STAND_W = 105;  
+const int L1_PLAYER_STAND_H = 120;  
 
-const int L1_CAUGHT_GUARD_W = 85;    // was 75
-const int L1_CAUGHT_GUARD_H = 115;   // was 105
-const int L1_CAUGHT_PLAYER_W = 105;  // was 90
-const int L1_CAUGHT_PLAYER_H = 130;  // was 120
-const int L1_CAUGHT_GUARD_Y = 271;   // was guardY (276)
-const int L1_CAUGHT_PLAYER_Y = 125;  // was playerY (130)
+const int L1_CAUGHT_GUARD_W = 85;    
+const int L1_CAUGHT_GUARD_H = 115;   
+const int L1_CAUGHT_PLAYER_W = 105;  
+const int L1_CAUGHT_PLAYER_H = 130;  
+const int L1_CAUGHT_GUARD_Y = 282;   
+const int L1_CAUGHT_PLAYER_Y = 125;  
 
-// The patrol-pattern question is only shown for 5 seconds now (was 10).
 const int L1_QUESTION_SECONDS = 5;
 
 bool puzzleStart = false;
@@ -182,18 +181,11 @@ int dodgeImgLeft1 = 0, dodgeImgLeft2 = 0;
 int dodgeImgRight1 = 0, dodgeImgRight2 = 0;
 int dodgeCaughtPlayerImg = 0;
 
-// Timer HUD image (timer.png) used by the Dodge Game screen. Drawn at the
-// same position/size as the score HUD (score.png), with the countdown value
-// drawn on top of it.
 int timerImg = 0;
 
 int dodgeCurrentAnimState = 0;
 int dodgeAnimTimer = 0;
 
-// After successfully dodging all the boxes, the character keeps auto-running
-// right towards the door (drawn in fallingboxbg.png) instead of freezing in
-// place, so the level ending reads as "reaching the door" rather than just
-// stopping mid-air.
 bool dodgeRunningToDoor = false;
 const int DODGE_DOOR_X = 750;
 
