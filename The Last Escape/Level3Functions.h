@@ -331,7 +331,7 @@ void gsUpdateGame() {
 					gsGangsterX = 580;
 
 					if (gsCurrentGangster > 3) {
-						gsState = 1; 
+						gsState = 1;
 						level3Completed = true;
 					}
 				}
@@ -354,7 +354,7 @@ void gsUpdateGame() {
 				gsMiss++;
 
 				if (gsMiss >= GS_MAX_MISS) {
-					gsState = 2; 
+					gsState = 2;
 				}
 			}
 		}
@@ -362,61 +362,70 @@ void gsUpdateGame() {
 }
 
 void gsDraw() {
+	// 1. Instruction Screen State
 	if (gsState == -1) {
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 		iShowImage(20, 50, 760, 140, gsWpImg);
 
 		iSetColor(0, 0, 0);
 		iText(220, 95, "Prisoner has to fight 3 gangsters sequentially!Left", GLUT_BITMAP_HELVETICA_18);
-		iText(150, 75, "Click to Shoot | Right-Click to Jump!Now click next", GLUT_BITMAP_HELVETICA_18);
+		iText(220, 75, "Click to Shoot | Right-Click to Jump!", GLUT_BITMAP_HELVETICA_18);
 
 		iShowImage(50, 50, 100, 40, backImg);
 		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
 		return;
 	}
 
+	// 2. Win Screen State (Draw bodies first, then show the banner)
 	if (gsState == 1) {
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
-		iShowImage(20, 50, 760, 140, gsWpImg);
 
+		// Draw all 3 defeated gangsters on screen
+		if (gsDeadX1 > 0) iShowImage(gsDeadX1 - 100, gsGangsterY + 50, gsGangsterWidth, gsGangsterHeight, gsDeadImg1);
+		if (gsDeadX2 > 0) iShowImage(gsDeadX2 - 130, gsGangsterY - 60, gsGangsterWidth, gsGangsterHeight, gsDeadImg2);
+		if (gsDeadX3 > 0) iShowImage(gsDeadX3 - 160, gsGangsterY - 70, gsGangsterWidth, gsGangsterHeight, gsDeadImg3);
+
+		// Draw Prisoner standing victorious
+		iShowImage(gsPrisonerX, gsPrisonerY, gsPrisonerWidth, gsPrisonerHeight, gsPrisonerImg);
+
+		// Draw Win Banner over the scene
+		iShowImage(20, 50, 760, 140, gsWpImg);
 		iSetColor(0, 0, 0);
 		iText(220, 95, "YOU WIN! All Gangsters Defeated!", GLUT_BITMAP_TIMES_ROMAN_24);
-
-		iSetColor(0, 0, 0);
-		iText(230, 75, "LEVEL 3 COMPLETE! Click to Continue", GLUT_BITMAP_HELVETICA_18);
+		iText(245, 75, " Click to Continue", GLUT_BITMAP_HELVETICA_18);
 		return;
 	}
 
+	// 3. Game Over Screen State
 	if (gsState == 2) {
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 		iShowImage(20, 50, 760, 140, gsWpImg);
 
 		iSetColor(0, 0, 0);
 		iText(220, 95, "GAME OVER", GLUT_BITMAP_TIMES_ROMAN_24);
-
-		iSetColor(0, 0, 0);
 		iText(220, 75, "Click anywhere with Mouse to Restart", GLUT_BITMAP_HELVETICA_18);
 
 		iShowImage(50, 50, 100, 40, backImg);
 		return;
 	}
 
+	// 4. Active Gameplay Screen
 	iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 
+	// Draw defeated gangsters 1 & 2 as you defeat them during gameplay
 	if (gsCurrentGangster > 1) {
-		iShowImage(gsDeadX1, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsDeadImg1);
+		iShowImage(gsDeadX1 - 100, gsGangsterY + 50, gsGangsterWidth, gsGangsterHeight, gsDeadImg1);
 	}
 	if (gsCurrentGangster > 2) {
-		iShowImage(gsDeadX2, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsDeadImg2);
-	}
-	if (gsState == 1) {
-		iShowImage(gsDeadX3, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsDeadImg3);
+		iShowImage(gsDeadX2 - 130, gsGangsterY - 60, gsGangsterWidth, gsGangsterHeight, gsDeadImg2);
 	}
 
+	// Draw active gangster
 	if (gsCurrentGangster <= 3 && gsState == 0) {
 		iShowImage(gsGangsterX, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsGangsterImg);
 	}
 
+	// Draw Prisoner
 	iShowImage(gsPrisonerX, gsPrisonerY, gsPrisonerWidth, gsPrisonerHeight, gsPrisonerImg);
 
 	for (int i = 0; i < GS_MAX_BULLETS; i++) {
@@ -446,21 +455,24 @@ void gsDraw() {
 	iText(685, 458, gsMissStr, GLUT_BITMAP_HELVETICA_12);
 }
 
-void gsMouseMove(int mx, int my) {
-	if (gsState != 0) return;
-
-	int oldPrisonerX = gsPrisonerX;
-
+void gsMouseMove(int mx, int my)
+{
+	// Update prisoner horizontal position centered on mouse X
 	gsPrisonerX = mx - gsPrisonerWidth / 2;
-	if (gsPrisonerX < 0) gsPrisonerX = 0;
-	if (gsPrisonerX > GS_SCREEN_W / 2 - gsPrisonerWidth) gsPrisonerX = GS_SCREEN_W / 2 - gsPrisonerWidth;
 
-	int deltaX = gsPrisonerX - oldPrisonerX;
-	gsGangsterX += deltaX;
+	// Restrict prisoner to the left half of the screen
+	if (gsPrisonerX < 0)
+	{
+		gsPrisonerX = 0;
+	}
+	if (gsPrisonerX > GS_SCREEN_W / 2 - gsPrisonerWidth)
+	{
+		gsPrisonerX = GS_SCREEN_W / 2 - gsPrisonerWidth;
+	}
 
-	if (gsGangsterX < GS_SCREEN_W / 2 + 50) gsGangsterX = GS_SCREEN_W / 2 + 50;
-	if (gsGangsterX > GS_SCREEN_W - gsGangsterWidth - 20) gsGangsterX = GS_SCREEN_W - gsGangsterWidth - 20;
-}
+	//  gsGangsterX is untouched, so the gangster stays completely stationary!
+};
+
 
 void gsHandleLeftClick(int mx, int my) {
 	if (gsState == -1) {
@@ -1084,11 +1096,11 @@ void trFixedUpdate() {
 
 	static int trAnimCounter = 0;
 	trAnimCounter++;
-	if (trAnimCounter >= TR_RUN_ANIM_TICKS) {
+	if (trAnimCounter >= TR_RUN_ANIM_TICKS)
 		trCurrentRunFrame = 1 - trCurrentRunFrame;
-		trAnimCounter = 0;
-	}
+	trAnimCounter = 0;
 }
+
 
 void trHandleMouseDown(int mx, int my) {
 	if (!trGameStarted) {

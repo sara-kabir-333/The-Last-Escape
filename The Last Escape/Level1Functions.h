@@ -50,7 +50,7 @@ void moveCharacterRight() {
 		if (charX >= 680) {
 			gameState = 71;
 			charX = 50;
-			charY = 210;
+			charY = 170;
 			resetSwitchPuzzle();
 		}
 	}
@@ -73,7 +73,7 @@ void moveCharacterLeft() {
 void startSwitchPuzzleLevel() {
 	gameState = 70;
 	charX = 50;
-	charY = 150;
+	charY = 50;
 	charFrame = 0;
 	targetX = -1;
 	resetSwitchPuzzle();
