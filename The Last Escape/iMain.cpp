@@ -9,6 +9,7 @@
 #include <ctime>
 #include <windows.h>
 #include <mmsystem.h>
+#include <objbase.h>
 #include <stdlib.h>
 #pragma comment(lib, "winmm.lib")
 
@@ -1414,8 +1415,11 @@ int main()
 {
 	iInitialize(800, 600, "The Last Escape");
 
-	mciSendString(TEXT("open \"audio2.mp3\" type mpegvideo alias bgm"), NULL, 0, NULL);
-	mciSendString(TEXT("open \"mouse.mp3\" type mpegvideo alias clicksound"), NULL, 0, NULL);
+	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+
+	//mciSendString(TEXT("open \"audio2.mp3\" type mpegvideo alias bgm"), NULL, 0, NULL);
+	//mciSendString(TEXT("open \"mouse.mp3\" type mpegvideo alias clicksound"), NULL, 0, NULL);
 
 	srand((unsigned)time(0));
 	atexit(saveGame);
@@ -1569,9 +1573,9 @@ int main()
 	introImg = iLoadImage("Images/intro.png");
 
 	lv3BgImageId = iLoadImage("Images/insideprison.png");
-	lv3HeroStandId = iLoadImage("Images/maincharstand.png");
-	lv3HeroAnim2Id = iLoadImage("Images/mainchar2.png");
-	lv3HeroAnim3Id = iLoadImage("Images/mainchar3.png");
+	lv3HeroStandId = iLoadImage("Images/player.png");
+	lv3HeroAnim2Id = iLoadImage("Images/player1.png");
+	lv3HeroAnim3Id = iLoadImage("Images/player2.png");
 	lv3HeroPunchId = iLoadImage("Images/maincharpunch.png");
 	lv3HeroKickId = iLoadImage("Images/maincharkick.png");
 	lv3GuardStId = iLoadImage("Images/guardst.png");

@@ -44,7 +44,7 @@ void lv3UpdateGame() {
 		}
 
 		if (!lv3HeroReachedGuard) {
-			if (lv3HeroX < LV3_HERO_STOP_X) {
+			if (isSpecialKeyPressed(GLUT_KEY_RIGHT) && lv3HeroX < LV3_HERO_STOP_X) {
 				lv3HeroX += 3;
 				lv3HeroWalkAnimTimer++;
 				if (lv3HeroWalkAnimTimer >= 10) {
