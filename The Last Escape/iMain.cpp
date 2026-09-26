@@ -1570,10 +1570,10 @@ int main()
 	wpTwo = iLoadImage("Images/wptwo.png");
 	wpThree = iLoadImage("Images/wpthree.png");
 
-	playerImg = iLoadImage("Images/player.png");
-	playerOne = iLoadImage("Images/player1.png");
-	playerTwo = iLoadImage("Images/player2.png");
-	playerThree = iLoadImage("Images/player3.png");
+	playerImg = iLoadImage("Images/p1.png");
+	playerOne = iLoadImage("Images/p2.png");
+	playerTwo = iLoadImage("Images/p3.png");
+	playerThree = iLoadImage("Images/p2.png");
 
 	guard1 = iLoadImage("Images/guard1.png");
 	guard3 = iLoadImage("Images/guard3.png");
@@ -1597,11 +1597,11 @@ int main()
 	dodgeBgImg = iLoadImage("Images/fallingboxbg.png");
 	dodgeBoxImg = iLoadImage("Images/box.png");
 	dodgeNoteImg = iLoadImage("Images/note.png");
-	dodgeImgStand = iLoadImage("Images/player1.png");
-	dodgeImgLeft1 = iLoadImage("Images/player2.png");
-	dodgeImgLeft2 = iLoadImage("Images/player3.png");
-	dodgeImgRight1 = iLoadImage("Images/player2.png");
-	dodgeImgRight2 = iLoadImage("Images/player3.png");
+	dodgeImgStand = iLoadImage("Images/p1.png");
+	dodgeImgLeft1 = iLoadImage("Images/p2.png");
+	dodgeImgLeft2 = iLoadImage("Images/p3.png");
+	dodgeImgRight1 = iLoadImage("Images/p2.png");
+	dodgeImgRight2 = iLoadImage("Images/p3.png");
 	dodgeCaughtPlayerImg = iLoadImage("Images/caughtplayer.png");
 
 	timerImg = iLoadImage("Images/timer.png");
