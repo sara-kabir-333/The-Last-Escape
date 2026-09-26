@@ -185,7 +185,7 @@ void lv3Draw() {
 			iText(noteX + 120, noteY + 40, "COLLECT THE GUN!", GLUT_BITMAP_HELVETICA_18);
 		}
 
-		iShowImage(330, 200, 180, 100, lv3GunImageId);
+		iShowImage(370, 220, 80, 50, lv3GunImageId);
 
 		iSetColor(255, 0, 0);
 

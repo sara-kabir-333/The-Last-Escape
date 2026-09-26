@@ -1501,8 +1501,8 @@ int main()
 
 	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
-	mciSendString(TEXT("open \"audio2.mp3\" type mpegvideo alias bgm"), NULL, 0, NULL);
-	mciSendString(TEXT("open \"mouse.mp3\" type mpegvideo alias clicksound"), NULL, 0, NULL);
+	mciSendString(TEXT("open \"audio2.wav\" type mpegvideo alias bgm"), NULL, 0, NULL);
+	mciSendString(TEXT("open \"mouse.wav\" type mpegvideo alias clicksound"), NULL, 0, NULL);
 
 	srand((unsigned)time(0));
 	atexit(saveGame);
@@ -1663,9 +1663,9 @@ int main()
 	introImg = iLoadImage("Images/intro.png");
 
 	lv3BgImageId = iLoadImage("Images/insideprison.png");
-	lv3HeroStandId = iLoadImage("Images/player1.png");
-	lv3HeroAnim2Id = iLoadImage("Images/player2.png");
-	lv3HeroAnim3Id = iLoadImage("Images/player3.png");
+	lv3HeroStandId = iLoadImage("Images/p1.png");
+	lv3HeroAnim2Id = iLoadImage("Images/p2.png");
+	lv3HeroAnim3Id = iLoadImage("Images/p3.png");
 	lv3HeroPunchId = iLoadImage("Images/maincharpunch.png");
 	lv3HeroKickId = iLoadImage("Images/maincharkick.png");
 	lv3GuardStId = iLoadImage("Images/guardst.png");
