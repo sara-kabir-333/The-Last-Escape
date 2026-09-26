@@ -281,7 +281,7 @@ Level 1 — BreakOut
 
 Level 2 — The Hidden File
 
-<img width="1183" height="903" alt="Screenshot (194)" src="https://github.com/user-attachments/assets/2c5da11c-945f-4923-a10c-54ddff24b02a" />
+<img width="600" height="400" alt="Screenshot (194)" src="https://github.com/user-attachments/assets/2c5da11c-945f-4923-a10c-54ddff24b02a" />
 
 
 
@@ -289,14 +289,14 @@ Level 2 — The Hidden File
 Level 3 — Final Exposure
 
 
-<img width="1195" height="897" alt="Screenshot (203)" src="https://github.com/user-attachments/assets/f45d6181-658a-4136-b9ba-9f481dc03786" />
+<img width="600" height="400" alt="Screenshot (203)" src="https://github.com/user-attachments/assets/f45d6181-658a-4136-b9ba-9f481dc03786" />
 
 
 
 
 Ending
 
-<img width="1671" height="941" alt="temple5" src="https://github.com/user-attachments/assets/5c7f206e-6d8c-4d66-8ae1-a8ae2e2fd9b9" />
+<img width="600" height="400" alt="temple5" src="https://github.com/user-attachments/assets/5c7f206e-6d8c-4d66-8ae1-a8ae2e2fd9b9" />
 
 
 
