@@ -1,3 +1,5 @@
+# 🎮 THE LAST ESCAPE
+
 ## Game Description
 
 **The Last Escape** is a 2D side-scrolling stealth, detection, puzzle, and action game developed using the **iGraphics** library with **C/C++**.
@@ -272,21 +274,24 @@ Menu
 
 Add the game menu screenshot here.
 
-Level 1 — BreakOut
+
+# Screenshots
+
+# Level 1 — BreakOut
 
 <img width="600" height="400" alt="Screenshot (205)" src="https://github.com/user-attachments/assets/78ca1f15-58f8-451c-9b27-a49e54187f87" />
 
 
 
 
-Level 2 — The Hidden File
+# Level 2 — The Hidden File
 
 <img width="600" height="400" alt="Screenshot (194)" src="https://github.com/user-attachments/assets/2c5da11c-945f-4923-a10c-54ddff24b02a" />
 
 
 
 
-Level 3 — Final Exposure
+# Level 3 — Final Exposure
 
 
 <img width="600" height="400" alt="Screenshot (203)" src="https://github.com/user-attachments/assets/f45d6181-658a-4136-b9ba-9f481dc03786" />
@@ -294,23 +299,23 @@ Level 3 — Final Exposure
 
 
 
-Ending
+# Ending
 
 <img width="600" height="400" alt="temple5" src="https://github.com/user-attachments/assets/5c7f206e-6d8c-4d66-8ae1-a8ae2e2fd9b9" />
 
 
 
-YouTube Link
+# YouTube Link
 
 The Last Escape — Gameplay / Project Video
 
-Project Report
+# Project Report
 
 [Project Report.docx](https://github.com/user-attachments/files/32688222/Project.Report.docx)
 
 
 
-Conclusion
+# Conclusion
 
 The Last Escape combines different gameplay mechanics such as puzzles, stealth, combat, shooting, evidence collection, and runner-style challenges into one 2D game.
 
