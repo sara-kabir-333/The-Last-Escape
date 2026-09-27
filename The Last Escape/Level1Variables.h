@@ -57,19 +57,19 @@ bool moveRight = true;
 int guardFrame = 0;
 int guardAnimCounter = 0;
 
-const int L1_GUARD_W = 85;    
-const int L1_GUARD_H = 115;   
+const int L1_GUARD_W = 85;
+const int L1_GUARD_H = 115;
 const int L1_PLAYER_RUN_W = 105;
 const int L1_PLAYER_RUN_H = 165;
-const int L1_PLAYER_STAND_W = 105;  
-const int L1_PLAYER_STAND_H = 120;  
+const int L1_PLAYER_STAND_W = 105;
+const int L1_PLAYER_STAND_H = 120;
 
-const int L1_CAUGHT_GUARD_W = 85;    
-const int L1_CAUGHT_GUARD_H = 115;   
-const int L1_CAUGHT_PLAYER_W = 105;  
-const int L1_CAUGHT_PLAYER_H = 130;  
-const int L1_CAUGHT_GUARD_Y = 282;   
-const int L1_CAUGHT_PLAYER_Y = 125;  
+const int L1_CAUGHT_GUARD_W = 85;
+const int L1_CAUGHT_GUARD_H = 115;
+const int L1_CAUGHT_PLAYER_W = 105;
+const int L1_CAUGHT_PLAYER_H = 130;
+const int L1_CAUGHT_GUARD_Y = 282;
+const int L1_CAUGHT_PLAYER_Y = 125;
 
 const int L1_QUESTION_SECONDS = 5;
 
@@ -132,6 +132,33 @@ int displayTimer = 0;
 
 int switchSequence[5] = { 0 };
 int switchCurrentInput = 0;
+
+// switchSlotState[i] describes what image should be shown at slot i of the
+// CCTV switch puzzle: 0 = unanswered (page1.png), 1 = correctly answered ON
+// (on3.png), 2 = correctly answered OFF (off3.png), 3 = wrong answer where the
+// correct value was ON (on4.png), 4 = wrong answer where the correct value
+// was OFF (off4.png).
+int switchSlotState[5] = { 0, 0, 0, 0, 0 };
+
+int on3Img = 0;
+int off3Img = 0;
+int on4Img = 0;
+int off4Img = 0;
+int page1Img = 0;
+
+// --- 3-digit patrol-code puzzle display (gameState 60) ---
+// A single page1.png (bigger than the switch puzzle's copies) is shown once,
+// with each correctly entered digit written on top of it in black. When a
+// wrong digit is entered, the expected digit at that slot is written in red
+// and held on screen briefly (puzzleWrongHold) before the "spotted" screen
+// takes over.
+bool puzzleWrongHold = false;
+int digitWrongHoldTimer = 0;
+
+const int NUM_PUZZLE_IMG_X = 300;
+const int NUM_PUZZLE_IMG_Y = 300;
+const int NUM_PUZZLE_IMG_W = 200;
+const int NUM_PUZZLE_IMG_H = 100;
 
 bool switchShowSequence = true;
 bool switchSolved = false;
@@ -216,10 +243,12 @@ void resetSwitchPuzzle();
 void startSwitchPuzzleLevel();
 void updateSequence();
 void createSequence();
+void drawSwitchSlots();
+void drawNumberPuzzleSlots();
 
-const int GAMESTATE_DODGE_NOTE = 500;       
+const int GAMESTATE_DODGE_NOTE = 500;
 
 const int GAMESTATE_LEVEL1_NOTE = 590;
 
-int dodgeIntroNoteImg = 0;     
-int introImg = 0;              
+int dodgeIntroNoteImg = 0;
+int introImg = 0;

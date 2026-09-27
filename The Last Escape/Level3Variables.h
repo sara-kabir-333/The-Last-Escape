@@ -1,12 +1,12 @@
 #pragma once
 
-int level3UnlockedBtn = 0; 
-int level3BgImg = 0;       
+int level3UnlockedBtn = 0;
+int level3BgImg = 0;
 const int GAMESTATE_LEVEL3_LOADING = 490;
 
-const int GAMESTATE_GUNCOLLECT_NOTE = 540;  
+const int GAMESTATE_GUNCOLLECT_NOTE = 540;
 
-int gunCollectImg = 0;         
+int gunCollectImg = 0;
 
 const int GAMESTATE_LEVEL3_FIGHT = 550;
 
@@ -24,7 +24,7 @@ int lv3HeroHealth = LV3_HERO_START_HEALTH;
 
 bool lv3IsAttacking = false;
 int lv3AttackCooldown = 0;
-int lv3HeroActionType = 1; 
+int lv3HeroActionType = 1;
 
 int lv3HeroWalkFrame = 0;
 int lv3HeroWalkAnimTimer = 0;
@@ -32,7 +32,7 @@ int lv3HeroWalkAnimTimer = 0;
 bool lv3HeroReachedGuard = false;
 
 int lv3ClickCooldownTimer = 0;
-const int LV3_CLICK_COOLDOWN = 20; 
+const int LV3_CLICK_COOLDOWN = 20;
 
 const int LV3_CENTER_X = 400;
 const int LV3_FIGHT_OVERLAP = 125;
@@ -68,8 +68,8 @@ int lv3GuardPunch2Id = 0;
 int lv3GunImageId = 0;
 int lv3NoteImg = 0;
 
-int lv3HeroLifeImg[5] = { 0, 0, 0, 0, 0 };  
-int lv3GuardLifeImg[4] = { 0, 0, 0, 0 };    
+int lv3HeroLifeImg[5] = { 0, 0, 0, 0, 0 };
+int lv3GuardLifeImg[4] = { 0, 0, 0, 0 };
 
 void lv3RestartGame();
 void lv3UpdateGame();
@@ -94,7 +94,7 @@ void gsHandleRightClick(int mx, int my);
 const int GS_SCREEN_W = 800;
 const int GS_SCREEN_H = 600;
 
-const int GS_MAX_MISS = 5;
+const int GS_MAX_MISS = 3;
 
 int gsPrisonerX = 100;
 int gsPrisonerY = 50;
@@ -107,20 +107,45 @@ int gsGroundY = 50;
 int gsJumpStrength = 24;
 int gsGravity = 1;
 
+const int GS_GANGSTER_BASE_Y = 50;
+
 int gsGangsterX = 580;
-int gsGangsterY = 50;
+int gsGangsterY = GS_GANGSTER_BASE_Y;
 int gsGangsterWidth = 160;
 int gsGangsterHeight = 200;
 
+// X and Y are stored per kill now, since each gangster (front/right/left
+// slot) dies at its own position.
 int gsDeadX1 = 0, gsDeadX2 = 0, gsDeadX3 = 0;
+int gsDeadY1 = 0, gsDeadY2 = 0, gsDeadY3 = 0;
 
-int gsCurrentGangster = 1; 
-int gsGangsterHits = 0;   
+int gsCurrentGangster = 1;
+int gsGangsterHits = 0;
 int gsGangsterShootCounter = 0;
 
 int gsBgImg = 0, gsWpImg = 0, gsPrisonerImg = 0, gsGangsterImg = 0, gsPbImg = 0, gsGbImg = 0;
-int gsDeadImg1 = 0, gsDeadImg2 = 0, gsDeadImg3 = 0;
+
+// Single shared "dead" image, shown exactly where a gangster was standing
+// when it died (instead of separate dead1/dead2/dead3 art at offset spots).
+int gsDeadImg = 0;
+
 int gsH1Img = 0, gsG1Img = 0, gsD1Img = 0;
+
+// guard2.png and guard7.png now sit at the SAME X position as gangster.png
+// (gsGangsterX == 580), so all 3 images line up in one vertical column with
+// gangster.png in the middle: guard2.png (GS_GUARD_RIGHT) 12px above it, and
+// guard7.png (GS_GUARD_LEFT) 12px below it. When each one is promoted to
+// being the active fighter, gsGangsterX/gsGangsterY move to its exact spot
+// (see gsUpdateGame), so the fight - and its bullets/dead.png - happens
+// right there, still on the same vertical line.
+int gsGuardRightImg = 0;
+int gsGuardLeftImg = 0;
+
+const int GS_GUARD_RIGHT_X = 580;
+const int GS_GUARD_RIGHT_Y = GS_GANGSTER_BASE_Y + 20;
+const int GS_GUARD_LEFT_X = 580;
+const int GS_GUARD_LEFT_Y = GS_GANGSTER_BASE_Y - 20;
+
 #define GS_MAX_BULLETS 50
 
 struct GsBullet {
@@ -128,8 +153,8 @@ struct GsBullet {
 	bool active;
 };
 
-GsBullet gsPBullets[GS_MAX_BULLETS]; 
-GsBullet gsGBullets[GS_MAX_BULLETS]; 
+GsBullet gsPBullets[GS_MAX_BULLETS];
+GsBullet gsGBullets[GS_MAX_BULLETS];
 
 
 int gsScore = 0;
@@ -141,20 +166,20 @@ const int GAMESTATE_TRAFFIC_LOADING = 580;
 const int TR_SCREEN_W = 800;
 const int TR_SCREEN_H = 600;
 
-const int TR_TICK_MS = 25;           
-const int TR_SCROLL_SPEED = 11;       
-const int TR_BG_SCROLL_SPEED = 8;    
-const int TR_SIDE_MOVE_SPEED = 10;    
-const int TR_JUMP_SPEED = 10;        
-const int TR_JUMP_MAX_HEIGHT = 100;  
-const int TR_RUN_ANIM_TICKS = 6;     
+const int TR_TICK_MS = 25;
+const int TR_SCROLL_SPEED = 11;
+const int TR_BG_SCROLL_SPEED = 8;
+const int TR_SIDE_MOVE_SPEED = 10;
+const int TR_JUMP_SPEED = 10;
+const int TR_JUMP_MAX_HEIGHT = 100;
+const int TR_RUN_ANIM_TICKS = 6;
 
 int trBgY1 = 0;
 int trBgY2 = 600;
 
 int trStartImg = 0, trBgImg = 0, trWinImg1 = 0, trWinImg2 = 0, trWinImg3 = 0, trFinalBgImg = 0;
 int trNoteImg = 0;
-int trScoreImg = 0; 
+int trScoreImg = 0;
 int trRunImg1 = 0, trRunImg2 = 0;
 int trCarImgs[6] = { 0, 0, 0, 0, 0, 0 };
 int trTruckImgs[4] = { 0, 0, 0, 0 };

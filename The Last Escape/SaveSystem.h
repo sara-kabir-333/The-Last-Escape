@@ -7,7 +7,7 @@
 #include "Level2Variables.h"
 #include "Level3Variables.h"
 
-const int GAMESTATE_SAVE_CHOICE = 220;   
+const int GAMESTATE_SAVE_CHOICE = 220;
 
 #define SAVE_FILE_NAME "savegame.bin"
 #define SAVE_MAGIC 771305
@@ -21,13 +21,13 @@ struct SaveData {
 
 int saveChoiceHover = 0;
 
-int svPageImg = 0;          
-int svContinueImg = 0;      
-int svContinueHoverImg = 0; 
-int svNewGameImg = 0;       
-int svNewGameHoverImg = 0;  
-int svBackImg = 0;          
-int svBackHoverImg = 0;     
+int svPageImg = 0;
+int svContinueImg = 0;
+int svContinueHoverImg = 0;
+int svNewGameImg = 0;
+int svNewGameHoverImg = 0;
+int svBackImg = 0;
+int svBackHoverImg = 0;
 
 void svLoadImages() {
 	svPageImg = iLoadImage("Images/page.png");
@@ -149,7 +149,7 @@ void svStartNewGame() {
 	showSettingsPanel = false;
 
 	gameState = 300;
-	saveGame();   
+	saveGame();
 }
 
 bool svContinueGame() {
@@ -162,7 +162,7 @@ bool svContinueGame() {
 	int s = d.resumeState;
 
 	if (s == 50) {
-	
+
 		resetLevel1();
 		gameState = 50;
 		sit1Timer = 0;
@@ -210,9 +210,9 @@ const int SV_BOX_H = 250;
 const int SV_BTN_W = 170;
 const int SV_BTN_H = 50;
 const int SV_BTN_X = SV_BOX_X + (SV_BOX_W - SV_BTN_W) / 2;
-const int SV_BTN1_Y = 320;   
-const int SV_BTN2_Y = 250;   
-const int SV_BTN3_Y = 180;   
+const int SV_BTN1_Y = 320;
+const int SV_BTN2_Y = 250;
+const int SV_BTN3_Y = 180;
 
 int svButtonAt(int mx, int my) {
 	if (mx < SV_BTN_X || mx > SV_BTN_X + SV_BTN_W) return 0;

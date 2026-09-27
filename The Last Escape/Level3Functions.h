@@ -1,3 +1,4 @@
+// ===================== Level3Functions.h (only gsDraw() er state == -1 block changed) =====================
 #pragma once
 #include "Menu.h"
 #include "Level3Variables.h"
@@ -135,11 +136,9 @@ void lv3Draw() {
 			}
 		}
 
-		iSetColor(255, 255, 255);
-		iText(50, 560, "Hero Health:", GLUT_BITMAP_HELVETICA_18);
 		{
 			int heroLifeImg = lv3GetHeroLifeImg(lv3HeroHealth, LV3_HERO_START_HEALTH);
-			if (heroLifeImg > 0) iShowImage(170, 545, 170, 60, heroLifeImg);//width,height
+			if (heroLifeImg > 0) iShowImage(120, 545, 170, 60, heroLifeImg);
 		}
 
 		if (lv3Guard.isAlive) {
@@ -153,11 +152,9 @@ void lv3Draw() {
 				iShowImage(lv3Guard.x, lv3Guard.y, lv3Guard.width, lv3Guard.height, lv3GuardPunch2Id);
 			}
 
-			iSetColor(255, 255, 255);
-			iText(500, 560, "Guard Health:", GLUT_BITMAP_HELVETICA_18);
 			{
 				int guardLifeImg = lv3GetGuardLifeImg(lv3Guard.health, LV3_GUARD_START_HEALTH);
-				if (guardLifeImg > 0) iShowImage(630, 545, 170, 60, guardLifeImg);
+				if (guardLifeImg > 0) iShowImage(580, 545, 170, 60, guardLifeImg);
 			}
 		}
 
@@ -170,15 +167,23 @@ void lv3Draw() {
 		else {
 			iText(285, 55, "MOUSE CLICK = Punch/Kick", GLUT_BITMAP_HELVETICA_18);
 		}
+
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 	}
 	else if (lv3SubState == 1) {
-		iShowImage(30, -15, 740, 300, lv3NoteImg);
+		{
+			int noteW = 500, noteH = 250;
+			int noteX = (800 - noteW) / 2;
+			int noteY = 20;
 
-		iSetColor(0, 0, 0);
-		iText(290, 55, "GUARD DEFEATED!", GLUT_BITMAP_TIMES_ROMAN_24);
+			iShowImage(noteX, noteY, noteW, noteH, lv3NoteImg);
 
-		iSetColor(0, 0, 0);
-		iText(305, 30, "COLLECT THE GUN!", GLUT_BITMAP_HELVETICA_18);
+			iSetColor(0, 0, 0);
+			iText(noteX + 105, noteY + 63, "GUARD DEFEATED!", GLUT_BITMAP_TIMES_ROMAN_24);
+
+			iSetColor(0, 0, 0);
+			iText(noteX + 120, noteY + 40, "COLLECT THE GUN!", GLUT_BITMAP_HELVETICA_18);
+		}
 
 		iShowImage(330, 200, 180, 100, lv3GunImageId);
 
@@ -192,6 +197,8 @@ void lv3Draw() {
 			iLine(410 + offset, 290, 400 + offset, 305);
 			iLine(410 + offset, 290, 420 + offset, 305);
 		}
+
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 	}
 	else if (lv3SubState == 2) {
 		if (lv3HeroWalkFrame == 0) {
@@ -203,16 +210,25 @@ void lv3Draw() {
 		else {
 			iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroAnim3Id);
 		}
+
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 	}
 	else if (lv3SubState == 3) {
 		iShowImage(lv3HeroX, lv3HeroY, lv3HeroWidth, lv3HeroHeight, lv3HeroStandId);
 
-		iShowImage(30, -15, 740, 300, lv3NoteImg);
-		iSetColor(0, 0, 0);
-		iText(280, 55, "YOU REACHED THE DOOR!", GLUT_BITMAP_HELVETICA_18);
-		iText(240, 30, "3 More Gangsters Are Waiting Outside...", GLUT_BITMAP_HELVETICA_18);
+		{
+			int noteW = 500, noteH = 250;
+			int noteX = (800 - noteW) / 2;
+			int noteY = 20;
 
-		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+			iShowImage(noteX, noteY, noteW, noteH, lv3NoteImg);
+			iSetColor(0, 0, 0);
+			iText(noteX + 110, noteY + 63, "YOU REACHED THE DOOR!", GLUT_BITMAP_HELVETICA_18);
+			iText(noteX + 60, noteY + 40, "2 More Gangsters Are Waiting Outside...", GLUT_BITMAP_HELVETICA_18);
+		}
+
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
+		if (nextImg > 0) iShowImage(650, 50, 80, 32, nextImg);
 	}
 }
 
@@ -265,9 +281,13 @@ void gsResetGame() {
 	gsCurrentGangster = 1;
 	gsPrisonerX = 100;
 	gsGangsterX = 580;
+	gsGangsterY = GS_GANGSTER_BASE_Y;
 	gsDeadX1 = 0;
 	gsDeadX2 = 0;
 	gsDeadX3 = 0;
+	gsDeadY1 = 0;
+	gsDeadY2 = 0;
+	gsDeadY3 = 0;
 	gsPrisonerY = gsGroundY;
 	gsPrisonerVelY = 0;
 	gsIsJumping = false;
@@ -313,7 +333,7 @@ void gsUpdateGame() {
 				gsPBullets[i].active = false;
 			}
 
-			if (gsCurrentGangster <= 3 &&
+			if (gsCurrentGangster <= 2 &&
 				gsPBullets[i].x + 30 >= gsGangsterX && gsPBullets[i].x <= gsGangsterX + gsGangsterWidth &&
 				gsPBullets[i].y + 15 >= gsGangsterY && gsPBullets[i].y <= gsGangsterY + gsGangsterHeight) {
 
@@ -322,15 +342,20 @@ void gsUpdateGame() {
 				gsScore++;
 
 				if (gsGangsterHits >= 10) {
-					if (gsCurrentGangster == 1) gsDeadX1 = gsGangsterX;
-					else if (gsCurrentGangster == 2) gsDeadX2 = gsGangsterX;
-					else if (gsCurrentGangster == 3) gsDeadX3 = gsGangsterX;
+					if (gsCurrentGangster == 1) {
+						gsDeadX1 = gsGangsterX;
+						gsDeadY1 = gsGangsterY;
+					}
 
 					gsCurrentGangster++;
 					gsGangsterHits = 0;
-					gsGangsterX = 580;
 
-					if (gsCurrentGangster > 3) {
+					if (gsCurrentGangster == 2) {
+						gsGangsterX = GS_GUARD_RIGHT_X;
+						gsGangsterY = GS_GUARD_RIGHT_Y;
+					}
+
+					if (gsCurrentGangster > 2) {
 						gsState = 1;
 						level3Completed = true;
 					}
@@ -363,16 +388,22 @@ void gsUpdateGame() {
 
 void gsDraw() {
 	// 1. Instruction Screen State
+	// FIX: ekhon note.png (imgnote) use hocche, r text-er cordinate
+	// traffic runner-er intro note-er moto (noteX/noteY based) kore deya holo.
 	if (gsState == -1) {
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
-		iShowImage(20, 50, 760, 140, gsWpImg);
+
+		int noteW = 500, noteH = 250;
+		int noteX = (GS_SCREEN_W - noteW) / 2;
+		int noteY = 20;
+		if (imgnote > 0) iShowImage(noteX, noteY, noteW, noteH, imgnote);
 
 		iSetColor(0, 0, 0);
-		iText(220, 95, "Prisoner has to fight 3 gangsters sequentially!Left", GLUT_BITMAP_HELVETICA_18);
-		iText(220, 75, "Click to Shoot | Right-Click to Jump!", GLUT_BITMAP_HELVETICA_18);
+		iText(noteX + 35, noteY + 63, "Prisoner has to fight 2 gangsters sequentially!Left", GLUT_BITMAP_HELVETICA_18);
+		iText(noteX + 100, noteY + 40, "Click to Shoot | Right-Click to Jump!", GLUT_BITMAP_HELVETICA_18);
 
-		iShowImage(50, 50, 100, 40, backImg);
-		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+		iShowImage(50, 50, 80, 32, backImg);
+		if (nextImg > 0) iShowImage(650, 50, 80, 32, nextImg);
 		return;
 	}
 
@@ -380,19 +411,16 @@ void gsDraw() {
 	if (gsState == 1) {
 		iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 
-		// Draw all 3 defeated gangsters on screen
-		if (gsDeadX1 > 0) iShowImage(gsDeadX1 - 100, gsGangsterY + 50, gsGangsterWidth, gsGangsterHeight, gsDeadImg1);
-		if (gsDeadX2 > 0) iShowImage(gsDeadX2 - 130, gsGangsterY - 60, gsGangsterWidth, gsGangsterHeight, gsDeadImg2);
-		if (gsDeadX3 > 0) iShowImage(gsDeadX3 - 160, gsGangsterY - 70, gsGangsterWidth, gsGangsterHeight, gsDeadImg3);
+		if (gsDeadX1 > 0) iShowImage(gsDeadX1, gsDeadY1, gsGangsterWidth, gsGangsterHeight, gsDeadImg);
 
-		// Draw Prisoner standing victorious
 		iShowImage(gsPrisonerX, gsPrisonerY, gsPrisonerWidth, gsPrisonerHeight, gsPrisonerImg);
 
-		// Draw Win Banner over the scene
 		iShowImage(20, 50, 760, 140, gsWpImg);
 		iSetColor(0, 0, 0);
 		iText(220, 95, "YOU WIN! All Gangsters Defeated!", GLUT_BITMAP_TIMES_ROMAN_24);
 		iText(245, 75, " Click to Continue", GLUT_BITMAP_HELVETICA_18);
+
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 		return;
 	}
 
@@ -405,27 +433,25 @@ void gsDraw() {
 		iText(220, 95, "GAME OVER", GLUT_BITMAP_TIMES_ROMAN_24);
 		iText(220, 75, "Click anywhere with Mouse to Restart", GLUT_BITMAP_HELVETICA_18);
 
-		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(50, 50, 80, 32, backImg);
 		return;
 	}
 
 	// 4. Active Gameplay Screen
 	iShowImage(0, 0, GS_SCREEN_W, GS_SCREEN_H, gsBgImg);
 
-	// Draw defeated gangsters 1 & 2 as you defeat them during gameplay
 	if (gsCurrentGangster > 1) {
-		iShowImage(gsDeadX1 - 100, gsGangsterY + 50, gsGangsterWidth, gsGangsterHeight, gsDeadImg1);
-	}
-	if (gsCurrentGangster > 2) {
-		iShowImage(gsDeadX2 - 130, gsGangsterY - 60, gsGangsterWidth, gsGangsterHeight, gsDeadImg2);
+		iShowImage(gsDeadX1, gsDeadY1, gsGangsterWidth, gsGangsterHeight, gsDeadImg);
 	}
 
-	// Draw active gangster
-	if (gsCurrentGangster <= 3 && gsState == 0) {
+	if (gsCurrentGangster == 1) {
+		if (gsGuardRightImg > 0) iShowImage(GS_GUARD_RIGHT_X, GS_GUARD_RIGHT_Y, gsGangsterWidth, gsGangsterHeight, gsGuardRightImg);
+	}
+
+	if (gsCurrentGangster <= 2 && gsState == 0) {
 		iShowImage(gsGangsterX, gsGangsterY, gsGangsterWidth, gsGangsterHeight, gsGangsterImg);
 	}
 
-	// Draw Prisoner
 	iShowImage(gsPrisonerX, gsPrisonerY, gsPrisonerWidth, gsPrisonerHeight, gsPrisonerImg);
 
 	for (int i = 0; i < GS_MAX_BULLETS; i++) {
@@ -446,21 +472,21 @@ void gsDraw() {
 
 	char gsScoreStr[20], gsMissStr[20], gsBossStr[20];
 	sprintf(gsScoreStr, "%d / 10", gsGangsterHits);
-	sprintf(gsBossStr, "%d / 3", gsCurrentGangster);
+	sprintf(gsBossStr, "%d / 2", gsCurrentGangster);
 	sprintf(gsMissStr, "%d / %d", gsMiss, GS_MAX_MISS);
 
 	iSetColor(255, 255, 255);
 	iText(685, 558, gsScoreStr, GLUT_BITMAP_HELVETICA_12);
 	iText(685, 508, gsBossStr, GLUT_BITMAP_HELVETICA_12);
 	iText(685, 458, gsMissStr, GLUT_BITMAP_HELVETICA_12);
+
+	if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 }
 
 void gsMouseMove(int mx, int my)
 {
-	// Update prisoner horizontal position centered on mouse X
 	gsPrisonerX = mx - gsPrisonerWidth / 2;
 
-	// Restrict prisoner to the left half of the screen
 	if (gsPrisonerX < 0)
 	{
 		gsPrisonerX = 0;
@@ -469,8 +495,6 @@ void gsMouseMove(int mx, int my)
 	{
 		gsPrisonerX = GS_SCREEN_W / 2 - gsPrisonerWidth;
 	}
-
-	//  gsGangsterX is untouched, so the gangster stays completely stationary!
 };
 
 
@@ -606,6 +630,7 @@ void trDraw() {
 		iText(noteX + 35, noteY + 63, "Press Right/Left Arrow to move,Space/Up to jump", GLUT_BITMAP_HELVETICA_18);
 		iText(noteX + 100, noteY + 40, "Click anywhere to start the game", GLUT_BITMAP_HELVETICA_18);
 
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 		return;
 	}
 
@@ -621,18 +646,22 @@ void trDraw() {
 		iText(noteX + 190, noteY + 63, "YOU WIN!", GLUT_BITMAP_TIMES_ROMAN_24);
 		iText(noteX + 110, noteY + 40, "Click anywhere to continue...", GLUT_BITMAP_HELVETICA_18);
 
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 		return;
 	}
 	else if (trWinState == 2) {
 		iShowImage(0, 0, TR_SCREEN_W, TR_SCREEN_H, trWinImg2);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 		return;
 	}
 	else if (trWinState == 3) {
 		iShowImage(0, 0, TR_SCREEN_W, TR_SCREEN_H, trWinImg3);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 		return;
 	}
 	else if (trWinState == 4) {
 		iShowImage(0, 0, TR_SCREEN_W, TR_SCREEN_H, trFinalBgImg);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 		return;
 	}
 
@@ -688,6 +717,8 @@ void trDraw() {
 		iText(noteX + 175, noteY + 63, "GAME OVER!", GLUT_BITMAP_TIMES_ROMAN_24);
 		iText(noteX + 145, noteY + 40, "Press 'R' to Restart", GLUT_BITMAP_HELVETICA_18);
 	}
+
+	if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 }
 
 void trSpawnTrafficCluster(int startY) {
@@ -1006,7 +1037,7 @@ void trFixedUpdate() {
 	}
 	else if (trWinState == 3) {
 		trWinTimer += TR_TICK_MS;
-		if (trWinTimer >= 7000) {
+		if (trWinTimer >= 4000) {
 			trWinState = 4;
 			trWinTimer = 0;
 
@@ -1065,7 +1096,6 @@ void trFixedUpdate() {
 		}
 	}
 
-	// CHANGED: road scrolls faster (was 6).
 	trBgY1 -= TR_BG_SCROLL_SPEED;
 	trBgY2 -= TR_BG_SCROLL_SPEED;
 
@@ -1096,9 +1126,10 @@ void trFixedUpdate() {
 
 	static int trAnimCounter = 0;
 	trAnimCounter++;
-	if (trAnimCounter >= TR_RUN_ANIM_TICKS)
+	if (trAnimCounter >= TR_RUN_ANIM_TICKS) {
 		trCurrentRunFrame = 1 - trCurrentRunFrame;
-	trAnimCounter = 0;
+		trAnimCounter = 0;
+	}
 }
 
 

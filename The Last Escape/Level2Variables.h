@@ -72,6 +72,10 @@ int investTableImg = 0;
 int investPieceImg[6] = { 0, 0, 0, 0, 0, 0 };
 int investNoteImg = 0;
 
+// Background image used behind the "pieces found" counter (styled the same
+// way the score.png counter is used in the traffic-runner / vault-runner games).
+int investPieceCountImg = 0;
+
 void resetInvestPuzzle();
 void checkInvestSearchLocation(int mx, int my);
 void checkInvestPiecePlacement(int pieceIndex);
@@ -90,8 +94,8 @@ int vrVault2Img = 0;
 int vrVault3Img = 0;
 int vrNoteImg = 0;
 
-const int VR_RUNNER_W = 115;  
-const int VR_RUNNER_H = 125;  
+const int VR_RUNNER_W = 115;
+const int VR_RUNNER_H = 125;
 
 int vrRunnerX = 50;
 int vrRunnerY = 200;
@@ -103,11 +107,11 @@ int vrFallCounter = 0;
 
 int vrBoxX = 800;
 int vrBoxY = 200;
-int vrBoxWidth = 65;    
-int vrBoxHeight = 58;   
+int vrBoxWidth = 65;
+int vrBoxHeight = 58;
 int vrGameSpeed = 4;
 
-const int VR_RUNNER_HITBOX_INSET_X = 32; 
+const int VR_RUNNER_HITBOX_INSET_X = 32;
 const int VR_RUNNER_HITBOX_INSET_Y = 19;
 const int VR_OBSTACLE_HITBOX_INSET = 8;
 
@@ -141,17 +145,17 @@ const int GAMESTATE_VR_WIN_LOADING = 480;
 
 bool level2Completed = false;
 
-int vrWinBgImg = 0; 
+int vrWinBgImg = 0;
 
 void vrResetGame();
 void vrFixedUpdate();
 void vrDraw();
 void vrHandleMouseDown(int mx, int my);
 
-const int GAMESTATE_LEVEL2_NOTE = 510;      
-const int GAMESTATE_USB_NOTE = 520;         
-const int GAMESTATE_INVEST_NOTE = 530;      
+const int GAMESTATE_LEVEL2_NOTE = 510;
+const int GAMESTATE_USB_NOTE = 520;
+const int GAMESTATE_INVEST_NOTE = 530;
 
-int level2NoteImg = 0;         
-int usbNoteImg = 0;           
-int evidenceRoomNoteImg = 0;   
+int level2NoteImg = 0;
+int usbNoteImg = 0;
+int evidenceRoomNoteImg = 0;

@@ -1,4 +1,5 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+﻿// ===================== Main.cpp =====================
+#define _CRT_SECURE_NO_WARNINGS
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -35,7 +36,7 @@ bool isNoteScreenState(int gs) {
 }
 
 bool isSettingsVisibleState(int gs) {
-	
+
 	return !isLoadingState(gs);
 }
 
@@ -196,12 +197,14 @@ void fixedUpdate() {
 
 			if (pressed != -1) {
 				if (pressed == switchSequence[switchCurrentInput]) {
+					switchSlotState[switchCurrentInput] = (switchSequence[switchCurrentInput] == 1) ? 1 : 2;
 					switchCurrentInput++;
 					if (switchCurrentInput == 5) {
 						switchSolved = true;
 					}
 				}
 				else {
+					switchSlotState[switchCurrentInput] = (switchSequence[switchCurrentInput] == 1) ? 3 : 4;
 					switchWrong = true;
 				}
 			}
@@ -256,6 +259,8 @@ void fixedUpdate() {
 					current = 0;
 					wrong = false;
 					solved = false;
+					puzzleWrongHold = false;
+					digitWrongHoldTimer = 0;
 					currentPuzzle = rand() % 5;
 					current = 0;
 					questionStartTime = clock();
@@ -275,7 +280,19 @@ void fixedUpdate() {
 			}
 		}
 
-		if (puzzleScreen && !showQuestion && !solved)
+		if (puzzleWrongHold)
+		{
+			// Hold the red "wrong digit" feedback on screen briefly before
+			// switching to the "you were spotted" screen.
+			digitWrongHoldTimer--;
+			if (digitWrongHoldTimer <= 0)
+			{
+				puzzleWrongHold = false;
+				wrong = true;
+				puzzleScreen = false;
+			}
+		}
+		else if (puzzleScreen && !showQuestion && !solved)
 		{
 			char pressed = -1;
 
@@ -311,8 +328,8 @@ void fixedUpdate() {
 				}
 				else
 				{
-					wrong = true;
-					puzzleScreen = false;
+					puzzleWrongHold = true;
+					digitWrongHoldTimer = 40;
 					digitReleased = true;
 				}
 			}
@@ -439,13 +456,13 @@ void iDraw()
 
 		iShowImage(0, 0, 800, 600, currentAbout);
 
-		iShowImage(50, 50, 100, 40, backImg);
-		if (gameState != 204) iShowImage(650, 50, 100, 40, nextImg);
+		iShowImage(50, 50, 80, 32, backImg);
+		if (gameState != 204) iShowImage(650, 50, 80, 32, nextImg);
 	}
 	else if (gameState == 210)
 	{
 		if (creditnoteImg > 0) iShowImage(0, 0, 800, 600, creditnoteImg);
-		if (backImg > 0) iShowImage(50, 50, 100, 40, backImg);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 	}
 	else if (gameState == GAMESTATE_SAVE_CHOICE)
 	{
@@ -469,7 +486,7 @@ void iDraw()
 		else {
 			iShowImage(492, 115, 175, 342, level3Btn);
 		}
-		iShowImage(68, 26, 120, 53, backImg);
+		iShowImage(50, 50, 80, 32, backImg);
 	}
 	else if (gameState == GAMESTATE_LEVEL1_NOTE)
 	{
@@ -479,7 +496,8 @@ void iDraw()
 		if (alarmMapImg > 0) iShowImage(530, 333, 200, 228, alarmMapImg);
 
 		if (introImg > 0) iShowImage(150, 150, 500, 300, introImg);
-		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
+		if (nextImg > 0) iShowImage(650, 50, 80, 32, nextImg);
 	}
 	else if (gameState == 350)
 	{
@@ -493,7 +511,7 @@ void iDraw()
 		if (cctvMapImg > 0) iShowImage(62, 335, 200, 228, cctvMapImg);
 		if (alarmMapImg > 0) iShowImage(530, 333, 200, 228, alarmMapImg);
 
-		if (backImg > 0) iShowImage(50, 50, 100, 40, backImg);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 	}
 	else if (gameState == 400)
 	{
@@ -510,7 +528,7 @@ void iDraw()
 		else if (charFrame == 2) currentAvatar = playerThree;
 
 		iShowImage(charX, charY, 130, 200, currentAvatar);
-		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(50, 50, 80, 32, backImg);
 
 		if (imgnote > 0) {
 			iShowImage(150, 20, 500, 200, imgnote);
@@ -531,7 +549,7 @@ void iDraw()
 		else if (charFrame == 2) currentAvatar = playerThree;
 
 		iShowImage(charX, charY, 140, 220, currentAvatar);
-		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(50, 50, 80, 32, backImg);
 
 		if (imgnote > 0) {
 			iShowImage(150, 20, 500, 200, imgnote);
@@ -542,11 +560,8 @@ void iDraw()
 			iText(255, 60, "MEMORIZE PATTERN........... ", GLUT_BITMAP_HELVETICA_18);
 
 			for (int i = 0; i < 5; i++) {
-				char text[10];
-				sprintf(text, "[%s]", switchSequence[i] == 1 ? "ON" : "OFF");
-				if (switchSequence[i] == 1) iSetColor(0, 150, 0);
-				else iSetColor(200, 0, 0);
-				iText(220 + (i * 75), 450, text, GLUT_BITMAP_HELVETICA_18);
+				int seqImg = (switchSequence[i] == 1) ? on3Img : off3Img;
+				if (seqImg > 0) iShowImage(200 + (i * 75), 425, 70, 40, seqImg);
 			}
 		}
 		else if (switchWrong) {
@@ -554,55 +569,50 @@ void iDraw()
 			iText(245, 65, "WRONG PATTERN! ALARM TRIGGERED", GLUT_BITMAP_HELVETICA_18);
 			iSetColor(0, 0, 0);
 			iText(245, 50, "PRESS SPACE OR R TO RETRY", GLUT_BITMAP_HELVETICA_18);
+
+			drawSwitchSlots();
 		}
 		else if (switchSolved) {
 			iSetColor(0, 0, 0);
 			iText(250, 65, "CCTV CAMERA DISABLED!", GLUT_BITMAP_HELVETICA_18);
 			iSetColor(0, 0, 0);
 			iText(250, 50, "ESCAPE NOW!", GLUT_BITMAP_HELVETICA_18);
+
+			drawSwitchSlots();
 		}
 		else {
 			iSetColor(0, 0, 0);
 			iText(250, 60, "PRESS O FOR 'ON' / F FOR 'OFF'", GLUT_BITMAP_HELVETICA_18);
 
-			for (int i = 0; i < 5; i++) {
-				if (i < switchCurrentInput) {
-					iSetColor(0, 180, 0);
-					iText(230 + (i * 75), 450, "[OK]", GLUT_BITMAP_HELVETICA_18);
-				}
-				else {
-					iSetColor(100, 100, 100);
-					iText(230 + (i * 75), 450, "[ ? ]", GLUT_BITMAP_HELVETICA_18);
-				}
-			}
+			drawSwitchSlots();
 		}
 	}
 	else if (gameState == 50) {
 		if (imgsit1 > 0) iShowImage(0, 0, 800, 600, imgsit1);
-		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(50, 50, 80, 32, backImg);
 	}
 	else if (gameState == 51) {
 		if (imgsit2 > 0) iShowImage(0, 0, 800, 600, imgsit2);
 		if (imgnote > 0) iShowImage(150, 20, 500, 200, imgnote);
-		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(50, 50, 80, 32, backImg);
 		iSetColor(0, 0, 0);
 		iText(300, 60, "CLICK ANYWHERE TO START", GLUT_BITMAP_HELVETICA_18);
 	}
 	else if (gameState == 52) {
 		if (imgBackground > 0) iShowImage(0, 0, 800, 600, imgBackground);
 		if (imgnote > 0) iShowImage(150, 20, 500, 200, imgnote);
-		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(50, 50, 80, 32, backImg);
 		iSetColor(0, 0, 0);
 		iText(250, 60, "click anywhere to break the lock");
 	}
 	else if (gameState == 53 || gameState == 54) {
 		if (imgLockScreen > 0) iShowImage(0, 0, 800, 600, imgLockScreen);
 		if (imgnote > 0) iShowImage(150, 20, 500, 200, imgnote);
-		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(50, 50, 80, 32, backImg);
 
 		iSetColor(0, 0, 0);
 		if (memoryWrong) {
-			
+
 			iSetColor(0, 0, 0);
 			iText(230, 65, "WRONG SEQUENCE!", GLUT_BITMAP_HELVETICA_18);
 			iSetColor(0, 0, 0);
@@ -648,10 +658,10 @@ void iDraw()
 	else if (gameState == 55) {
 		if (imgLockScreen > 0) iShowImage(0, 0, 800, 600, imgLockScreen);
 		if (imgnote > 0) iShowImage(150, 20, 500, 200, imgnote);
-		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(50, 50, 80, 32, backImg);
 
 		if (playerImg > 0) iShowImage(530, 180, 140, 180, playerImg);
-		if (nextImg > 0) iShowImage(600, 50, 100, 40, nextImg);
+		if (nextImg > 0) iShowImage(600, 50, 80, 32, nextImg);
 
 		iSetColor(0, 0, 0);
 		iText(250, 60, "lock unlocked! click next");
@@ -659,7 +669,7 @@ void iDraw()
 	else if (gameState == 60)
 	{
 		iShowImage(0, 0, 800, 600, bgOne);
-		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(50, 50, 80, 32, backImg);
 
 		if (wrong)
 		{
@@ -713,12 +723,19 @@ void iDraw()
 
 			if (showWpTwo && !puzzleScreen)
 			{
-				iShowImage(30, 60, 740, 120, wpTwo);
+				int noteW = 500, noteH = 250;
+				int noteX = (800 - noteW) / 2;
+				int noteY = 20;
+
+				if (imgnote > 0) iShowImage(noteX, noteY, noteW, noteH, imgnote);
+
+				iSetColor(0, 0, 0);
+				iText(noteX + 35, noteY + 60, "PRESS S TO START NUMBER PUZZLE", GLUT_BITMAP_HELVETICA_18);
 			}
 
 			if (playerEscaped)
 			{
-				if (nextImg > 0) iShowImage(650, 30, 100, 40, nextImg);
+				if (nextImg > 0) iShowImage(650, 30, 80, 32, nextImg);
 			}
 
 			if (puzzleScreen)
@@ -746,6 +763,8 @@ void iDraw()
 					{
 						iText(260, 60, "FIND THE 3 DIGIT CODE", GLUT_BITMAP_HELVETICA_18);
 					}
+
+					drawNumberPuzzleSlots();
 				}
 			}
 		}
@@ -770,7 +789,7 @@ void iDraw()
 		if (vaultUnlocked && vaultImg > 0) {
 			iShowImage(154, 57, 204, 193, vaultImg);
 		}
-		if (backImg > 0) iShowImage(50, 50, 100, 40, backImg);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 	}
 	else if (gameState == GAMESTATE_INVESTIGATION)
 	{
@@ -784,33 +803,38 @@ void iDraw()
 	{
 		if (dodgeBgImg > 0) iShowImage(0, 0, 800, 600, dodgeBgImg);
 		if (dodgeIntroNoteImg > 0) iShowImage(130, 150, 500, 280, dodgeIntroNoteImg);
-		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
+		if (nextImg > 0) iShowImage(650, 50, 80, 32, nextImg);
 	}
 	else if (gameState == GAMESTATE_LEVEL2_NOTE)
 	{
 		if (level2MapImg > 0) iShowImage(0, 0, 800, 600, level2MapImg);
 		if (level2NoteImg > 0) iShowImage(150, 150, 500, 200, level2NoteImg);
-		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
+		if (nextImg > 0) iShowImage(650, 50, 80, 32, nextImg);
 	}
 	else if (gameState == GAMESTATE_USB_NOTE)
 	{
 		if (usbImgBg > 0) iShowImage(0, 0, 800, 600, usbImgBg);
 		else iShowImage(0, 0, 800, 600, level2Bg);
 		if (usbNoteImg > 0) iShowImage(50, 200, 700, 180, usbNoteImg);
-		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
+		if (nextImg > 0) iShowImage(650, 50, 80, 32, nextImg);
 	}
 	else if (gameState == GAMESTATE_INVEST_NOTE)
 	{
 		if (investRoomImg > 0) iShowImage(0, 0, 800, 600, investRoomImg);
 		if (evidenceRoomNoteImg > 0) iShowImage(150, 150, 480, 280, evidenceRoomNoteImg);
-		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
+		if (nextImg > 0) iShowImage(650, 50, 80, 32, nextImg);
 	}
 	else if (gameState == GAMESTATE_GUNCOLLECT_NOTE)
 	{
 		if (lv3BgImageId > 0) iShowImage(0, 0, 800, 600, lv3BgImageId);
 		else if (level3BgImg > 0) iShowImage(0, 0, 800, 600, level3BgImg);
 		if (gunCollectImg > 0) iShowImage(150, 150, 480, 280, gunCollectImg);
-		if (nextImg > 0) iShowImage(650, 50, 100, 40, nextImg);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
+		if (nextImg > 0) iShowImage(650, 50, 80, 32, nextImg);
 	}
 	else if (gameState == GAMESTATE_LEVEL3_FIGHT)
 	{
@@ -936,8 +960,15 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
+		// FIX: back button ekhane check hoto na, khali next check hoto -
+		// ekhon back e click korle 300 (level select) e ferot jabe.
 		if (gameState == GAMESTATE_LEVEL1_NOTE)
 		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 300;
+				return;
+			}
 			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
 			{
 				gameState = 350;
@@ -945,8 +976,14 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
+		// FIX: back click korle 350 (level1 map) e ferot jabe.
 		if (gameState == GAMESTATE_DODGE_NOTE)
 		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 350;
+				return;
+			}
 			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
 			{
 				resetDodgeGame();
@@ -955,8 +992,14 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
+		// FIX: back click korle 300 (level select) e ferot jabe.
 		if (gameState == GAMESTATE_LEVEL2_NOTE)
 		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 300;
+				return;
+			}
 			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
 			{
 				gameState = GAMESTATE_LEVEL2_MAP;
@@ -964,8 +1007,14 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
+		// FIX: back click korle level2 map e ferot jabe.
 		if (gameState == GAMESTATE_USB_NOTE)
 		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = GAMESTATE_LEVEL2_MAP;
+				return;
+			}
 			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
 			{
 				gameState = 400;
@@ -974,8 +1023,14 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
+		// FIX: back click korle level2 map e ferot jabe.
 		if (gameState == GAMESTATE_INVEST_NOTE)
 		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = GAMESTATE_LEVEL2_MAP;
+				return;
+			}
 			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
 			{
 				resetInvestPuzzle();
@@ -984,8 +1039,14 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
+		// FIX: back click korle 300 (level select) e ferot jabe.
 		if (gameState == GAMESTATE_GUNCOLLECT_NOTE)
 		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 300;
+				return;
+			}
 			if (mx >= 650 && mx <= 750 && my >= 50 && my <= 90)
 			{
 				lv3RestartGame();
@@ -994,8 +1055,15 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
+		// FIX: back button click check add kora holo, na hole lv3HandleMouseDown
+		// e back kokhono handle hoto na.
 		if (gameState == GAMESTATE_LEVEL3_FIGHT)
 		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 300;
+				return;
+			}
 			lv3HandleMouseDown(mx, my);
 			return;
 		}
@@ -1011,8 +1079,15 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
+		// FIX: back button click check add kora holo, na hole trHandleMouseDown
+		// e back kokhono handle hoto na.
 		if (gameState == GAMESTATE_TRAFFIC)
 		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = 300;
+				return;
+			}
 			trHandleMouseDown(mx, my);
 			return;
 		}
@@ -1108,8 +1183,15 @@ void iMouse(int button, int state, int mx, int my)
 			return;
 		}
 
+		// FIX: back button click check add kora holo, na hole vrHandleMouseDown
+		// e back kokhono handle hoto na.
 		if (gameState == GAMESTATE_VAULT_RUNNER)
 		{
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
+			{
+				gameState = GAMESTATE_LEVEL2_MAP;
+				return;
+			}
 			vrHandleMouseDown(mx, my);
 			return;
 		}
@@ -1144,7 +1226,7 @@ void iMouse(int button, int state, int mx, int my)
 		}
 		else if (gameState == 300)
 		{
-			if (mx >= 68 && mx <= 188 && my >= 26 && my <= 79)
+			if (mx >= 50 && mx <= 150 && my >= 50 && my <= 90)
 			{
 				gameState = 100;
 			}
@@ -1209,7 +1291,7 @@ void iMouse(int button, int state, int mx, int my)
 			}
 			else if (mx >= 530 && mx <= 730 && my >= 333 && my <= 561)
 			{
-				if (switchPuzzleCompleted && cctvUnlocked && !level1Completed) {
+				if (switchPuzzleCompleted && cctvUnlocked) {
 					gameState = GAMESTATE_DODGE_NOTE;
 				}
 				return;
@@ -1373,12 +1455,14 @@ void iKeyboard(unsigned char key) {
 
 		if (pressed != -1) {
 			if (pressed == switchSequence[switchCurrentInput]) {
+				switchSlotState[switchCurrentInput] = (switchSequence[switchCurrentInput] == 1) ? 1 : 2;
 				switchCurrentInput++;
 				if (switchCurrentInput == 5) {
 					switchSolved = true;
 				}
 			}
 			else {
+				switchSlotState[switchCurrentInput] = (switchSequence[switchCurrentInput] == 1) ? 3 : 4;
 				switchWrong = true;
 			}
 		}
@@ -1417,9 +1501,8 @@ int main()
 
 	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
-
-	//mciSendString(TEXT("open \"audio2.mp3\" type mpegvideo alias bgm"), NULL, 0, NULL);
-	//mciSendString(TEXT("open \"mouse.mp3\" type mpegvideo alias clicksound"), NULL, 0, NULL);
+	mciSendString(TEXT("open \"audio2.mp3\" type mpegvideo alias bgm"), NULL, 0, NULL);
+	mciSendString(TEXT("open \"mouse.mp3\" type mpegvideo alias clicksound"), NULL, 0, NULL);
 
 	srand((unsigned)time(0));
 	atexit(saveGame);
@@ -1505,14 +1588,20 @@ int main()
 	que4 = iLoadImage("Images/que4.png");
 	que5 = iLoadImage("Images/que5.png");
 
+	on3Img = iLoadImage("Images/on3.png");
+	off3Img = iLoadImage("Images/off3.png");
+	on4Img = iLoadImage("Images/on4.png");
+	off4Img = iLoadImage("Images/off4.png");
+	page1Img = iLoadImage("Images/page1.png");
+
 	dodgeBgImg = iLoadImage("Images/fallingboxbg.png");
 	dodgeBoxImg = iLoadImage("Images/box.png");
 	dodgeNoteImg = iLoadImage("Images/note.png");
-	dodgeImgStand = iLoadImage("Images/stand.png");
-	dodgeImgLeft1 = iLoadImage("Images/left1.png");
-	dodgeImgLeft2 = iLoadImage("Images/left2.png");
-	dodgeImgRight1 = iLoadImage("Images/right1.png");
-	dodgeImgRight2 = iLoadImage("Images/right2.png");
+	dodgeImgStand = iLoadImage("Images/player1.png");
+	dodgeImgLeft1 = iLoadImage("Images/player2.png");
+	dodgeImgLeft2 = iLoadImage("Images/player3.png");
+	dodgeImgRight1 = iLoadImage("Images/player2.png");
+	dodgeImgRight2 = iLoadImage("Images/player3.png");
 	dodgeCaughtPlayerImg = iLoadImage("Images/caughtplayer.png");
 
 	timerImg = iLoadImage("Images/timer.png");
@@ -1522,10 +1611,9 @@ int main()
 	imgCommonRoute = iLoadImage("Images/common route.png");
 	imgCCTVBackground = iLoadImage("Images/cctv.png");
 
-
 	usbImgBg = iLoadImage("Images/usb room.png");
 	usbImgWp = iLoadImage("Images/wp.png");
-	
+
 	imgS1 = iLoadImage("Images/S1.png");
 	imgM1 = iLoadImage("Images/M1.png");
 
@@ -1554,6 +1642,8 @@ int main()
 	investPieceImg[4] = iLoadImage("Images/piece5.png");
 	investPieceImg[5] = iLoadImage("Images/piece6.png");
 
+	investPieceCountImg = iLoadImage("Images/piece.png");
+
 	vrVault1Img = iLoadImage("Images/vault1.png");
 	vrVault2Img = iLoadImage("Images/vault2.png");
 	vrVault3Img = iLoadImage("Images/vault3.png");
@@ -1573,9 +1663,9 @@ int main()
 	introImg = iLoadImage("Images/intro.png");
 
 	lv3BgImageId = iLoadImage("Images/insideprison.png");
-	lv3HeroStandId = iLoadImage("Images/player.png");
-	lv3HeroAnim2Id = iLoadImage("Images/player1.png");
-	lv3HeroAnim3Id = iLoadImage("Images/player2.png");
+	lv3HeroStandId = iLoadImage("Images/player1.png");
+	lv3HeroAnim2Id = iLoadImage("Images/player2.png");
+	lv3HeroAnim3Id = iLoadImage("Images/player3.png");
 	lv3HeroPunchId = iLoadImage("Images/maincharpunch.png");
 	lv3HeroKickId = iLoadImage("Images/maincharkick.png");
 	lv3GuardStId = iLoadImage("Images/guardst.png");
@@ -1601,13 +1691,14 @@ int main()
 	gsGangsterImg = iLoadImage("Images/gangster.png");
 	gsPbImg = iLoadImage("Images/pb.png");
 	gsGbImg = iLoadImage("Images/gb.png");
-	gsDeadImg1 = iLoadImage("Images/dead1.png");
-	gsDeadImg2 = iLoadImage("Images/dead2.png");
-	gsDeadImg3 = iLoadImage("Images/dead3.png");
+	gsDeadImg = iLoadImage("Images/dead.png");
 
 	gsH1Img = iLoadImage("Images/H1.png");
 	gsG1Img = iLoadImage("Images/G1.png");
 	gsD1Img = iLoadImage("Images/D1.png");
+
+	gsGuardRightImg = iLoadImage("Images/guard2.png");
+	gsGuardLeftImg = iLoadImage("Images/guard7.png");
 
 	for (int i = 0; i < GS_MAX_BULLETS; i++) {
 		gsPBullets[i].active = false;
@@ -1649,7 +1740,7 @@ int main()
 
 	iSetTimer(TR_TICK_MS, trFixedUpdate);
 	iSetTimer(2000, saveGame);
-	
+
 	iStart();
 	return 0;
 }

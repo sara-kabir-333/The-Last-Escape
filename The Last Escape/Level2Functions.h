@@ -61,10 +61,15 @@ void drawInvestPuzzle() {
 		iSetColor(0, 0, 0);
 		iText(220, 35, "Collect 6 torn pieces from the room", GLUT_BITMAP_HELVETICA_18);
 
+		// Piece counter now uses piece.png (same position/style as the
+		// score.png counter used in the traffic-runner / vault-runner games)
+		// instead of plain "Pieces Found: X/6" text.
+		if (investPieceCountImg > 0) iShowImage(560, 535, 220, 45, investPieceCountImg);
+
 		char counterText[50];
-		sprintf(counterText, "Pieces Found: %d/6", investPiecesFoundCount);
-		iSetColor(255, 255, 255);
-		iText(30, 560, counterText, GLUT_BITMAP_HELVETICA_18);
+		sprintf(counterText, "%d/6", investPiecesFoundCount);
+		iSetColor(255, 215, 0);
+		iText(700, 549, counterText, GLUT_BITMAP_HELVETICA_18);
 	}
 	else if (investStage == 2) {
 		if (investTableImg > 0) iShowImage(0, 0, 800, 600, investTableImg);
@@ -108,7 +113,7 @@ void drawInvestPuzzle() {
 		}
 	}
 
-	iShowImage(50, 50, 100, 40, backImg);
+	iShowImage(50, 50, 80, 32, backImg);
 }
 
 void handleInvestMouseDown(int mx, int my) {
@@ -314,6 +319,7 @@ void vrDraw() {
 		iSetColor(0, 0, 0);
 		iText(230, 65, "Click anywhere to disable the laser", GLUT_BITMAP_HELVETICA_18);
 		iText(255, 50, "Click to Jump - Avoid the Boxes!", GLUT_BITMAP_HELVETICA_18);
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 		return;
 	}
 
@@ -343,6 +349,7 @@ void vrDraw() {
 				}
 			}
 		}
+		if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 		return;
 	}
 
@@ -378,7 +385,7 @@ void vrDraw() {
 
 	iShowImage(560, 535, 220, 45, trScoreImg);
 
-	iSetColor(255, 215, 0); 
+	iSetColor(255, 215, 0);
 	char vrScoreStr[50];
 	sprintf(vrScoreStr, "%d", vrCoinScore);
 	iText(700, 549, vrScoreStr, GLUT_BITMAP_HELVETICA_18);
@@ -392,6 +399,8 @@ void vrDraw() {
 		iSetColor(0, 0, 0);
 		iText(305, 30, "CLICK TO RETRY", GLUT_BITMAP_HELVETICA_18);
 	}
+
+	if (backImg > 0) iShowImage(50, 50, 80, 32, backImg);
 }
 
 void vrHandleMouseDown(int mx, int my) {
@@ -656,7 +665,7 @@ void usbDrawGame() {
 		iText(noteX + 165, noteY + 40, "Press R to Retry", GLUT_BITMAP_HELVETICA_18);
 	}
 
-	iShowImage(50, 50, 100, 40, backImg);
+	iShowImage(50, 50, 80, 32, backImg);
 }
 
 void usbHandleMouseClick(int mx, int my) {

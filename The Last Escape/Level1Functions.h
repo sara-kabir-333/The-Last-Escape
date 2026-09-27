@@ -20,6 +20,8 @@ void resetLevel1() {
 	memoryWrong = false;
 	switchPuzzleCompleted = false;
 	cctvUnlocked = false;
+	puzzleWrongHold = false;
+	digitWrongHoldTimer = 0;
 }
 
 void generateSwitchSequence() {
@@ -38,7 +40,64 @@ void resetSwitchPuzzle() {
 	switchKeyReleased = true;
 	switchPlayerRunning = false;
 	targetX = -1;
+
+	for (int i = 0; i < 5; i++) {
+		switchSlotState[i] = 0;
+	}
+
 	generateSwitchSequence();
+}
+
+// Draws the 5 switch-puzzle indicator slots using on3/off3 (correct),
+// on4/off4 (wrong) or page1 (not answered yet) images, based on
+// switchSlotState[]. Position/size/spacing match the old text indicators.
+void drawSwitchSlots() {
+	for (int i = 0; i < 5; i++) {
+		int slotImg = page1Img;
+
+		if (switchSlotState[i] == 1) slotImg = on3Img;
+		else if (switchSlotState[i] == 2) slotImg = off3Img;
+		else if (switchSlotState[i] == 3) slotImg = on4Img;
+		else if (switchSlotState[i] == 4) slotImg = off4Img;
+
+		if (slotImg > 0) {
+			iShowImage(200 + (i * 75), 425, 70, 40, slotImg);
+		}
+	}
+}
+
+// Draws the single (bigger) page1.png background for the 3-digit patrol
+// code puzzle, with each correctly-entered digit written on top of it in
+// black, and - while puzzleWrongHold is active - the expected digit at the
+// mistaken slot written in red.
+void drawNumberPuzzleSlots() {
+	if (page1Img > 0) {
+		iShowImage(NUM_PUZZLE_IMG_X, NUM_PUZZLE_IMG_Y, NUM_PUZZLE_IMG_W, NUM_PUZZLE_IMG_H, page1Img);
+	}
+
+	for (int i = 0; i < 3; i++) {
+		bool showDigit = false;
+		bool isWrongSlot = false;
+
+		if (i < current) {
+			showDigit = true;
+		}
+		else if (i == current && puzzleWrongHold) {
+			showDigit = true;
+			isWrongSlot = true;
+		}
+
+		if (showDigit) {
+			char digitStr[2];
+			digitStr[0] = answer[currentPuzzle][i];
+			digitStr[1] = '\0';
+
+			if (isWrongSlot) iSetColor(200, 0, 0);
+			else iSetColor(0, 0, 0);
+
+			iText(NUM_PUZZLE_IMG_X + 45 + i * 60, NUM_PUZZLE_IMG_Y + 40, digitStr, GLUT_BITMAP_TIMES_ROMAN_24);
+		}
+	}
 }
 
 void moveCharacterRight() {
@@ -344,7 +403,7 @@ void drawDodgeGame()
 		iText(230, 40, "REACH THE RIGHT SIDE IN 4 SEC", GLUT_BITMAP_HELVETICA_18);
 		iText(280, 15, "Click Mouse to Start", GLUT_BITMAP_HELVETICA_18);
 
-		iShowImage(50, 50, 100, 40, backImg);
+		iShowImage(50, 50, 80, 32, backImg);
 		return;
 	}
 
@@ -406,7 +465,7 @@ void drawDodgeGame()
 		iText(305, 30, "Click Mouse to Restart", GLUT_BITMAP_HELVETICA_18);
 	}
 
-	iShowImage(50, 50, 100, 40, backImg);
+	iShowImage(50, 50, 80, 32, backImg);
 }
 
 void handleDodgeMouseClick(int mx, int my)
