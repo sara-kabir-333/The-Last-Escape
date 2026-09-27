@@ -307,7 +307,7 @@ Add the game menu screenshot here.
 
 # YouTube Link
 
-The Last Escape — Gameplay / Project Video
+https://youtu.be/x5WRHnpWu6g?si=cM6CIwxsp-cE1WVc
 
 # Project Report
 
